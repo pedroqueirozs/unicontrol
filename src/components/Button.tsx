@@ -8,6 +8,7 @@ interface ButtonProps {
   borderWidth?: string;
   borderStyle?: string;
   color?: string;
+  type?: string;
   onClick?: () => void;
   [key: string]: any;
 }
@@ -21,6 +22,7 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor = "#FD7401",
   color = "#FFFF",
   onClick,
+  type,
   ...props
 }) => {
   return (
