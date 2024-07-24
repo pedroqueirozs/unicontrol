@@ -1,11 +1,11 @@
 import React from "react";
+import { Mail, User } from "lucide-react";
 
 interface InputProps {
   id: string;
+  icon: string;
   type: string;
   placeholder: string;
-  icon: string;
-  className: string;
   labelName: string;
   labelId: string;
   errorsSpan: string;
@@ -16,10 +16,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
     {
       id,
+      icon,
       type,
       placeholder,
-      icon,
-      className,
       labelName,
       labelId,
       errorsSpan,
@@ -28,24 +27,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
-      <div className={className}>
+      <div>
         <div className="flex gap-1">
-          <label htmlFor={id} className="mb-1 block">
+          <label htmlFor={labelId} className="mb-1 block">
             {labelName}
           </label>
           <span style={{ color: "red", fontSize: 14 }}> {errorsSpan}</span>
         </div>
         <div className="relative mb-2">
           <input
-            className="bg-[#F1F3F6] rounded-md h-10 w-full pl-3 pr-10 outline-none"
+            className="bg-[#F1F3F6] rounded-md h-8 w-full pl-3 outline-none"
             id={id}
             type={type}
             placeholder={placeholder}
             ref={ref}
             {...props}
           />
-          <div className="bg-[#FD7401] rounded-md flex absolute inset-y-0 right-0 items-center p-2 pointer-events-none w-9">
-            <img src={icon} alt="icon" />
+          <div className="bg-[#FD7401]  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
+            <div className="w-full text-center"><div className="text-tex_color_white w-full flex justify-center "> {icon}</div></div>
           </div>
         </div>
       </div>

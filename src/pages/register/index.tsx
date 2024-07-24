@@ -1,7 +1,3 @@
-import emailIcon from "../../../public/images/email_icon.svg";
-import passwordIcon from "../../../public/images/password_icon.svg";
-import userIcon from "../../../public/images/user_icon.svg";
-
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -10,12 +6,16 @@ import Input from "../../components/Input";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import { useState, SetStateAction } from "react";
-
+import { LockKeyhole, Mail, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confPassword, setConfPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const db = { name, email, confirmPassword }
+
 
   const schema = yup.object({
     name: yup.string().required("*"),
@@ -37,11 +37,16 @@ export default function Register() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+  const navigate = useNavigate()
+  function closeLogin() {
+    navigate('/')
+  }
   function teste() {
-    alert("ola");
+    alert("função teste")
+    console.log(db)
   }
   return (
-    <div className="max-w-md mx-auto mt-20 text-text_description">
+    <div className="max-w-xs mx-auto mt-20 text-text_description">
       <Header page="Register " />
       <div>
         <form
@@ -53,13 +58,12 @@ export default function Register() {
             id="name"
             type="text"
             placeholder="Enter your name"
-            icon={userIcon}
-            className="input"
+            icon={<User />}
             labelName="Name"
             labelId="name"
             {...register("name")}
             onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setPassword(e.target.value)
+              setName(e.target.value)
             }
             errorsSpan={errors.name?.message}
           />
@@ -68,14 +72,13 @@ export default function Register() {
             id="user_email"
             type="email"
             placeholder="example@gmail.com"
-            icon={emailIcon}
-            className="input"
+            icon={<Mail />}
             labelName="Email address"
             labelId="user_email"
             {...register("user_email")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setEmail(e.target.value)
-            }
+            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
+            //   setEmail(e.target.value)
+            // }
             errorsSpan={errors.user_email?.message}
           />
 
@@ -83,9 +86,8 @@ export default function Register() {
             id="confirm_email"
             type="email"
             placeholder="example@gmail.com"
-            icon={emailIcon}
-            className="input"
-            labelName="Confirm Email"
+            icon={<Mail />}
+            labelName="Confirm email"
             labelId="confirm_email"
             {...register("confirm_email")}
             onChange={(e: { target: { value: SetStateAction<string> } }) =>
@@ -96,28 +98,26 @@ export default function Register() {
           <Input
             id="password"
             type="password"
-            placeholder="Create a password"
-            icon={passwordIcon}
-            className="input"
+            placeholder="Create your password"
+            icon={<LockKeyhole />}
             labelName="Password"
-            labelId="name"
+            labelId="password"
             {...register("password")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setPassword(e.target.value)
-            }
+            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
+            //   setPassword(e.target.value)
+            // }
             errorsSpan={errors.password?.message}
           />
           <Input
             id="confirm_password"
             type="password"
-            placeholder="Confirm Password"
-            icon={passwordIcon}
-            className="input"
+            placeholder="Confirm password"
+            icon={<LockKeyhole />}
             labelName="Confirm Password"
             labelId="confirm_password"
             {...register("confirm_password")}
             onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setConfPassword(e.target.value)
+              setConfirmPassword(e.target.value)
             }
             errorsSpan={errors.confirm_password?.message}
           />
@@ -131,6 +131,7 @@ export default function Register() {
         </div>
         <Button
           text="Close"
+          onClick={closeLogin}
           backgroundColor="#FFFF"
           borderColor="#FD7401"
           color="#FD7401"

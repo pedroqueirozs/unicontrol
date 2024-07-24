@@ -2,8 +2,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import emailIcon from "../../../public/images/email_icon.svg";
-import passwordIcon from "../../../public/images/password_icon.svg";
 import googleIcon from "../../../public/images/google_icon.svg";
 
 import Input from "../../components/Input";
@@ -12,6 +10,7 @@ import Header from "../../components/Header";
 
 import { useNavigate } from "react-router-dom";
 import { SetStateAction, useState } from "react";
+import { Mail, LockKeyhole } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,7 +36,7 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-20 text-text_description">
+    <div className="max-w-xs mx-auto mt-20 text-text_description">
       <Header page="Login" />
       <div>
         <form
@@ -49,30 +48,29 @@ export default function Login() {
             id="user_email"
             type="email"
             placeholder="example@gmail.com"
-            icon={emailIcon}
-            className="input"
+            icon={<Mail />}
             labelName="Email address"
             labelId="user_email"
             {...register("user_email")}
             onChange={(e: { target: { value: SetStateAction<string> } }) =>
               setEmail(e.target.value)
             }
+            errorsSpan={errors.user_email?.message}
           />
-          <span style={{ color: "red " }}>{errors.user_email?.message}</span>
           <Input
             id="password"
             type="password"
-            placeholder="Create a password"
-            icon={passwordIcon}
-            className="input"
+            placeholder="Enter your password"
+            icon={<LockKeyhole />}
             labelName="Password"
-            labelId="name"
+            labelId="password"
             {...register("password")}
             onChange={(e: { target: { value: SetStateAction<string> } }) =>
               setPassword(e.target.value)
             }
+            errorsSpan={errors.password?.message}
+
           />
-          <span style={{ color: "red " }}>{errors.password?.message}</span>
           <a className="justify-items-end text-end  text-text_title" href="#">
             Forgot password?
           </a>

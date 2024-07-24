@@ -28,7 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <div>
       <button
-        className="w-full h-10 flex justify-center items-center mt-3 gap-3  rounded-md hover:opacity-60"
+        className="w-full h-8 flex justify-center items-center mt-3 gap-3  rounded-md hover:opacity-60"
         style={{
           backgroundColor,
           borderColor,
