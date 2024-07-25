@@ -1,5 +1,4 @@
 import React from "react";
-import { Mail, User } from "lucide-react";
 
 interface InputProps {
   id: string;
@@ -14,16 +13,7 @@ interface InputProps {
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    {
-      id,
-      icon,
-      type,
-      placeholder,
-      labelName,
-      labelId,
-      errorsSpan,
-      ...props
-    },
+    { id, icon, type, placeholder, labelName, labelId, errorsSpan, ...props },
     ref
   ) => {
     return (
@@ -44,7 +34,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           <div className="bg-[#FD7401]  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
-            <div className="w-full text-center"><div className="text-tex_color_white w-full flex justify-center "> {icon}</div></div>
+            <div className="w-full text-center">
+              <div className="text-tex_color_white w-full flex justify-center ">
+                {" "}
+                {icon}
+              </div>
+            </div>
           </div>
         </div>
       </div>

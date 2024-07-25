@@ -9,14 +9,18 @@ import Button from "../../components/Button";
 import Header from "../../components/Header";
 
 import { useNavigate } from "react-router-dom";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import { Mail, LockKeyhole } from "lucide-react";
+import { addUsersAcess } from "../../services/dataAcess/users";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function Login() {
+  useEffect(() => {
+    addUsersAcess();
+  }, []);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  console.log(email, password);
 
   const schema = yup.object({
     user_email: yup.string().email("Digite um e-mail valido ").required("*"),
@@ -28,11 +32,18 @@ export default function Login() {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
+  const nav = useNavigate();
+
   function registerUser() {
     navigate(`/register`);
   }
   function loginNow() {
     navigate(`/home`);
+  }
+  async function googleLogin() {
+    const provider = new GoogleAuthProvider();
+    const { user } = await signInWithPopup(getAuth(), provider);
+    // nav("/home");
   }
 
   return (
@@ -69,7 +80,6 @@ export default function Login() {
               setPassword(e.target.value)
             }
             errorsSpan={errors.password?.message}
-
           />
           <a className="justify-items-end text-end  text-text_title" href="#">
             Forgot password?
@@ -87,6 +97,7 @@ export default function Login() {
           backgroundColor="#FFFF"
           borderColor="#C2C2C2"
           color="#555555"
+          onClick={googleLogin}
         />
         <Button
           onClick={registerUser}

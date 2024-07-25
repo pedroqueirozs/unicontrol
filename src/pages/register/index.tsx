@@ -8,22 +8,27 @@ import Header from "../../components/Header";
 import { useState, SetStateAction } from "react";
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  signInWithPopup,
+} from "firebase/auth";
+import { GoogleAuthProvider } from "firebase/auth/web-extension";
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const db = { name, email, confirmPassword }
-
+  const db = { name, email, confirmPassword };
 
   const schema = yup.object({
     name: yup.string().required("*"),
-    user_email: yup.string().email("Digite um e-mail valido ").required("*"),
+    email: yup.string().email("Digite um e-mail valido ").required("*"),
     confirm_email: yup
       .string()
       .required("*")
-      .oneOf([yup.ref("user_email")], "Os emails não são iguais"),
+      .oneOf([yup.ref("email")], "Os emails não são iguais"),
     password: yup.string().required("*").min(6, "Minimo 6 caracteres"),
     confirm_password: yup
       .string()
@@ -37,14 +42,21 @@ export default function Register() {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   function closeLogin() {
-    navigate('/')
+    navigate("/");
   }
-  function teste() {
-    alert("função teste")
-    console.log(db)
+
+  async function teste({ email, password }: any) {
+    const user = await createUserWithEmailAndPassword(
+      getAuth(),
+      email,
+      password
+    );
+
+    navigate("/home");
   }
+
   return (
     <div className="max-w-xs mx-auto mt-20 text-text_description">
       <Header page="Register " />
@@ -75,7 +87,7 @@ export default function Register() {
             icon={<Mail />}
             labelName="Email address"
             labelId="user_email"
-            {...register("user_email")}
+            {...register("email")}
             // onChange={(e: { target: { value: SetStateAction<string> } }) =>
             //   setEmail(e.target.value)
             // }
@@ -103,9 +115,6 @@ export default function Register() {
             labelName="Password"
             labelId="password"
             {...register("password")}
-            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            //   setPassword(e.target.value)
-            // }
             errorsSpan={errors.password?.message}
           />
           <Input
