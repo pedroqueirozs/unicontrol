@@ -1,4 +1,4 @@
-import { db } from "../firebaseConfig";
+/* import { db } from "../firebaseConfig";
 
 const usersReference = db.collection("users")
 
@@ -8,6 +8,6 @@ export function addUsersAcess(){
         email:"douglas@gmail.com",
         password:"12348"
 
-    }).then((res)=>{
+    }).then(()=>{
     })
-}
+} */

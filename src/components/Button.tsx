@@ -10,6 +10,7 @@ interface ButtonProps {
   color?: string;
   type?: string;
   onClick?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -22,6 +23,7 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor = "#FD7401",
   color = "#FFFF",
   onClick,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type,
   ...props
 }) => {

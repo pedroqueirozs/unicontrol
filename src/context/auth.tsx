@@ -1,27 +1,35 @@
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
+import { auth } from "../services/firebaseConfig";
+interface AuthProviderProps {
+  children: ReactNode;
+}
 const AuthContext = createContext({});
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [authed, setAuthed] = useState<any>(null);
-  const auth = getAuth();
 
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
-      //   console.log("user.auth.currentUser");
-      //   console.log(user.auth.currentUser);
-      if (auth) {
-        setAuthed(auth);
+      if (user) {
+        setAuthed(user);
       }
     });
-  }, []);
-  console.log(authed);
+  }, [authed, setAuthed]);
   return (
     <AuthContext.Provider value={{ authed }}>{children}</AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

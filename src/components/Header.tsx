@@ -3,10 +3,11 @@ import logo from "../../public/images/logo.svg";
 
 interface HeaderProps {
   page: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
-const Header: React.FC<HeaderProps> = ({ page, ...props }) => {
+const Header: React.FC<HeaderProps> = ({ page }) => {
   return (
     <div>
       <div className="flex justify-center items-center gap-2">

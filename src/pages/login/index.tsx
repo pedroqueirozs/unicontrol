@@ -9,19 +9,18 @@ import Button from "../../components/Button";
 import Header from "../../components/Header";
 
 import { useNavigate } from "react-router-dom";
-import { SetStateAction, useEffect, useState } from "react";
+
 import { Mail, LockKeyhole } from "lucide-react";
-import { addUsersAcess } from "../../services/dataAcess/users";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+
+import { auth } from "../../services/firebaseConfig";
 
 export default function Login() {
-  useEffect(() => {
-    addUsersAcess();
-  }, []);
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   const schema = yup.object({
     user_email: yup.string().email("Digite um e-mail valido ").required("*"),
     password: yup.string().required("*").min(6, "Minimo 6 caracteres"),
@@ -32,29 +31,41 @@ export default function Login() {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  const nav = useNavigate();
-
   function registerUser() {
     navigate(`/register`);
   }
-  function loginNow() {
-    navigate(`/home`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function handleLogin({ user_email, password }: any) {
+    console.log("Antes da função de login ser chamada!");
+    await signInWithEmailAndPassword(auth, user_email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        navigate("/home");
+        alert(`Bem-vindo de volta, ${user.email}`);
+      })
+      .catch((error) => {
+        console.log(error);
+        alert("Erro ao fazer login. Verifique suas credenciais.");
+      });
   }
   async function googleLogin() {
     const provider = new GoogleAuthProvider();
-    const { user } = await signInWithPopup(getAuth(), provider);
-    // nav("/home");
+
+    await signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        alert(`Bem vindo, ${user.displayName}`);
+      })
+      .catch((error) => {
+        console.log("Erro ao realizar o ligin com o google", error);
+      });
   }
 
   return (
     <div className="max-w-xs mx-auto mt-20 text-text_description">
       <Header page="Login" />
       <div>
-        <form
-          onSubmit={handleSubmit(loginNow)}
-          className="flex flex-col"
-          action=""
-        >
+        <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
           <Input
             id="user_email"
             type="email"
@@ -63,9 +74,6 @@ export default function Login() {
             labelName="Email address"
             labelId="user_email"
             {...register("user_email")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setEmail(e.target.value)
-            }
             errorsSpan={errors.user_email?.message}
           />
           <Input
@@ -76,9 +84,6 @@ export default function Login() {
             labelName="Password"
             labelId="password"
             {...register("password")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setPassword(e.target.value)
-            }
             errorsSpan={errors.password?.message}
           />
           <a className="justify-items-end text-end  text-text_title" href="#">

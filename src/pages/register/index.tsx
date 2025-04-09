@@ -5,23 +5,16 @@ import * as yup from "yup";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
-import { useState, SetStateAction } from "react";
+
+/* import { useState, SetStateAction } from "react"; */
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  createUserWithEmailAndPassword,
-  getAuth,
-  signInWithPopup,
-} from "firebase/auth";
-import { GoogleAuthProvider } from "firebase/auth/web-extension";
+
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+
+import { auth } from "../../services/firebaseConfig";
+
 export default function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const db = { name, email, confirmPassword };
-
   const schema = yup.object({
     name: yup.string().required("*"),
     email: yup.string().email("Digite um e-mail valido ").required("*"),
@@ -42,30 +35,37 @@ export default function Register() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   const navigate = useNavigate();
+
   function closeLogin() {
     navigate("/");
   }
 
-  async function teste({ email, password }: any) {
-    const user = await createUserWithEmailAndPassword(
-      getAuth(),
-      email,
-      password
-    );
-
-    navigate("/home");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function handleRegister({ email, password, name }: any) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      await updateProfile(user, {
+        displayName: name,
+      });
+      console.log("Este são os dados do usuario criado!", user.displayName);
+      navigate("/home");
+    } catch (error) {
+      console.log("Erro ao cadastrar novo usuario", error);
+    }
   }
 
   return (
     <div className="max-w-xs mx-auto mt-20 text-text_description">
       <Header page="Register " />
       <div>
-        <form
-          onSubmit={handleSubmit(teste)}
-          className="flex flex-col"
-          action=""
-        >
+        <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
           <Input
             id="name"
             type="text"
@@ -74,9 +74,9 @@ export default function Register() {
             labelName="Name"
             labelId="name"
             {...register("name")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
+            /*  onChange={(e: { target: { value: SetStateAction<string> } }) =>
               setName(e.target.value)
-            }
+            } */
             errorsSpan={errors.name?.message}
           />
 
@@ -88,10 +88,7 @@ export default function Register() {
             labelName="Email address"
             labelId="user_email"
             {...register("email")}
-            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            //   setEmail(e.target.value)
-            // }
-            errorsSpan={errors.user_email?.message}
+            errorsSpan={errors.email?.message}
           />
 
           <Input
@@ -102,9 +99,9 @@ export default function Register() {
             labelName="Confirm email"
             labelId="confirm_email"
             {...register("confirm_email")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
+            /*   onChange={(e: { target: { value: SetStateAction<string> } }) =>
               setEmail(e.target.value)
-            }
+            } */
             errorsSpan={errors.confirm_email?.message}
           />
           <Input
@@ -125,9 +122,9 @@ export default function Register() {
             labelName="Confirm Password"
             labelId="confirm_password"
             {...register("confirm_password")}
-            onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setConfirmPassword(e.target.value)
-            }
+            /*   onChange={(e: { target: { value: SetStateAction<string> } }) =>
+              setPassword(e.target.value)
+            } */
             errorsSpan={errors.confirm_password?.message}
           />
 

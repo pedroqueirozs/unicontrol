@@ -8,6 +8,7 @@ interface InputProps {
   labelName: string;
   labelId: string;
   errorsSpan: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
