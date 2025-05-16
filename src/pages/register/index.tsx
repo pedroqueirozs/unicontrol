@@ -62,7 +62,7 @@ export default function Register() {
   }
 
   return (
-    <div className="max-w-xs mx-auto mt-20 text-text_description">
+    <div className="mx-auto mt-20 text-text_description max-w-xl p-8 border border-solid border-border_input_color rounded-md">
       <Header page="Register " />
       <div>
         <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
@@ -128,7 +128,7 @@ export default function Register() {
             errorsSpan={errors.confirm_password?.message}
           />
 
-          <Button type="onSubmit" text="Register" backgroundColor="#FD7401" />
+          <Button type="onSubmit" text="Register" backgroundColor="#F39C12" />
         </form>
         <div className="justify-center mt-8 flex gap-4 ">
           <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
@@ -139,8 +139,8 @@ export default function Register() {
           text="Close"
           onClick={closeLogin}
           backgroundColor="#FFFF"
-          borderColor="#FD7401"
-          color="#FD7401"
+          borderColor="#F39C12"
+          color="#F39C12"
         />
       </div>
     </div>

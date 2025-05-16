@@ -20,21 +20,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div>
         <div className="flex gap-1">
-          <label htmlFor={labelId} className="mb-1 block">
+          <label htmlFor={labelId} className="mb-1 block text-text_description">
             {labelName}
           </label>
           <span style={{ color: "red", fontSize: 14 }}> {errorsSpan}</span>
         </div>
         <div className="relative mb-2">
           <input
-            className="bg-[#F1F3F6] rounded-md h-8 w-full pl-3 outline-none"
+            className="bg-bg_input_color rounded-md h-9 w-full pl-3 outline-none border border-solid border-border_input_color"
             id={id}
             type={type}
             placeholder={placeholder}
             ref={ref}
             {...props}
           />
-          <div className="bg-[#FD7401]  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
+          <div className="bg-color_info  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
             <div className="w-full text-center">
               <div className="text-tex_color_white w-full flex justify-center ">
                 {" "}

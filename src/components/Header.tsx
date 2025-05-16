@@ -10,11 +10,13 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ page }) => {
   return (
     <div>
-      <div className="flex justify-center items-center gap-2">
+      <div className="flex justify-center items-center gap-2 ">
         <img src={logo} alt="Logo" />
-        <h1 className="text-text_title text-xl font-bold">Invoice Control</h1>
+        <h1 className="text-text_title text-xl font-bold">Unicontrol</h1>
       </div>
-      <span className="flex justify-center pt-5 mb-5">{page}</span>
+      <span className="flex justify-center pt-5 mb-5">
+        {page} 
+      </span>
     </div>
   );
 };

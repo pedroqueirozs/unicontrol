@@ -20,7 +20,7 @@ const Button: React.FC<ButtonProps> = ({
   borderColor = "FD7401",
   borderWidth = "1px",
   borderStyle = "solid",
-  backgroundColor = "#FD7401",
+  backgroundColor = "#F39C12",
   color = "#FFFF",
   onClick,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -30,7 +30,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <div>
       <button
-        className="w-full h-8 flex justify-center items-center mt-3 gap-3  rounded-md hover:opacity-60"
+        className="w-full h-10 flex justify-center items-center mt-3 gap-3  rounded-md hover:opacity-60"
         style={{
           backgroundColor,
           borderColor,

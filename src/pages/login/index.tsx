@@ -10,7 +10,7 @@ import Header from "../../components/Header";
 
 import { useNavigate } from "react-router-dom";
 
-import { Mail, LockKeyhole } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -62,8 +62,8 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-xs mx-auto mt-20 text-text_description">
-      <Header page="Login" />
+    <div className="max-w-xl px-8 pt-8 pb-36 mx-auto mt-20 text-text_descriptions border border-solid border-border_input_color rounded-md">
+      <Header page="Login into your account" />
       <div>
         <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
           <Input
@@ -80,16 +80,19 @@ export default function Login() {
             id="password"
             type="password"
             placeholder="Enter your password"
-            icon={<LockKeyhole />}
+            icon={<Lock />}
             labelName="Password"
             labelId="password"
             {...register("password")}
             errorsSpan={errors.password?.message}
           />
-          <a className="justify-items-end text-end  text-text_title" href="#">
+          <a
+            className="justify-items-end text-end  text-color_tertiary"
+            href="#"
+          >
             Forgot password?
           </a>
-          <Button type="submit" text="Login now" backgroundColor="#FD7401" />
+          <Button type="submit" text="Login now" backgroundColor="#F39C12" />
         </form>
         <div className="justify-center mt-8 flex gap-4 ">
           <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
@@ -109,7 +112,7 @@ export default function Login() {
           text="Signup now"
           backgroundColor="#FFFF"
           borderColor="#C2C2C2"
-          color="#1E2772"
+          color="#555555"
         />
       </div>
     </div>
