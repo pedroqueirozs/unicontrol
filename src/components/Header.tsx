@@ -1,14 +1,13 @@
-import React from "react";
 import { User } from "lucide-react";
 
 interface HeaderProps {
   title: string;
 }
 
-const Header = React.forwardRef<HTMLElement>(({ title }: HeaderProps) => {
+export function Header({ title }: HeaderProps) {
   return (
     <div className="bg-tex_color_white flex w-full justify-between items-center  h-16 p-5 ">
-      <span>{title}</span>
+      <span className="text-color_primary_400 font-bold">{title}</span>
       <div className="flex">
         <span>Notificações </span>
         <div>
@@ -16,7 +15,7 @@ const Header = React.forwardRef<HTMLElement>(({ title }: HeaderProps) => {
         </div>
       </div>
     </div>
-  );
-});
+  )
+};
 
-export default Header;
+
