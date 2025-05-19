@@ -6,7 +6,7 @@ import googleIcon from "../../../public/images/google_icon.svg";
 
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-import Header from "../../components/Header";
+/* import AuthLayout from "../../components/layouts/AuthLayout"; */
 
 import { useNavigate } from "react-router-dom";
 
@@ -40,8 +40,8 @@ export default function Login() {
     await signInWithEmailAndPassword(auth, user_email, password)
       .then((userCredential) => {
         const user = userCredential.user;
-        navigate("/home");
-        alert(`Bem-vindo de volta, ${user.email}`);
+        navigate("/dashboard");
+        alert(`Bem-vindo(a), ${user.email}`);
       })
       .catch((error) => {
         console.log(error);
@@ -62,59 +62,54 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-xl px-8 pt-8 pb-36 mx-auto mt-20 text-text_descriptions border border-solid border-border_input_color rounded-md">
-      <Header page="Login into your account" />
-      <div>
-        <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
-          <Input
-            id="user_email"
-            type="email"
-            placeholder="example@gmail.com"
-            icon={<Mail />}
-            labelName="Email address"
-            labelId="user_email"
-            {...register("user_email")}
-            errorsSpan={errors.user_email?.message}
-          />
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            icon={<Lock />}
-            labelName="Password"
-            labelId="password"
-            {...register("password")}
-            errorsSpan={errors.password?.message}
-          />
-          <a
-            className="justify-items-end text-end  text-color_tertiary"
-            href="#"
-          >
-            Forgot password?
-          </a>
-          <Button type="submit" text="Login now" backgroundColor="#F39C12" />
-        </form>
-        <div className="justify-center mt-8 flex gap-4 ">
-          <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
-          <div className="text-[#C2C2C2]">OR</div>
-          <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
-        </div>
-        <Button
-          text="Login with Google"
-          icon={googleIcon}
-          backgroundColor="#FFFF"
-          borderColor="#C2C2C2"
-          color="#555555"
-          onClick={googleLogin}
+    <div>
+      <span className="flex justify-center my-8 ">Login into your account</span>
+      <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
+        <Input
+          id="user_email"
+          type="email"
+          placeholder="example@gmail.com"
+          icon={<Mail />}
+          labelName="Email address"
+          labelId="user_email"
+          {...register("user_email")}
+          errorsSpan={errors.user_email?.message}
         />
-        <Button
-          onClick={registerUser}
-          text="Signup now"
-          backgroundColor="#FFFF"
-          borderColor="#C2C2C2"
-          color="#555555"
+        <Input
+          id="password"
+          type="password"
+          placeholder="Enter your password"
+          icon={<Lock />}
+          labelName="Password"
+          labelId="password"
+          {...register("password")}
+          errorsSpan={errors.password?.message}
         />
+        <a className="justify-items-end text-end  text-color_tertiary" href="#">
+          Forgot password?
+        </a>
+        <Button type="submit" text="Login now" backgroundColor="#F39C12" />
+      </form>
+      <div className="justify-center mt-8 flex gap-4 ">
+        <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
+        <div className="text-[#C2C2C2]">OR</div>
+        <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
       </div>
+      <Button
+        text="Login with Google"
+        icon={googleIcon}
+        backgroundColor="#FFFF"
+        borderColor="#C2C2C2"
+        color="#555555"
+        onClick={googleLogin}
+      />
+      <Button
+        onClick={registerUser}
+        text="Signup now"
+        backgroundColor="#FFFF"
+        borderColor="#C2C2C2"
+        color="#555555"
+      />
     </div>
   );
 }

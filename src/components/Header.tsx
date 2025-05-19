@@ -1,24 +1,22 @@
 import React from "react";
-import logo from "../../public/images/logo.svg";
+import { User } from "lucide-react";
 
 interface HeaderProps {
-  page: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  title: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ page }) => {
+const Header = React.forwardRef<HTMLElement>(({ title }: HeaderProps) => {
   return (
-    <div>
-      <div className="flex justify-center items-center gap-2 ">
-        <img src={logo} alt="Logo" />
-        <h1 className="text-text_title text-xl font-bold">Unicontrol</h1>
+    <div className="bg-tex_color_white flex w-full justify-between items-center  h-16 p-5 ">
+      <span>{title}</span>
+      <div className="flex">
+        <span>Notificações </span>
+        <div>
+          <User />
+        </div>
       </div>
-      <span className="flex justify-center pt-5 mb-5">
-        {page} 
-      </span>
     </div>
   );
-};
+});
 
 export default Header;

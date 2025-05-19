@@ -4,9 +4,7 @@ import * as yup from "yup";
 
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-import Header from "../../components/Header";
 
-/* import { useState, SetStateAction } from "react"; */
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -62,87 +60,77 @@ export default function Register() {
   }
 
   return (
-    <div className="mx-auto mt-20 text-text_description max-w-xl p-8 border border-solid border-border_input_color rounded-md">
-      <Header page="Register " />
-      <div>
-        <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
-          <Input
-            id="name"
-            type="text"
-            placeholder="Enter your name"
-            icon={<User />}
-            labelName="Name"
-            labelId="name"
-            {...register("name")}
-            /*  onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setName(e.target.value)
-            } */
-            errorsSpan={errors.name?.message}
-          />
+    <div>
+      <span className="flex justify-center my-8 ">Create your account</span>
 
-          <Input
-            id="user_email"
-            type="email"
-            placeholder="example@gmail.com"
-            icon={<Mail />}
-            labelName="Email address"
-            labelId="user_email"
-            {...register("email")}
-            errorsSpan={errors.email?.message}
-          />
-
-          <Input
-            id="confirm_email"
-            type="email"
-            placeholder="example@gmail.com"
-            icon={<Mail />}
-            labelName="Confirm email"
-            labelId="confirm_email"
-            {...register("confirm_email")}
-            /*   onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setEmail(e.target.value)
-            } */
-            errorsSpan={errors.confirm_email?.message}
-          />
-          <Input
-            id="password"
-            type="password"
-            placeholder="Create your password"
-            icon={<LockKeyhole />}
-            labelName="Password"
-            labelId="password"
-            {...register("password")}
-            errorsSpan={errors.password?.message}
-          />
-          <Input
-            id="confirm_password"
-            type="password"
-            placeholder="Confirm password"
-            icon={<LockKeyhole />}
-            labelName="Confirm Password"
-            labelId="confirm_password"
-            {...register("confirm_password")}
-            /*   onChange={(e: { target: { value: SetStateAction<string> } }) =>
-              setPassword(e.target.value)
-            } */
-            errorsSpan={errors.confirm_password?.message}
-          />
-
-          <Button type="onSubmit" text="Register" backgroundColor="#F39C12" />
-        </form>
-        <div className="justify-center mt-8 flex gap-4 ">
-          <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
-          <div className="text-[#C2C2C2]">OR</div>
-          <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
-        </div>
-        <Button
-          text="Close"
-          onClick={closeLogin}
-          backgroundColor="#FFFF"
-          borderColor="#F39C12"
-          color="#F39C12"
+      <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
+        <Input
+          id="name"
+          type="text"
+          placeholder="Enter your name"
+          icon={<User />}
+          labelName="Name"
+          labelId="name"
+          {...register("name")}
+          errorsSpan={errors.name?.message}
         />
+
+        <Input
+          id="user_email"
+          type="email"
+          placeholder="example@gmail.com"
+          icon={<Mail />}
+          labelName="Email address"
+          labelId="user_email"
+          {...register("email")}
+          errorsSpan={errors.email?.message}
+        />
+
+        <Input
+          id="confirm_email"
+          type="email"
+          placeholder="example@gmail.com"
+          icon={<Mail />}
+          labelName="Confirm email"
+          labelId="confirm_email"
+          {...register("confirm_email")}
+          errorsSpan={errors.confirm_email?.message}
+        />
+        <Input
+          id="password"
+          type="password"
+          placeholder="Create your password"
+          icon={<LockKeyhole />}
+          labelName="Password"
+          labelId="password"
+          {...register("password")}
+          errorsSpan={errors.password?.message}
+        />
+        <Input
+          id="confirm_password"
+          type="password"
+          placeholder="Confirm password"
+          icon={<LockKeyhole />}
+          labelName="Confirm Password"
+          labelId="confirm_password"
+          {...register("confirm_password")}
+          errorsSpan={errors.confirm_password?.message}
+        />
+
+        <Button type="onSubmit" text="Register" backgroundColor="#F39C12" />
+      </form>
+      <div className="justify-center mt-8 flex gap-4 ">
+        <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
+        <div className="text-[#C2C2C2]">OR</div>
+        <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
       </div>
+      <Button
+        text="Close"
+        onClick={closeLogin}
+        backgroundColor="#FFFF"
+        borderColor="#F39C12"
+        color="#F39C12"
+      />
     </div>
   );
 }
