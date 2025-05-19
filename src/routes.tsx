@@ -11,7 +11,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
-import GoodsShipped from "./pages/dashboard";
+import GoodsShipped from "./pages/goodsShipped";
 import Documents from "./pages/documents";
 import Financial from "./pages/financial";
 import Reports from "./pages/reports";

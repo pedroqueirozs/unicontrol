@@ -1,10 +1,7 @@
 import React from "react";
 
-interface InputProps {
+interface InputSelectProps {
   id: string;
-  icon?: string;
-  type: string;
-  placeholder?: string;
   labelName: string;
   labelId: string;
   errorsSpan: string;
@@ -12,9 +9,9 @@ interface InputProps {
   [key: string]: any;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
+const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
   (
-    { id, icon, type, placeholder, labelName, labelId, errorsSpan, ...props },
+    { id, labelName, labelId, errorsSpan, ...props },
     ref
   ) => {
     return (
@@ -26,29 +23,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <span style={{ color: "red", fontSize: 14 }}> {errorsSpan}</span>
         </div>
         <div className="relative mb-2">
-          <input
+          <select
             className="bg-bg_input_color rounded-md h-9 w-full pl-3 outline-none border border-solid border-border_input_color"
             id={id}
-            type={type}
-            placeholder={placeholder}
             ref={ref}
             {...props}
-          />
-          {icon && (
-             <div className="bg-color_info  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
-            <div className="w-full text-center">
-              <div className="text-tex_color_white w-full flex justify-center ">
-                {" "}
-                {icon}
-              </div>
-            </div>
-          </div>
-         )}
+                >
+  <option value="on_time">No Prazo</option>
+  <option value="delivered" selected>Entregue</option>
+  <option value="late">Atrasada</option>
+            </select>
+         
         </div>
       </div>
     );
   }
 );
-Input.displayName = "Input";
+InputSelect.displayName = "Input";
 
-export default Input;
+export default InputSelect;
