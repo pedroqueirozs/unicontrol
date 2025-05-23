@@ -46,6 +46,7 @@ const router = createBrowserRouter([
           { path: "financial", element: <Financial />, handle: { title: "Contas a pagar" } },
           { path: "reports", element: <Reports />, handle: { title: "Relatórios" } },
           { path: "settings", element: <Settings />, handle: { title: "Configurações" } },
+          { path: "settings", element: <Settings />, handle: { title: "Configurações" } },
         ],
       },
     ],

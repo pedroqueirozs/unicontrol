@@ -1,19 +1,21 @@
 import React from "react";
 
+interface Option {
+  value: string;
+  label: string;
+}
 interface InputSelectProps {
   id: string;
   labelName: string;
   labelId: string;
   errorsSpan: string;
+  options: Option[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
 const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
-  (
-    { id, labelName, labelId, errorsSpan, ...props },
-    ref
-  ) => {
+  ({ id, labelName, labelId, errorsSpan, options, ...props }, ref) => {
     return (
       <div>
         <div className="flex gap-1">
@@ -28,12 +30,13 @@ const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
             id={id}
             ref={ref}
             {...props}
-                >
-  <option value="on_time">No Prazo</option>
-  <option value="delivered" selected>Entregue</option>
-  <option value="late">Atrasada</option>
-            </select>
-         
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     );

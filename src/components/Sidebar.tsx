@@ -5,6 +5,7 @@ import {
   DollarSign,
   AlignJustify,
   Settings,
+  Users,
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "./SidebarItem";
@@ -53,6 +54,13 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
             }
             label="Relatórios"
             to="/reports"
+          />
+          <SidebarItem
+            icon={
+              <Users className="size-11  bg-color_primary_300 rounded-full p-2" />
+            }
+            label="Pendências/Clientes"
+            to="/"
           />
           <SidebarItem
             icon={

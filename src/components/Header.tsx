@@ -15,7 +15,5 @@ export function Header({ title }: HeaderProps) {
         </div>
       </div>
     </div>
-  )
-};
-
-
+  );
+}
