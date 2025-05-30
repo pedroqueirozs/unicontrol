@@ -6,6 +6,7 @@ import {
   AlignJustify,
   Settings,
   Users,
+  ShieldAlert,
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "./SidebarItem";
@@ -32,7 +33,7 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
               <PackagePlus className="size-11  bg-color_primary_300 rounded-full p-2" />
             }
             label="Mercadorias"
-            to="/goods_shipped"
+            to="/goods-shipped"
           />
           <SidebarItem
             icon={
@@ -60,7 +61,14 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
               <Users className="size-11  bg-color_primary_300 rounded-full p-2" />
             }
             label="Pendências/Clientes"
-            to="/"
+            to="/customers-pending"
+          />
+          <SidebarItem
+            icon={
+              <ShieldAlert className="size-11  bg-color_primary_300 rounded-full p-2" />
+            }
+            label="Pendências/Fornecedores"
+            to="/suppliers-pending"
           />
           <SidebarItem
             icon={

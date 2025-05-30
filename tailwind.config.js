@@ -17,6 +17,8 @@ export default {
       color_secondary: "#F39C12",
       color_tertiary: "#3498DB",
 
+      neutral: "#BDC3C7",
+
       //INPUT COLORS
       border_input_color: "#E0E0E0",
       bg_input_color: "#F5F7FA",
