@@ -1,19 +1,20 @@
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import InputSelect from "../../components/InputSelect";
-import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
-export default function GoodsShipped() {
+/* import InputSelect from "../../components/InputSelect";
+ */
+export default function SuppliersPending() {
   return (
     <div>
       <h2 className="text-color_primary_400 font-bold">
-        Cadastrar nova mercadoria
+        Cadastrar nova pendência de fornecedor
       </h2>
       <form action="#" className="flex-col my-2">
         <div className="grid grid-cols-3 gap-4 w-full ">
           <Input
             id="name"
             type="text"
-            labelName="Nome do Cliente"
+            labelName="Nome do Fornecedor"
             labelId="name"
             // {...register("user_email")}
             // errorsSpan={errors.user_email?.message}
@@ -26,53 +27,41 @@ export default function GoodsShipped() {
             // {...register("user_email")}
             // errorsSpan={errors.user_email?.message}
           />
-
-          <InputSelect
-            id="carrier"
-            labelName="Transportadora"
-            labelId="carrier"
-            options={[
-              { value: "on_time", label: "Braspress" },
-              { value: "delivered", label: "Correios" },
-              { value: "late", label: "Retirada na Empresa" },
-              { value: "late", label: "Outro" },
-            ]}
-          />
           <Input
-            id="shipping_date"
-            type="date"
-            labelName="Data do envio"
-            labelId="shipping_date"
+            id="city"
+            type="text"
+            labelName="Cidade"
+            labelId="city"
             // {...register("user_email")}
             // errorsSpan={errors.user_email?.message}
+          />
+
+          <Input
+            id="registration_date"
+            type="date"
+            labelName="Data do registro"
+            labelId="registration_date"
+            // {...register("user_email")}
+            // errorsSpan={errors.user_email?.message}
+          />
+          <InputSelect
+            id="status"
+            labelName="Status"
+            labelId="status"
+            options={[
+              { value: "pending", label: "Pendente" },
+              { value: "resolved", label: "Resolvido" },
+            ]}
           />
           <Input
             id="delivery_forecast"
             type="date"
-            labelName="Previsão de Entrega"
+            labelName="Encerramento"
             labelId="delivery_forecast"
             // {...register("user_email")}
             // errorsSpan={errors.user_email?.message}
           />
-          <InputSelect
-            id="situation"
-            labelName="Situação"
-            labelId="situation"
-            options={[
-              { value: "on_time", label: "No Prazo" },
-              { value: "delivered", label: "Entregue" },
-              { value: "late", label: "Atrasada" },
-              { value: "pending", label: "Pendência" },
-            ]}
-          />
-          <Input
-            id="delivery_date"
-            type="date"
-            labelName="Data da Entrega"
-            labelId="delivery_date"
-            // {...register("user_email")}
-            // errorsSpan={errors.user_email?.message}
-          />
+
           <Input
             id="notes"
             type="text"
@@ -92,7 +81,6 @@ export default function GoodsShipped() {
           />
         </div>
       </form>
-      <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
     </div>
   );
 }

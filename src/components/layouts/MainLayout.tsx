@@ -8,17 +8,20 @@ interface Title {
 
 export default function MainLayout() {
   const matches = useMatches();
-
   const currentMatch = matches.find((match) => (match.handle as Title)?.title);
   const title = (currentMatch?.handle as Title)?.title || "Página";
+
   return (
-    <div className="flex mx-auto ">
+    <div className="flex min-h-screen">
       <SideBar />
-      <div className="w-full">
+      <div className="flex flex-col w-full">
         <Header title={title} />
-        <div className=" mt-8 mx-4 p-4 border border-border_input_color rounded-md ">
+        <main className="flex-1 mt-8 mx-4 p-4 border border-border_input_color rounded-md">
           <Outlet />
-        </div>
+        </main>
+        <footer className="mt-auto  py-2 text-center text-sm">
+          © 2025 saojoseartigosliturgicos
+        </footer>
       </div>
     </div>
   );
