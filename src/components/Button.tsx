@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ButtonProps {
-  text: string;
+  text?: string;
   icon?: string;
   backgroundColor?: string;
   borderColor?: string;
@@ -41,9 +41,7 @@ const Button: React.FC<ButtonProps> = ({
         onClick={onClick}
         {...props}
       >
-        {icon && (
-          <img src={icon} alt="" />
-        )}
+        {icon && <img src={icon} alt="" />}
         {text}
       </button>
     </div>

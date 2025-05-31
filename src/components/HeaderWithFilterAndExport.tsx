@@ -1,7 +1,7 @@
 export function HeaderWithFilterAndExport({ title }: { title: string }) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className=" font-semibold">{title}</h2>
+    <div className="flex items-center justify-between mb-4 ">
+      <h2 className=" text-color_primary_400 font-bold">{title}</h2>
       <div className="flex items-center gap-2">
         <input
           type="text"

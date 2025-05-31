@@ -2,13 +2,15 @@ import Button from "../../components/Button";
 import Input from "../../components/Input";
 import InputSelect from "../../components/InputSelect";
 import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
+import { ShippingRecord } from "../../components/ShippingRecord";
+import { PaginationFooter } from "../../components/PaginationFooter";
 export default function GoodsShipped() {
   return (
     <div>
       <h2 className="text-color_primary_400 font-bold">
         Cadastrar nova mercadoria
       </h2>
-      <form action="#" className="flex-col my-2">
+      <form action="#" className=" flex flex-col gap-4 my-4">
         <div className="grid grid-cols-3 gap-4 w-full ">
           <Input
             id="name"
@@ -93,6 +95,45 @@ export default function GoodsShipped() {
         </div>
       </form>
       <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
+      <div className="grid grid-cols-8 items-center gap-2 p-2 bg-color_primary_400 text-tex_color_white rounded">
+        <span>Cliente</span>
+        <span>Documento</span>
+        <span>Transportadora</span>
+        <span>Envio</span>
+        <span>Previsão</span>
+        <span>Situação</span>
+        <span>Entrega</span>
+        <span className="text-center">Actions</span>
+      </div>
+      <ShippingRecord
+        client="João Silva"
+        document="NF-2023/0001"
+        carrier="Expressa"
+        shippingDate="10/05/2025"
+        deliveryForecast="15/05/2025"
+        situation="No prazo"
+        deliveryDate="15/05/2025"
+        observation="Enviado para maraba"
+      />{" "}
+      <ShippingRecord
+        client="Paróquia N Sra de Fátima"
+        document="NF-2023/0001"
+        carrier="Expressa"
+        shippingDate="10/05/2025"
+        deliveryForecast="15/05/2025"
+        situation="Entregue"
+        deliveryDate="15/05/2025"
+      />
+      <ShippingRecord
+        client="João Silva"
+        document="NF-2023/0001"
+        carrier="Expressa"
+        shippingDate="10/05/2025"
+        deliveryForecast="15/05/2025"
+        situation="Atrasada"
+        deliveryDate="15/05/2025"
+      />
+      <PaginationFooter />
     </div>
   );
 }
