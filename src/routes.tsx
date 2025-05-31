@@ -72,7 +72,7 @@ const router = createBrowserRouter([
           {
             path: "customers-pending",
             element: <CustomersPending />,
-            handle: { title: "Pendências/Trocas de clientes" },
+            handle: { title: "Pendências/ Trocas de clientes" },
           },
           {
             path: "suppliers-pending",
