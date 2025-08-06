@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 interface InfoCardProps {
   icon: ReactNode;
   title: string;
-  value: string;
-  variant?: "default" | "attention" | "sucess";
+  value?: string;
+  variant?: "default" | "attention" | "success";
   to?: string;
 }
 
@@ -18,21 +18,21 @@ export default function InfoCard({
 }: InfoCardProps) {
   const variantStyles: Record<string, string> = {
     default: "bg-white text-gray-800 border border-gray-200",
-    attention: "bg-color_error text-blue-800 border border-blue-300",
-    sucess: "bg-color_sucess text-yellow-800 border border-yellow-300",
+    attention: "bg-color_error text-blue-800 border-none",
+    success: "bg-color_sucess text-yellow-800 border-none",
   };
 
   const content = (
     <div
-      className={` rounded-2xl border-border_input_color  p-4 shadow-sm flex items-center justify-center gap-4 transition hover:shadow-md ${
+      className={`rounded-xl border-border_input_color p-4 shadow-sm flex flex-col items-center justify-center gap-2 transition hover:shadow-xl min-h-24 ${
         variantStyles[variant]
       } ${to ? "cursor-pointer" : ""}`}
     >
-      <div className="text-3xl">{icon}</div>
-      <div>
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="text-xl font-bold">{value}</div>
+      <div className="flex justify-center text-center gap-4">
+        <span className="text-3xl">{icon}</span>
+        <span className="text-sm ">{title}</span>
       </div>
+      <span className="text-5xl font-semibold">{value}</span>
     </div>
   );
 

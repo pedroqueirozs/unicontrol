@@ -59,16 +59,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
         <InfoCard
           icon={<TriangleAlert className="text-red-500" />}
-          title="Mercadorias em atraso"
+          title="MERCADORIAS ATRASADAS"
           value="09"
           variant="attention"
           to="/goods-shipped"
         />
         <InfoCard
           icon={<PackageCheck className="text-green-600" />}
-          title="Mercadorias entregues"
+          title="ENTREGUES NO ULTIMO MÊS"
           value="32"
-          variant="sucess"
+          variant="success"
           to="/goods-shipped"
         />
       </div>
@@ -76,32 +76,23 @@ export default function Dashboard() {
         <InfoCard
           icon={<ShieldAlert />}
           title="Pendências com fornecedores"
-          value="5"
           to="/suppliers-pending"
         />
         <InfoCard
           icon={<Users />}
           title="Trocas/ Avarias de clientes"
-          value="5"
           to="/customers-pending"
         />
-        <InfoCard
-          icon={<PiggyBank />}
-          title="Contas a pagar"
-          value="5"
-          to="/financial"
-        />
-        <InfoCard icon={<ChartLine />} title="Controle de Fretes" value="5" />
+        <InfoCard icon={<PiggyBank />} title="Contas a pagar" to="/financial" />
+        <InfoCard icon={<ChartLine />} title="Controle de Fretes" />
         <InfoCard
           icon={<Package />}
           title="Mercadorias enviadas"
-          value="5"
           to="/goods-shipped"
         />
         <InfoCard
           icon={<Folder />}
           title="Central de documentos"
-          value="5"
           to="/documents"
         />
       </div>

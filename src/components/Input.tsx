@@ -35,15 +35,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {icon && (
-             <div className="bg-color_info  rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
-            <div className="w-full text-center">
-              <div className="text-tex_color_white w-full flex justify-center ">
-                {" "}
-                {icon}
+            <div className="bg-color_secondary rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
+              <div className="w-full text-center">
+                <div className="text-tex_color_white w-full flex justify-center ">
+                  {" "}
+                  {icon}
+                </div>
               </div>
             </div>
-          </div>
-         )}
+          )}
         </div>
       </div>
     );

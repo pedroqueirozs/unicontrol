@@ -8,4 +8,5 @@
 
 body {
   background-color: var(--color-background);
+  font-family: "Inter", sans-serif;
 }

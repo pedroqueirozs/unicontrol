@@ -4,18 +4,20 @@ import { ChevronDown } from "lucide-react";
 
 interface ShippingRecordProps {
   client: string;
-  document: string;
+  invoice: string;
+  city: string;
   carrier: string;
   shippingDate: string;
   deliveryForecast: string;
   situation: "Entregue" | "No prazo" | "Atrasada";
-  deliveryDate: string;
+  deliveryDate?: string;
   observation?: string;
 }
 
 export function ShippingRecord({
   client,
-  document,
+  invoice,
+  city,
   carrier,
   shippingDate,
   deliveryForecast,
@@ -23,11 +25,15 @@ export function ShippingRecord({
   deliveryDate,
   observation,
 }: ShippingRecordProps) {
+  function hardOrShowObservation() {
+    console.log("Notificação ocultada ou mostrada!");
+  }
   return (
     <div className="border-b border-y-neutral text-sm">
-      <div className="grid grid-cols-8 items-center gap-2 p-2 text-sm">
+      <div className="grid grid-cols-9 items-center gap-2 p-2 text-sm">
         <span>{client}</span>
-        <span>{document}</span>
+        <span>{invoice}</span>
+        <span>{city}</span>
         <span>{carrier}</span>
         <span>{shippingDate}</span>
         <span>{deliveryForecast}</span>
@@ -52,10 +58,11 @@ export function ShippingRecord({
             <PencilLine className="text-color_tertiary" />
           </button>
           <button>
-            <ChevronDown />
+            <ChevronDown onClick={hardOrShowObservation} />
           </button>
         </div>
       </div>
+
       {observation && <p className="px-2">Observação: {observation}</p>}
     </div>
   );
