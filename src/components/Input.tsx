@@ -7,14 +7,14 @@ interface InputProps {
   placeholder?: string;
   labelName: string;
   labelId: string;
-  errorsSpan: string;
+  errorMessage: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    { id, icon, type, placeholder, labelName, labelId, errorsSpan, ...props },
+    { id, icon, type, placeholder, labelName, labelId, errorMessage, ...props },
     ref
   ) => {
     return (
@@ -23,11 +23,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <label htmlFor={labelId} className="mb-1 block text-text_description">
             {labelName}
           </label>
-          <span style={{ color: "red", fontSize: 14 }}> {errorsSpan}</span>
+          <span className="text-color_error text-sm"> {errorMessage}</span>
         </div>
         <div className="relative mb-2">
           <input
-            className="bg-bg_input_color rounded-md h-9 w-full pl-3 outline-none border border-solid border-border_input_color"
+            className="bg-bg_input_color rounded-md h-11 w-full pl-3 outline-none border border-solid border-border_input_color focus:border-color_secondary"
             id={id}
             type={type}
             placeholder={placeholder}
@@ -35,9 +35,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {icon && (
-            <div className="bg-color_secondary rounded-md flex absolute inset-y-0 right-0 items-center p-0.5 pointer-events-none w-8">
+            <div className="bg-color_secondary rounded-md flex absolute inset-y-0 right-0 items-center pointer-events-none w-8">
               <div className="w-full text-center">
-                <div className="text-tex_color_white w-full flex justify-center ">
+                <div className="text-text_color_white w-full flex justify-center ">
                   {" "}
                   {icon}
                 </div>

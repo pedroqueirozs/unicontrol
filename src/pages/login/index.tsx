@@ -1,23 +1,22 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
 import googleIcon from "../../assets/google_icon.svg";
-
+import { Mail, Lock } from "lucide-react";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-
 import { useNavigate } from "react-router-dom";
-
-import { Mail, Lock } from "lucide-react";
 import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-
 import { auth } from "../../services/firebaseConfig";
 
+type LoginFormImputs = {
+  user_email: string;
+  password: string;
+};
 export default function Login() {
   const navigate = useNavigate();
   const schema = yup.object({
@@ -33,31 +32,30 @@ export default function Login() {
   function registerUser() {
     navigate(`/register`);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function handleLogin({ user_email, password }: any) {
-    console.log("Antes da função de login ser chamada!");
-    await signInWithEmailAndPassword(auth, user_email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        navigate("/dashboard");
-        alert(`Bem-vindo(a), ${user.email}`);
-      })
-      .catch((error) => {
-        console.log(error);
-        alert("Erro ao fazer login. Verifique suas credenciais.");
-      });
+  async function handleLogin({ user_email, password }: LoginFormImputs) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        user_email,
+        password
+      );
+      const user = userCredential.user;
+      alert(`Bem-vindo(a), ${user.displayName}`);
+      navigate("/dashboard");
+    } catch (error) {
+      alert("Erro ao fazer login. Verifique suas credenciais.");
+    }
   }
   async function googleLogin() {
     const provider = new GoogleAuthProvider();
-
-    await signInWithPopup(auth, provider)
-      .then((result) => {
-        const user = result.user;
-        alert(`Bem vindo, ${user.displayName}`);
-      })
-      .catch((error) => {
-        console.log("Erro ao realizar o ligin com o google", error);
-      });
+    const userCredential = await signInWithPopup(auth, provider);
+    try {
+      const user = userCredential.user;
+      navigate("/dashboard");
+      alert(`Bem vindo, ${user.displayName}`);
+    } catch (error) {
+      alert("Erro ao realizar login com o google");
+    }
   }
 
   return (
@@ -72,7 +70,7 @@ export default function Login() {
           labelName="E-mail"
           labelId="user_email"
           {...register("user_email")}
-          errorsSpan={errors.user_email?.message}
+          errorMessage={errors.user_email?.message}
         />
         <Input
           id="password"
@@ -82,9 +80,9 @@ export default function Login() {
           labelName="Senha"
           labelId="password"
           {...register("password")}
-          errorsSpan={errors.password?.message}
+          errorMessage={errors.password?.message}
         />
-        <a className="justify-items-end text-end" href="#">
+        <a className="justify-items-end text-end hover:underline" href="#">
           Esqueceu a senha?
         </a>
         <Button type="submit" text="Entrar" backgroundColor="#34D399" />

@@ -26,7 +26,7 @@ const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
         </div>
         <div className="relative mb-2">
           <select
-            className="bg-bg_input_color rounded-md h-9 w-full pl-3 outline-none border border-solid border-border_input_color"
+            className="bg-bg_input_color rounded-md h-11 w-32 pl-3 outline-none border border-solid border-border_input_color focus:border-color_secondary"
             id={id}
             ref={ref}
             {...props}

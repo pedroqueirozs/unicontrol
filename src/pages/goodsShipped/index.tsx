@@ -1,24 +1,106 @@
 import Button from "../../components/Button";
+import { CustomDataGrid } from "../../components/CustomDataGrid";
 import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
 import Input from "../../components/Input";
 import InputSelect from "../../components/InputSelect";
-import { PaginationFooter } from "../../components/PaginationFooter";
-import { ShippingRecord } from "../../components/ShippingRecord";
-import { useState } from "react";
-import { useEffect } from "react";
+import { GridColDef } from "@mui/x-data-grid";
 
-export default async function GoodsShipped() {
-  const [data, setData] = useState([]);
+const rows = [
+  {
+    id: 1,
+    customer: "Loja Centro",
+    invoice: "2236",
+    city: "Belo Horizonte",
+    state: "MG",
+    transporter: "Jadlog",
+    shipping: "30/07/2025",
+    situation: "Em transito",
+    estimated_delivery: "05/08/2025",
+    delivery_date: "",
+    observation: "",
+  },
+  {
+    id: 2,
+    customer: "Supermercado Pague Menos",
+    invoice: "3347",
+    city: "Uberlândia",
+    state: "MG",
+    transporter: "Braspress",
+    shipping: "01/08/2025",
+    situation: "Em transito",
+    estimated_delivery: "08/08/2025",
+    delivery_date: "",
+    observation: "",
+  },
+  {
+    id: 3,
+    customer: "Drogaria Central",
+    invoice: "4458",
+    city: "Governador Valadares",
+    state: "MG",
+    transporter: "Total Express",
+    shipping: "29/07/2025",
+    situation: "Em transito",
+    estimated_delivery: "06/08/2025",
+    delivery_date: "",
+    observation: "",
+  },
+  {
+    id: 4,
+    customer: "Distribuidora ABC",
+    invoice: "5569",
+    city: "Patos de Minas",
+    state: "MG",
+    transporter: "Correios",
+    shipping: "27/07/2025",
+    situation: "Em transito",
+    estimated_delivery: "03/08/2025",
+    delivery_date: "",
+    observation: "",
+  },
+  {
+    id: 5,
+    customer: "Auto Peças São José",
+    invoice: "6670",
+    city: "Divinópolis",
+    state: "MG",
+    transporter: "Jamef",
+    shipping: "02/08/2025",
+    situation: "Em transito",
+    estimated_delivery: "09/08/2025",
+    delivery_date: "",
+    observation: "",
+  },
+];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch("http://localhost:3000/goods_shipped");
-      const json = await response.json();
-      setData(json);
-    };
-    fetchData();
-  }, []);
-  console.log(data);
+const columns: GridColDef[] = [
+  { field: "customer", headerName: "Cliente", width: 150 },
+  { field: "invoice", headerName: "Nota Fiscal", width: 120 },
+  { field: "city", headerName: "Cidade", width: 150 },
+  { field: "state", headerName: "UF", width: 150 },
+  { field: "transporter", headerName: "Transportador", width: 150 },
+  { field: "shipping", headerName: "Data de Envio", width: 130 },
+  { field: "stuation", headerName: "Situação", width: 130, editable: true },
+  {
+    field: "estimated_delivery",
+    headerName: "Previsão de entrega",
+    width: 130,
+    editable: true,
+  },
+  {
+    field: "delivery_date",
+    headerName: "Data da entrega",
+    width: 130,
+    editable: true,
+  },
+  {
+    field: "observation",
+    headerName: "Observação",
+    width: 130,
+    editable: true,
+  },
+];
+export default function GoodsShipped() {
   return (
     <div>
       <h2 className="text-color_primary_400 font-bold">
@@ -42,13 +124,29 @@ export default async function GoodsShipped() {
             // {...register("user_email")}
             // errorsSpan={errors.user_email?.message}
           />
+          <Input
+            id="city"
+            type="text"
+            labelName="Cidade"
+            labelId="city"
+            // {...register("user_email")}
+            // errorsSpan={errors.user_email?.message}
+          />
+          <Input
+            id="uf"
+            type="text"
+            labelName="UF"
+            labelId="uf"
+            // {...register("user_email")}
+            // errorsSpan={errors.user_email?.message}
+          />
 
           <InputSelect
             id="carrier"
             labelName="Transportadora"
             labelId="carrier"
             options={[
-              { value: "braspres", label: "Braspress" },
+              { value: "braspress", label: "Braspress" },
               { value: "correios", label: "Correios" },
               { value: "withdrawal", label: "Retirada na Empresa" },
               { value: "other", label: "Outro" },
@@ -109,30 +207,7 @@ export default async function GoodsShipped() {
         </div>
       </form>
       <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
-      <div className="grid grid-cols-9 items-center gap-2 p-2 bg-color_primary_400 text-tex_color_white rounded">
-        <span>Cliente</span>
-        <span>Nota Fiscal</span>
-        <span>Cidade</span>
-        <span>Transportadora</span>
-        <span>Envio</span>
-        <span>Previsão</span>
-        <span>Situação</span>
-        <span>Entrega</span>
-        <span className="text-center">Actions</span>
-      </div>
-      <ShippingRecord
-        client="Paróquia N Sra de Fátima"
-        invoice="2021"
-        city="Rio de Janeiro - RJ"
-        carrier="Correios"
-        shippingDate="10/05/2025"
-        deliveryForecast="25/06/2025"
-        situation="No prazo"
-        /* deliveryDate="15/05/2025" */
-        observation="Enviado para maraba em nome do Pe. Maciel - Codigo de rastreio AA12345678BR"
-      />
-
-      <PaginationFooter />
+      <CustomDataGrid columns={columns} rows={rows} />
     </div>
   );
 }

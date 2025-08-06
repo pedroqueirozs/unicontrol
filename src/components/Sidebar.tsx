@@ -10,15 +10,15 @@ import {
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "./SidebarItem";
-
-import logo from "../assets/logo.svg";
+  
+import logotipoLightSvg from "../assets/unicontrol-logo-light.svg";
 
 const SideBar = React.forwardRef<HTMLElement>(() => {
   return (
-    <aside className="w-80 bg-color_primary_400 text-tex_color_white rounded-s-2xl">
+    <aside className="w-80 bg-color_primary_400 text-text_color_white rounded-s-2xl">
       <nav>
-        <div className="bg-color_primary_500 text-tex_color_white flex w-full justify-center items-center gap-2 rounded-tl-2xl">
-          <img className="h-20 w-auto" src={logo} alt="" />
+        <div className="bg-color_primary_500 h-20 text-tex_color_white flex w-full justify-center items-center gap-2 rounded-tl-2xl">
+          <img className=" w-auto" src={logotipoLightSvg} alt="" />
         </div>
         <ul className="space-y-4 text-center flex flex-col gap-8 py-8 ">
           <SidebarItem

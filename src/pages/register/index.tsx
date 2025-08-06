@@ -61,7 +61,7 @@ export default function Register() {
 
   return (
     <div>
-      <span className="flex justify-center my-8 ">Create your account</span>
+      <span className="flex justify-center my-8 ">Crie sua conta</span>
 
       <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
         <Input
