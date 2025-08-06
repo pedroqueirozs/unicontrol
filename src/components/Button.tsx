@@ -10,7 +10,6 @@ interface ButtonProps {
   color?: string;
   type?: string;
   onClick?: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -22,14 +21,13 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor = "#34D399",
   color = "#FFFF",
   onClick,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type,
   ...props
 }) => {
   return (
     <div>
       <button
-        className="w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60"
+        className="w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60 "
         style={{
           backgroundColor,
           borderColor,

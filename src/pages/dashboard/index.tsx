@@ -7,6 +7,7 @@ import {
   PiggyBank,
   ChartLine,
   Package,
+  MapPin,
 } from "lucide-react";
 import InfoCard from "../../components/InfoCard";
 
@@ -58,14 +59,14 @@ export default function Dashboard() {
     <div className="space-y-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
         <InfoCard
-          icon={<TriangleAlert className="text-red-500" />}
+          icon={<TriangleAlert className="text-color_primary_300" />}
           title="MERCADORIAS ATRASADAS"
           value="09"
           variant="attention"
           to="/goods-shipped"
         />
         <InfoCard
-          icon={<PackageCheck className="text-green-600" />}
+          icon={<PackageCheck className="text-color_primary_300" />}
           title="ENTREGUES NO ULTIMO MÊS"
           value="32"
           variant="success"
@@ -95,6 +96,7 @@ export default function Dashboard() {
           title="Central de documentos"
           to="/documents"
         />
+        <InfoCard icon={<MapPin />} title="Endereços" to="/address" />
       </div>
 
       {/* Lista de últimas mercadorias enviadas */}
