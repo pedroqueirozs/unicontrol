@@ -11,14 +11,14 @@ import {
 import React from "react";
 import { SidebarItem } from "./SidebarItem";
 
-import logo from "../../public/images/logo.svg";
+import logo from "../assets/logo.svg";
 
 const SideBar = React.forwardRef<HTMLElement>(() => {
   return (
-    <aside className="w-60 bg-color_primary_400 text-tex_color_white">
+    <aside className="w-80 bg-color_primary_400 text-tex_color_white rounded-s-2xl">
       <nav>
-        <div className="bg-color_primary_500 text-tex_color_white flex w-full justify-center items-center gap-2 font-bold ">
-          <img className="w-8 h-16" src={logo} alt="" /> Unicontrol
+        <div className="bg-color_primary_500 text-tex_color_white flex w-full justify-center items-center gap-2 rounded-tl-2xl">
+          <img className="h-20 w-auto" src={logo} alt="" />
         </div>
         <ul className="space-y-4 text-center flex flex-col gap-8 py-8 ">
           <SidebarItem

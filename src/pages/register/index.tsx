@@ -53,7 +53,7 @@ export default function Register() {
         displayName: name,
       });
       console.log("Este são os dados do usuario criado!", user.displayName);
-      navigate("/home");
+      navigate("/dashboard");
     } catch (error) {
       console.log("Erro ao cadastrar novo usuario", error);
     }
@@ -67,9 +67,9 @@ export default function Register() {
         <Input
           id="name"
           type="text"
-          placeholder="Enter your name"
+          placeholder="Insira o seu nome"
           icon={<User />}
-          labelName="Name"
+          labelName="Nome"
           labelId="name"
           {...register("name")}
           errorsSpan={errors.name?.message}
@@ -80,7 +80,7 @@ export default function Register() {
           type="email"
           placeholder="example@gmail.com"
           icon={<Mail />}
-          labelName="Email address"
+          labelName="E-mail"
           labelId="user_email"
           {...register("email")}
           errorsSpan={errors.email?.message}
@@ -91,7 +91,7 @@ export default function Register() {
           type="email"
           placeholder="example@gmail.com"
           icon={<Mail />}
-          labelName="Confirm email"
+          labelName="Confirme o seu e-mail"
           labelId="confirm_email"
           {...register("confirm_email")}
           errorsSpan={errors.confirm_email?.message}
@@ -99,9 +99,9 @@ export default function Register() {
         <Input
           id="password"
           type="password"
-          placeholder="Create your password"
+          placeholder="Crie sua senha"
           icon={<LockKeyhole />}
-          labelName="Password"
+          labelName="Senha"
           labelId="password"
           {...register("password")}
           errorsSpan={errors.password?.message}
@@ -109,15 +109,15 @@ export default function Register() {
         <Input
           id="confirm_password"
           type="password"
-          placeholder="Confirm password"
+          placeholder="Confirme sua senha"
           icon={<LockKeyhole />}
-          labelName="Confirm Password"
+          labelName="Confirme sua senha"
           labelId="confirm_password"
           {...register("confirm_password")}
           errorsSpan={errors.confirm_password?.message}
         />
 
-        <Button type="onSubmit" text="Register" backgroundColor="#F39C12" />
+        <Button type="onSubmit" text="Cadastrar" backgroundColor="#34D399" />
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
@@ -128,8 +128,7 @@ export default function Register() {
         text="Close"
         onClick={closeLogin}
         backgroundColor="#FFFF"
-        borderColor="#F39C12"
-        color="#F39C12"
+        color="#34D399"
       />
     </div>
   );

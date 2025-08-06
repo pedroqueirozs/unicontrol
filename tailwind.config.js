@@ -14,9 +14,7 @@ export default {
       color_primary_400: "#2C3E50",
       color_primary_300: "#3D5367",
 
-      color_secondary: "#F39C12",
-      color_tertiary: "#3498DB",
-
+      color_secondary: "#34D399",
       neutral: "#BDC3C7",
 
       //INPUT COLORS
@@ -24,8 +22,8 @@ export default {
       bg_input_color: "#F5F7FA",
 
       // STATUS COLORS
-      color_sucess: "#2ECC71",
-      color_info: "#3498DB",
+      color_success: "#2ECC71",
+      color_info: "#34D399",
       color_error: "#E74C3C",
     },
   },

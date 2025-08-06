@@ -12,7 +12,7 @@ export default function MainLayout() {
   const title = (currentMatch?.handle as Title)?.title || "Página";
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen p-6">
       <SideBar />
       <div className="flex flex-col w-full">
         <Header title={title} />

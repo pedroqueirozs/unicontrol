@@ -19,8 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   icon,
   borderColor = "FD7401",
   borderWidth = "1px",
-  borderStyle = "solid",
-  backgroundColor = "#F39C12",
+  backgroundColor = "#34D399",
   color = "#FFFF",
   onClick,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -30,12 +29,11 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <div>
       <button
-        className="w-full h-9 flex justify-center items-center mt-3 gap-3 p-2  rounded-md hover:opacity-60"
+        className="w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60"
         style={{
           backgroundColor,
           borderColor,
           borderWidth,
-          borderStyle,
           color,
         }}
         onClick={onClick}

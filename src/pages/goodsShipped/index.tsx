@@ -1,10 +1,24 @@
 import Button from "../../components/Button";
+import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
 import Input from "../../components/Input";
 import InputSelect from "../../components/InputSelect";
-import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
-import { ShippingRecord } from "../../components/ShippingRecord";
 import { PaginationFooter } from "../../components/PaginationFooter";
-export default function GoodsShipped() {
+import { ShippingRecord } from "../../components/ShippingRecord";
+import { useState } from "react";
+import { useEffect } from "react";
+
+export default async function GoodsShipped() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch("http://localhost:3000/goods_shipped");
+      const json = await response.json();
+      setData(json);
+    };
+    fetchData();
+  }, []);
+  console.log(data);
   return (
     <div>
       <h2 className="text-color_primary_400 font-bold">
@@ -34,10 +48,10 @@ export default function GoodsShipped() {
             labelName="Transportadora"
             labelId="carrier"
             options={[
-              { value: "on_time", label: "Braspress" },
-              { value: "delivered", label: "Correios" },
-              { value: "late", label: "Retirada na Empresa" },
-              { value: "late", label: "Outro" },
+              { value: "braspres", label: "Braspress" },
+              { value: "correios", label: "Correios" },
+              { value: "withdrawal", label: "Retirada na Empresa" },
+              { value: "other", label: "Outro" },
             ]}
           />
           <Input
@@ -95,9 +109,10 @@ export default function GoodsShipped() {
         </div>
       </form>
       <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
-      <div className="grid grid-cols-8 items-center gap-2 p-2 bg-color_primary_400 text-tex_color_white rounded">
+      <div className="grid grid-cols-9 items-center gap-2 p-2 bg-color_primary_400 text-tex_color_white rounded">
         <span>Cliente</span>
-        <span>Documento</span>
+        <span>Nota Fiscal</span>
+        <span>Cidade</span>
         <span>Transportadora</span>
         <span>Envio</span>
         <span>Previsão</span>
@@ -106,33 +121,17 @@ export default function GoodsShipped() {
         <span className="text-center">Actions</span>
       </div>
       <ShippingRecord
-        client="João Silva"
-        document="NF-2023/0001"
-        carrier="Expressa"
-        shippingDate="10/05/2025"
-        deliveryForecast="15/05/2025"
-        situation="No prazo"
-        deliveryDate="15/05/2025"
-        observation="Enviado para maraba"
-      />{" "}
-      <ShippingRecord
         client="Paróquia N Sra de Fátima"
-        document="NF-2023/0001"
-        carrier="Expressa"
+        invoice="2021"
+        city="Rio de Janeiro - RJ"
+        carrier="Correios"
         shippingDate="10/05/2025"
-        deliveryForecast="15/05/2025"
-        situation="Entregue"
-        deliveryDate="15/05/2025"
+        deliveryForecast="25/06/2025"
+        situation="No prazo"
+        /* deliveryDate="15/05/2025" */
+        observation="Enviado para maraba em nome do Pe. Maciel - Codigo de rastreio AA12345678BR"
       />
-      <ShippingRecord
-        client="João Silva"
-        document="NF-2023/0001"
-        carrier="Expressa"
-        shippingDate="10/05/2025"
-        deliveryForecast="15/05/2025"
-        situation="Atrasada"
-        deliveryDate="15/05/2025"
-      />
+
       <PaginationFooter />
     </div>
   );

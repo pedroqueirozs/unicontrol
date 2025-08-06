@@ -2,11 +2,10 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import googleIcon from "../../../public/images/google_icon.svg";
+import googleIcon from "../../assets/google_icon.svg";
 
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-/* import AuthLayout from "../../components/layouts/AuthLayout"; */
 
 import { useNavigate } from "react-router-dom";
 
@@ -63,14 +62,14 @@ export default function Login() {
 
   return (
     <div>
-      <span className="flex justify-center my-8 ">Login into your account</span>
+      <span className="flex justify-center my-8 ">Faça login em sua conta</span>
       <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
         <Input
           id="user_email"
           type="email"
           placeholder="example@gmail.com"
           icon={<Mail />}
-          labelName="Email address"
+          labelName="E-mail"
           labelId="user_email"
           {...register("user_email")}
           errorsSpan={errors.user_email?.message}
@@ -78,17 +77,17 @@ export default function Login() {
         <Input
           id="password"
           type="password"
-          placeholder="Enter your password"
+          placeholder="Digite sua senha"
           icon={<Lock />}
-          labelName="Password"
+          labelName="Senha"
           labelId="password"
           {...register("password")}
           errorsSpan={errors.password?.message}
         />
-        <a className="justify-items-end text-end  text-color_tertiary" href="#">
-          Forgot password?
+        <a className="justify-items-end text-end" href="#">
+          Esqueceu a senha?
         </a>
-        <Button type="submit" text="Login now" backgroundColor="#F39C12" />
+        <Button type="submit" text="Entrar" backgroundColor="#34D399" />
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
@@ -96,7 +95,7 @@ export default function Login() {
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
       </div>
       <Button
-        text="Login with Google"
+        text="Entre com o Google"
         icon={googleIcon}
         backgroundColor="#FFFF"
         borderColor="#C2C2C2"
@@ -105,7 +104,7 @@ export default function Login() {
       />
       <Button
         onClick={registerUser}
-        text="Signup now"
+        text="Cadastre-se"
         backgroundColor="#FFFF"
         borderColor="#C2C2C2"
         color="#555555"
