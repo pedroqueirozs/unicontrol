@@ -1,8 +1,21 @@
 import { DataGrid, GridColDef, DataGridProps } from "@mui/x-data-grid";
 
+type RowData = {
+  id: string;
+  customer: string;
+  invoice: string;
+  city: string;
+  state: string;
+  transporter: string;
+  shipping: string;
+  situation: string;
+  estimated_delivery: string;
+  delivery_date: string;
+  observation: string;
+};
 interface CustomDataGridProps extends Partial<DataGridProps> {
   columns: GridColDef[];
-  rows: any[];
+  rows: RowData[];
   height?: number;
 }
 
