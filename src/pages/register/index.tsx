@@ -12,6 +12,11 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import { auth } from "../../services/firebaseConfig";
 
+type RegistrationData = {
+  name: string;
+  email: string;
+  password: string;
+};
 export default function Register() {
   const schema = yup.object({
     name: yup.string().required("*"),
@@ -40,9 +45,9 @@ export default function Register() {
     navigate("/");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function handleRegister({ email, password, name }: any) {
+  async function handleRegister(data: RegistrationData) {
     try {
+      const { email, password, name } = data;
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -53,7 +58,7 @@ export default function Register() {
         displayName: name,
       });
       console.log("Este são os dados do usuario criado!", user.displayName);
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       console.log("Erro ao cadastrar novo usuario", error);
     }
@@ -72,7 +77,7 @@ export default function Register() {
           labelName="Nome"
           labelId="name"
           {...register("name")}
-          errorsSpan={errors.name?.message}
+          errorMessage={errors.name?.message}
         />
 
         <Input
@@ -83,7 +88,7 @@ export default function Register() {
           labelName="E-mail"
           labelId="user_email"
           {...register("email")}
-          errorsSpan={errors.email?.message}
+          errorMessage={errors.email?.message}
         />
 
         <Input
@@ -94,7 +99,7 @@ export default function Register() {
           labelName="Confirme o seu e-mail"
           labelId="confirm_email"
           {...register("confirm_email")}
-          errorsSpan={errors.confirm_email?.message}
+          errorMessage={errors.confirm_email?.message}
         />
         <Input
           id="password"
@@ -104,7 +109,7 @@ export default function Register() {
           labelName="Senha"
           labelId="password"
           {...register("password")}
-          errorsSpan={errors.password?.message}
+          errorMessage={errors.password?.message}
         />
         <Input
           id="confirm_password"
@@ -114,10 +119,10 @@ export default function Register() {
           labelName="Confirme sua senha"
           labelId="confirm_password"
           {...register("confirm_password")}
-          errorsSpan={errors.confirm_password?.message}
+          errorMessage={errors.confirm_password?.message}
         />
 
-        <Button type="onSubmit" text="Cadastrar" backgroundColor="#34D399" />
+        <Button type="submit" text="Cadastrar" backgroundColor="#34D399" />
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
