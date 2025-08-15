@@ -12,12 +12,15 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../../services/firebaseConfig";
+import { useState } from "react";
 
 type LoginFormImputs = {
   user_email: string;
   password: string;
 };
 export default function Login() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
   const schema = yup.object({
     user_email: yup.string().email("Digite um e-mail valido ").required("*"),
@@ -33,6 +36,7 @@ export default function Login() {
     navigate(`/register`);
   }
   async function handleLogin({ user_email, password }: LoginFormImputs) {
+    setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -44,6 +48,8 @@ export default function Login() {
       navigate("/dashboard");
     } catch (error) {
       alert("Erro ao fazer login. Verifique suas credenciais.");
+    } finally {
+      setIsLoading(false);
     }
   }
   async function googleLogin() {
@@ -85,7 +91,12 @@ export default function Login() {
         <a className="justify-items-end text-end hover:underline" href="#">
           Esqueceu a senha?
         </a>
-        <Button type="submit" text="Entrar" backgroundColor="#34D399" />
+        <Button
+          isLoading={isLoading}
+          type="submit"
+          text="Entrar"
+          backgroundColor="#34D399"
+        />
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>

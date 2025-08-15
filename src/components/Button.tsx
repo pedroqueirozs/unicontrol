@@ -8,9 +8,10 @@ interface ButtonProps {
   borderWidth?: string;
   borderStyle?: string;
   color?: string;
-  type?: string;
+  type?: "button" | "submit" | "reset";
+  isLoading?: boolean;
   onClick?: () => void;
-  [key: string]: any;
+  /* [key: string]: any; */
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -21,13 +22,17 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor = "#34D399",
   color = "#FFFF",
   onClick,
-  type,
+  isLoading = false,
+  type = "button",
   ...props
 }) => {
   return (
     <div>
       <button
-        className="w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60 "
+        type={type}
+        className={`w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60 ${
+          isLoading ? "cursor-progress" : ""
+        }`}
         style={{
           backgroundColor,
           borderColor,
@@ -35,10 +40,17 @@ const Button: React.FC<ButtonProps> = ({
           color,
         }}
         onClick={onClick}
+        disabled={isLoading}
         {...props}
       >
-        {icon && <img src={icon} alt="" />}
-        {text}
+        {isLoading ? (
+          "Carregando..."
+        ) : (
+          <>
+            {icon && <img src={icon} />}
+            {text}
+          </>
+        )}
       </button>
     </div>
   );

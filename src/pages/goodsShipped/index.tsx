@@ -11,9 +11,17 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import { db } from "../../services/firebaseConfig";
-import { addDoc, collection } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  Timestamp,
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
 
-type MerchandiseData = {
+export type MerchandiseFormData = {
   name: string;
   document_number: string;
   city: string;
@@ -25,85 +33,38 @@ type MerchandiseData = {
   delivery_date?: string | null;
   notes?: string | null;
 };
+export type MerchandiseFirestoreData = Omit<
+  MerchandiseFormData,
+  "shipping_date" | "delivery_forecast" | "delivery_date"
+> & {
+  shipping_date: Timestamp;
+  delivery_forecast: Timestamp;
+  delivery_date?: Timestamp | null;
+  created_at: Timestamp;
+};
 
-const rows = [
-  {
-    id: "1",
-    customer: "Loja Centro",
-    invoice: "2236",
-    city: "Belo Horizonte",
-    state: "MG",
-    transporter: "Jadlog",
-    shipping: "30/07/2025",
-    situation: "Em transito",
-    estimated_delivery: "05/08/2025",
-    delivery_date: "",
-    observation: "",
-  },
-  {
-    id: "2",
-    customer: "Supermercado Pague Menos",
-    invoice: "3347",
-    city: "Uberlândia",
-    state: "MG",
-    transporter: "Braspress",
-    shipping: "01/08/2025",
-    situation: "Em transito",
-    estimated_delivery: "08/08/2025",
-    delivery_date: "",
-    observation: "",
-  },
-  {
-    id: "3",
-    customer: "Drogaria Central",
-    invoice: "4458",
-    city: "Governador Valadares",
-    state: "MG",
-    transporter: "Total Express",
-    shipping: "29/07/2025",
-    situation: "Em transito",
-    estimated_delivery: "06/08/2025",
-    delivery_date: "",
-    observation: "",
-  },
-  {
-    id: "4",
-    customer: "Distribuidora ABC",
-    invoice: "5569",
-    city: "Patos de Minas",
-    state: "MG",
-    transporter: "Correios",
-    shipping: "27/07/2025",
-    situation: "Em transito",
-    estimated_delivery: "03/08/2025",
-    delivery_date: "",
-    observation: "",
-  },
-  {
-    id: "5",
-    customer: "Auto Peças São José",
-    invoice: "6670",
-    city: "Divinópolis",
-    state: "MG",
-    transporter: "Jamef",
-    shipping: "02/08/2025",
-    situation: "Em transito",
-    estimated_delivery: "09/08/2025",
-    delivery_date: "",
-    observation: "",
-  },
-];
+export type MerchandiseUIData = Omit<
+  MerchandiseFirestoreData,
+  "shipping_date" | "delivery_forecast" | "delivery_date" | "created_at"
+> & {
+  id: string;
+  shipping_date: string;
+  delivery_forecast: string;
+  delivery_date?: string;
+  created_at: string;
+  notes: string;
+};
 
 const columns: GridColDef[] = [
-  { field: "customer", headerName: "Cliente", width: 150 },
-  { field: "invoice", headerName: "Nota Fiscal", width: 120 },
+  { field: "name", headerName: "Cliente", width: 150 },
+  { field: "document_number", headerName: "Nota Fiscal", width: 120 },
   { field: "city", headerName: "Cidade", width: 150 },
-  { field: "state", headerName: "UF", width: 150 },
+  { field: "uf", headerName: "UF", width: 150 },
   { field: "transporter", headerName: "Transportador", width: 150 },
-  { field: "shipping", headerName: "Data de Envio", width: 130 },
-  { field: "stuation", headerName: "Situação", width: 130, editable: true },
+  { field: "shipping_date", headerName: "Data de Envio", width: 130 },
+  { field: "situation", headerName: "Situação", width: 130, editable: true },
   {
-    field: "estimated_delivery",
+    field: "delivery_forecast",
     headerName: "Previsão de entrega",
     width: 130,
     editable: true,
@@ -115,37 +76,18 @@ const columns: GridColDef[] = [
     editable: true,
   },
   {
-    field: "observation",
+    field: "notes",
     headerName: "Observação",
     width: 130,
     editable: true,
   },
 ];
 
-async function registerNewGoodsShipped(data: MerchandiseData) {
-  try {
-    const shippingDate = dayjs(data.shipping_date).startOf("day").toDate();
-    const deliveryForecast = dayjs(data.delivery_forecast)
-      .startOf("day")
-      .toDate();
-    const deliveryDate = data.delivery_date
-      ? dayjs(data.delivery_date).startOf("day").toDate()
-      : null;
-    const docRef = await addDoc(collection(db, "goods_shipped"), {
-      ...data,
-      shipping_date: shippingDate,
-      delivery_forecast: deliveryForecast,
-      delivery_date: deliveryDate,
-      created_at: new Date(),
-    });
-
-    console.log("Documento criado com ID:", docRef.id);
-  } catch (error) {
-    console.error("Erro ao adicionar documento:", error);
-  }
-}
-
 export default function GoodsShipped() {
+  const [data, setData] = useState<MerchandiseUIData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [tableIsLoading, setTableIsLoading] = useState(false);
+
   const schema = yup.object({
     name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
     document_number: yup
@@ -162,24 +104,97 @@ export default function GoodsShipped() {
     shipping_date: yup.string().required("*"),
     delivery_forecast: yup.string().required("*"),
     situation: yup.string().required("*"),
-    delivery_date: yup.string().nullable().notRequired(),
+    delivery_date: yup.string().notRequired(),
     notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
   });
   const {
     handleSubmit,
     register,
     formState: { errors },
-  } = useForm({
+  } = useForm<MerchandiseFormData>({
     resolver: yupResolver(schema),
   });
 
+  async function registerNewGoodsShipped(data: MerchandiseFormData) {
+    setIsLoading(true);
+    try {
+      const shippingDate = dayjs(data.shipping_date).startOf("day").toDate();
+      const deliveryForecast = dayjs(data.delivery_forecast)
+        .startOf("day")
+        .toDate();
+      const deliveryDate = data.delivery_date
+        ? dayjs(data.delivery_date).startOf("day").toDate()
+        : null;
+      const docRef = await addDoc(collection(db, "goods_shipped"), {
+        ...data,
+        shipping_date: shippingDate,
+        delivery_forecast: deliveryForecast,
+        delivery_date: deliveryDate,
+        created_at: new Date(),
+      });
+
+      console.log("Documento criado com ID:", docRef.id);
+    } catch (error) {
+      console.error("Erro ao adicionar documento:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  async function getAllDocuments() {
+    setTableIsLoading(true);
+    try {
+      const q = query(
+        collection(db, "goods_shipped"),
+        orderBy("created_at", "desc")
+      );
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const snapshot = await getDocs(q);
+
+      const docs = await snapshot.docs.map((doc) => {
+        const data = doc.data() as MerchandiseFirestoreData;
+        return {
+          id: doc.id,
+          ...data,
+          shipping_date: dayjs(data.shipping_date.toDate()).format(
+            "DD/MM/YYYY"
+          ),
+          delivery_forecast: dayjs(data.delivery_forecast.toDate()).format(
+            "DD/MM/YYYY"
+          ),
+          delivery_date: data.delivery_date
+            ? dayjs(data.delivery_date.toDate()).format("DD/MM/YYYY")
+            : "",
+          created_at: dayjs(data.created_at.toDate()).format("DD/MM/YYYY"),
+          notes: data.notes ?? "",
+        };
+      });
+      setData(docs);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setTableIsLoading(false);
+    }
+  }
+  useEffect(() => {
+    getAllDocuments();
+  }, []);
+
+  async function onSubmit(formData: MerchandiseFormData) {
+    const normalizedData: MerchandiseFormData = {
+      ...formData,
+      delivery_date: formData.delivery_date ?? "",
+      notes: formData.notes ?? "",
+    };
+
+    await registerNewGoodsShipped(normalizedData);
+  }
   return (
     <div>
       <h2 className="text-color_primary_400 font-bold">
         Cadastrar nova mercadoria
       </h2>
       <form
-        onSubmit={handleSubmit(registerNewGoodsShipped)}
+        onSubmit={handleSubmit(onSubmit)}
         className=" flex flex-col gap-4 my-4"
       >
         <div className="grid grid-cols-3 gap-4 w-full ">
@@ -230,7 +245,6 @@ export default function GoodsShipped() {
           />
           <Input
             id="shipping_date"
-            s
             type="date"
             labelName="Data do envio"
             labelId="shipping_date"
@@ -276,7 +290,7 @@ export default function GoodsShipped() {
           />
         </div>
         <div className="w-52 flex gap-4 ">
-          <Button text={"Salvar"} />
+          <Button isLoading={isLoading} text={"Salvar"} type="submit" />
           <Button
             backgroundColor="#F5F7FA"
             color="#555555"
@@ -286,7 +300,7 @@ export default function GoodsShipped() {
         </div>
       </form>
       <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
-      <CustomDataGrid columns={columns} rows={rows} />
+      <CustomDataGrid columns={columns} rows={data} loading={tableIsLoading} />
     </div>
   );
 }

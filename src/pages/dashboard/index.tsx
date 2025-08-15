@@ -10,50 +10,75 @@ import {
   MapPin,
 } from "lucide-react";
 import InfoCard from "../../components/InfoCard";
+import { useEffect, useState } from "react";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { db } from "../../services/firebaseConfig";
+import dayjs from "dayjs";
+
+import { MerchandiseUIData, MerchandiseFirestoreData } from "../goodsShipped";
+import { GridColDef } from "@mui/x-data-grid";
+import { CustomDataGrid } from "../../components/CustomDataGrid";
+
+const columns: GridColDef[] = [
+  { field: "name", headerName: "Cliente", width: 150 },
+  { field: "document_number", headerName: "Nota Fiscal", width: 120 },
+  { field: "city", headerName: "Cidade", width: 150 },
+  { field: "uf", headerName: "UF", width: 150 },
+  { field: "transporter", headerName: "Transportador", width: 150 },
+  { field: "shipping_date", headerName: "Data de Envio", width: 130 },
+  {
+    field: "notes",
+    headerName: "Observação",
+    width: 130,
+    editable: false,
+  },
+];
 
 export default function Dashboard() {
-  const ultimasMercadorias = [
-    {
-      id: 1,
-      nome: "Paróquia N Sra Aparecida #1234 - São Paulo",
-      data: "22/05/2025",
-    },
-    {
-      id: 2,
-      nome: "Paróquia São Pedro e São Paulo #1235 - Rio de Janeiro",
-      data: "21/05/2025",
-    },
-    {
-      id: 3,
-      nome: "Pe.Márcio Junior #1236 - Minas Gerais",
-      data: "20/05/2025",
-    },
-    {
-      id: 4,
-      nome: "Área Pastoral da paróquia de Acara #1237 - Paraná",
-      data: "19/05/2025",
-    },
-    {
-      id: 5,
-      nome: "Paróquia Nossa Senhora Aparecida #1237 - Paraná",
-      data: "19/05/2025",
-    },
-    {
-      id: 6,
-      nome: "Paróquia Nossa Senhora Aparecida #1237 - Paraná",
-      data: "19/05/2025",
-    },
-    {
-      id: 7,
-      nome: "Paróquia Nossa Senhora Aparecida #1237 - Paraná",
-      data: "19/05/2025",
-    },
-    {
-      id: 8,
-      nome: "Paróquia Nossa Senhora Aparecida #1237 - Paraná",
-      data: "19/05/2025",
-    },
-  ];
+  const [data, setData] = useState<MerchandiseUIData[]>([]);
+  const [loading, setIsLoading] = useState(false);
+
+  async function latestGoodsShipped() {
+    try {
+      setIsLoading(true);
+      const q = query(
+        collection(db, "goods_shipped"),
+        orderBy("created_at", "desc"),
+        limit(20)
+      );
+
+      const snapshot = await getDocs(q);
+
+      const docs = snapshot.docs.map((doc) => {
+        const data = doc.data() as MerchandiseFirestoreData;
+        return {
+          id: doc.id,
+          ...data,
+          shipping_date: dayjs(data.shipping_date.toDate()).format(
+            "DD/MM/YYYY"
+          ),
+          delivery_forecast: dayjs(data.delivery_forecast.toDate()).format(
+            "DD/MM/YYYY"
+          ),
+          delivery_date: data.delivery_date
+            ? dayjs(data.delivery_date.toDate()).format("DD/MM/YYYY")
+            : "",
+          created_at: dayjs(data.created_at.toDate()).format("DD/MM/YYYY"),
+          notes: data.notes ?? "",
+        };
+      });
+
+      setData(docs);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    latestGoodsShipped();
+  }, []);
 
   return (
     <div className="space-y-10">
@@ -104,17 +129,7 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold text-gray-800 mb-4">
           Últimas mercadorias enviadas
         </h2>
-        <ul className="divide-y divide-neutral">
-          {ultimasMercadorias.map((item) => (
-            <li
-              key={item.id}
-              className="py-2 text-sm text-gray-700 flex justify-between"
-            >
-              <span className="font-medium">{item.nome}</span>
-              <span className="text-gray-500">{item.data}</span>
-            </li>
-          ))}
-        </ul>
+        <CustomDataGrid columns={columns} rows={data} loading={loading} />
       </div>
     </div>
   );
