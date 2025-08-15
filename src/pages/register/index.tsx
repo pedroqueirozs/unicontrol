@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import { auth } from "../../services/firebaseConfig";
+import { useState } from "react";
 
 type RegistrationData = {
   name: string;
@@ -18,6 +19,7 @@ type RegistrationData = {
   password: string;
 };
 export default function Register() {
+  const [isLoading, setIsLoading] = useState(false);
   const schema = yup.object({
     name: yup.string().required("*"),
     email: yup.string().email("Digite um e-mail valido ").required("*"),
@@ -46,6 +48,7 @@ export default function Register() {
   }
 
   async function handleRegister(data: RegistrationData) {
+    setIsLoading(true);
     try {
       const { email, password, name } = data;
       const userCredential = await createUserWithEmailAndPassword(
@@ -61,6 +64,8 @@ export default function Register() {
       navigate("/");
     } catch (error) {
       console.log("Erro ao cadastrar novo usuario", error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -122,7 +127,12 @@ export default function Register() {
           errorMessage={errors.confirm_password?.message}
         />
 
-        <Button type="submit" text="Cadastrar" backgroundColor="#34D399" />
+        <Button
+          isLoading={isLoading}
+          type="submit"
+          text="Cadastrar"
+          backgroundColor="#34D399"
+        />
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
