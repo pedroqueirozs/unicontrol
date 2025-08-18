@@ -8,7 +8,6 @@ type RowData = {
   uf: string;
   transporter: string;
   shipping_date: string;
-  situation: string;
   delivery_forecast: string;
   delivery_date?: string | null | undefined;
   notes: string;
