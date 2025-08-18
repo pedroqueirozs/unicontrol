@@ -1,14 +1,18 @@
-import Button from "../../components/Button";
-import { CustomDataGrid } from "../../components/CustomDataGrid";
-import { HeaderWithFilterAndExport } from "../../components/HeaderWithFilterAndExport";
-import Input from "../../components/Input";
-import InputSelect from "../../components/InputSelect";
-import { GridColDef } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
+
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+
 import dayjs from "dayjs";
 
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import InputSelect from "../../components/InputSelect";
+import Input from "../../components/Input";
+import Button from "../../components/Button";
+
+import { CustomDataGrid } from "../../components/CustomDataGrid";
+import { useConfirmDialog } from "../../components/ConfimDialog";
+import { GridColDef } from "@mui/x-data-grid";
 
 import { db } from "../../services/firebaseConfig";
 import {
@@ -19,7 +23,8 @@ import {
   query,
   Timestamp,
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
+
+import { notify } from "../../utils/notify";
 
 export type MerchandiseFormData = {
   name: string;
@@ -85,8 +90,9 @@ const columns: GridColDef[] = [
 
 export default function GoodsShipped() {
   const [data, setData] = useState<MerchandiseUIData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [tableIsLoading, setTableIsLoading] = useState(false);
+  const { confirm, dialog } = useConfirmDialog();
+  const [visibleForm, setVisibleForm] = useState(false);
 
   const schema = yup.object({
     name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
@@ -110,13 +116,13 @@ export default function GoodsShipped() {
   const {
     handleSubmit,
     register,
+    reset,
     formState: { errors },
   } = useForm<MerchandiseFormData>({
     resolver: yupResolver(schema),
   });
 
   async function registerNewGoodsShipped(data: MerchandiseFormData) {
-    setIsLoading(true);
     try {
       const shippingDate = dayjs(data.shipping_date).startOf("day").toDate();
       const deliveryForecast = dayjs(data.delivery_forecast)
@@ -125,19 +131,26 @@ export default function GoodsShipped() {
       const deliveryDate = data.delivery_date
         ? dayjs(data.delivery_date).startOf("day").toDate()
         : null;
-      const docRef = await addDoc(collection(db, "goods_shipped"), {
-        ...data,
-        shipping_date: shippingDate,
-        delivery_forecast: deliveryForecast,
-        delivery_date: deliveryDate,
-        created_at: new Date(),
-      });
+      const confirmed = await confirm(
+        "Tem certeza que deseja cadastrar essa mercadoria?"
+      );
+      if (confirmed) {
+        const docRef = await addDoc(collection(db, "goods_shipped"), {
+          ...data,
+          shipping_date: shippingDate,
+          delivery_forecast: deliveryForecast,
+          delivery_date: deliveryDate,
+          created_at: new Date(),
+        });
+        reset();
+        notify.success("Cadastrado com sucesso!");
+        await getAllDocuments();
 
-      console.log("Documento criado com ID:", docRef.id);
+        console.log("Documento criado com ID:", docRef.id);
+      }
     } catch (error) {
+      notify.error("Erro ao cadastrar, verifique os dados.");
       console.error("Erro ao adicionar documento:", error);
-    } finally {
-      setIsLoading(false);
     }
   }
   async function getAllDocuments() {
@@ -148,6 +161,7 @@ export default function GoodsShipped() {
         orderBy("created_at", "desc")
       );
       await new Promise((resolve) => setTimeout(resolve, 5000));
+
       const snapshot = await getDocs(q);
 
       const docs = await snapshot.docs.map((doc) => {
@@ -168,6 +182,7 @@ export default function GoodsShipped() {
           notes: data.notes ?? "",
         };
       });
+
       setData(docs);
     } catch (error) {
       console.log(error);
@@ -190,117 +205,139 @@ export default function GoodsShipped() {
   }
   return (
     <div>
-      <h2 className="text-color_primary_400 font-bold">
-        Cadastrar nova mercadoria
-      </h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className=" flex flex-col gap-4 my-4"
-      >
-        <div className="grid grid-cols-3 gap-4 w-full ">
-          <Input
-            id="name"
-            type="text"
-            labelName="Nome do Cliente"
-            labelId="name"
-            {...register("name")}
-            errorMessage={errors.name?.message}
-          />
-          <Input
-            id="document_number"
-            labelName="Documento/Nota Fiscal"
-            labelId="document_number"
-            {...register("document_number")}
-            errorMessage={errors.document_number?.message}
-          />
-          <Input
-            id="city"
-            type="text"
-            labelName="Cidade"
-            labelId="city"
-            {...register("city")}
-            errorMessage={errors.city?.message}
-          />
-          <Input
-            id="uf"
-            type="text"
-            labelName="UF"
-            labelId="uf"
-            {...register("uf")}
-            errorMessage={errors.uf?.message}
-          />
+      <div className="flex justify-between text-center items-center mb-8">
+        <h2 className="text-color_primary_400 font-bold">
+          Lista de mercadorias enviadas
+        </h2>
+        <Button
+          type="button"
+          text={visibleForm ? "Fechar" : "Cadastrar nova +"}
+          onClick={() => setVisibleForm((prev) => !prev)}
+        />
+      </div>
 
-          <InputSelect
-            id="carrier"
-            labelName="Transportadora"
-            labelId="carrier"
-            options={[
-              { value: "braspress", label: "Braspress" },
-              { value: "correios", label: "Correios" },
-              { value: "withdrawal", label: "Retirada na Empresa" },
-              { value: "other", label: "Outro" },
-            ]}
-            {...register("transporter")}
-            errorMessage={errors.transporter?.message}
-          />
-          <Input
-            id="shipping_date"
-            type="date"
-            labelName="Data do envio"
-            labelId="shipping_date"
-            {...register("shipping_date")}
-            errorMessage={errors.shipping_date?.message}
-          />
-          <Input
-            id="delivery_forecast"
-            type="date"
-            labelName="Previsão de Entrega"
-            labelId="delivery_forecast"
-            {...register("delivery_forecast")}
-            errorMessage={errors.delivery_forecast?.message}
-          />
-          <InputSelect
-            id="situation"
-            labelName="Situação"
-            labelId="situation"
-            options={[
-              { value: "on_time", label: "No Prazo" },
-              { value: "delivered", label: "Entregue" },
-              { value: "late", label: "Atrasada" },
-              { value: "pending", label: "Pendência" },
-            ]}
-            {...register("situation")}
-            errorMessage={errors.situation?.message}
-          />
-          <Input
-            id="delivery_date"
-            type="date"
-            labelName="Data da Entrega"
-            labelId="delivery_date"
-            {...register("delivery_date")}
-            errorMessage={errors.delivery_date?.message}
-          />
-          <Input
-            id="notes"
-            type="text"
-            labelName="Anotações"
-            labelId="notes"
-            {...register("notes")}
-            errorMessage={errors.notes?.message}
-          />
-        </div>
-        <div className="w-52 flex gap-4 ">
-          <Button isLoading={isLoading} text={"Salvar"} type="submit" />
-          <Button
-            backgroundColor="#F5F7FA"
-            color="#555555"
-            borderColor="#E0E0E0"
-            text={"Limpar"}
-          />
-        </div>
-      </form>
-      <HeaderWithFilterAndExport title={"Lista de mercadorias enviadas"} />
-      <CustomDataGrid columns={columns} rows={data} loading={tableIsLoading} />
+      {visibleForm && (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className=" flex flex-col gap-4 my-8"
+        >
+          <div className="grid grid-cols-3 gap-4 w-full ">
+            <Input
+              id="name"
+              type="text"
+              labelName="Nome do Cliente"
+              labelId="name"
+              {...register("name")}
+              errorMessage={errors.name?.message}
+            />
+            <Input
+              id="document_number"
+              labelName="Documento/Nota Fiscal"
+              labelId="document_number"
+              {...register("document_number")}
+              errorMessage={errors.document_number?.message}
+            />
+            <Input
+              id="city"
+              type="text"
+              labelName="Cidade"
+              labelId="city"
+              {...register("city")}
+              errorMessage={errors.city?.message}
+            />
+            <Input
+              id="uf"
+              type="text"
+              labelName="UF"
+              labelId="uf"
+              {...register("uf")}
+              errorMessage={errors.uf?.message}
+            />
+
+            <InputSelect
+              id="carrier"
+              labelName="Transportadora"
+              labelId="carrier"
+              options={[
+                { value: "Braspress", label: "Braspress" },
+                { value: "Correios", label: "Correios" },
+                { value: "Retirada na Empresa", label: "Retirada na Empresa" },
+                { value: "Outro", label: "Outro" },
+              ]}
+              {...register("transporter")}
+              errorMessage={errors.transporter?.message}
+            />
+            <Input
+              id="shipping_date"
+              type="date"
+              labelName="Data do envio"
+              labelId="shipping_date"
+              {...register("shipping_date")}
+              errorMessage={errors.shipping_date?.message}
+            />
+            <Input
+              id="delivery_forecast"
+              type="date"
+              labelName="Previsão de Entrega"
+              labelId="delivery_forecast"
+              {...register("delivery_forecast")}
+              errorMessage={errors.delivery_forecast?.message}
+            />
+            <InputSelect
+              id="situation"
+              labelName="Situação"
+              labelId="situation"
+              options={[
+                { value: "on_time", label: "No Prazo" },
+                { value: "delivered", label: "Entregue" },
+                { value: "late", label: "Atrasada" },
+                { value: "pending", label: "Pendência" },
+              ]}
+              {...register("situation")}
+              errorMessage={errors.situation?.message}
+            />
+            <Input
+              id="delivery_date"
+              type="date"
+              labelName="Data da Entrega"
+              labelId="delivery_date"
+              {...register("delivery_date")}
+              errorMessage={errors.delivery_date?.message}
+            />
+            <Input
+              id="notes"
+              type="text"
+              labelName="Anotações"
+              labelId="notes"
+              {...register("notes")}
+              errorMessage={errors.notes?.message}
+            />
+          </div>
+          <div className="w-52 flex gap-4 ">
+            <Button text={"Salvar"} type="submit" />
+            {dialog}
+            <Button
+              onClick={() => reset()}
+              backgroundColor="#F5F7FA"
+              color="#555555"
+              borderColor="#E0E0E0"
+              text={"Limpar"}
+            />
+          </div>
+        </form>
+      )}
+      <CustomDataGrid
+        columns={columns}
+        rows={data}
+        loading={tableIsLoading}
+        showToolbar
+        sx={{
+          "& .MuiDataGrid-columnHeaderTitle": {
+            color: "#1A2A38",
+            fontWeight: "bold ",
+          },
+        }}
+      />
     </div>
   );
 }
