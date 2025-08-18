@@ -72,12 +72,14 @@ const columns: GridColDef[] = [
     width: 130,
     editable: false,
     renderCell: (params) => {
-      const labels: Record<string, string> = {
-        on_time: "No Prazo",
-        late: "Atrasada",
-        delivered: "Entregue",
-      };
-      return labels[params.value] || params.value;
+      const value = params.value as string;
+
+      let color = "";
+      if (value === "Atrasada") color = "red";
+      if (value === "Entregue") color = "green";
+      if (value === "No Prazo") color = "blue";
+
+      return <span style={{ color, fontWeight: "bold" }}>{value}</span>;
     },
   },
 
@@ -215,14 +217,14 @@ export default function GoodsShipped() {
     const today = dayjs().startOf("day");
 
     if (deliveryDate) {
-      return "delivered";
+      return "Entregue";
     }
 
     if (today.isAfter(dayjs(deliveryForecast))) {
-      return "late";
+      return "Atrasada";
     }
 
-    return "on_time";
+    return "No Prazo";
   }
 
   useEffect(() => {
