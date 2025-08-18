@@ -34,7 +34,6 @@ export type MerchandiseFormData = {
   transporter: string;
   shipping_date: string;
   delivery_forecast: string;
-  situation: string;
   delivery_date?: string | null;
   notes?: string | null;
 };
@@ -67,7 +66,21 @@ const columns: GridColDef[] = [
   { field: "uf", headerName: "UF", width: 150 },
   { field: "transporter", headerName: "Transportador", width: 150 },
   { field: "shipping_date", headerName: "Data de Envio", width: 130 },
-  { field: "situation", headerName: "Situação", width: 130, editable: true },
+  {
+    field: "situation",
+    headerName: "Situação",
+    width: 130,
+    editable: false,
+    renderCell: (params) => {
+      const labels: Record<string, string> = {
+        on_time: "No Prazo",
+        late: "Atrasada",
+        delivered: "Entregue",
+      };
+      return labels[params.value] || params.value;
+    },
+  },
+
   {
     field: "delivery_forecast",
     headerName: "Previsão de entrega",
@@ -109,7 +122,6 @@ export default function GoodsShipped() {
     transporter: yup.string().required("*"),
     shipping_date: yup.string().required("*"),
     delivery_forecast: yup.string().required("*"),
-    situation: yup.string().required("*"),
     delivery_date: yup.string().notRequired(),
     notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
   });
@@ -166,6 +178,11 @@ export default function GoodsShipped() {
 
       const docs = await snapshot.docs.map((doc) => {
         const data = doc.data() as MerchandiseFirestoreData;
+        const deliveryDate = data.delivery_date
+          ? data.delivery_date.toDate()
+          : null;
+        const deliveryForecast = data.delivery_forecast.toDate();
+
         return {
           id: doc.id,
           ...data,
@@ -180,6 +197,7 @@ export default function GoodsShipped() {
             : "",
           created_at: dayjs(data.created_at.toDate()).format("DD/MM/YYYY"),
           notes: data.notes ?? "",
+          situation: calculateSituation(deliveryDate, deliveryForecast),
         };
       });
 
@@ -190,6 +208,23 @@ export default function GoodsShipped() {
       setTableIsLoading(false);
     }
   }
+  function calculateSituation(
+    deliveryDate: Date | null,
+    deliveryForecast: Date
+  ): string {
+    const today = dayjs().startOf("day");
+
+    if (deliveryDate) {
+      return "delivered";
+    }
+
+    if (today.isAfter(dayjs(deliveryForecast))) {
+      return "late";
+    }
+
+    return "on_time";
+  }
+
   useEffect(() => {
     getAllDocuments();
   }, []);
@@ -283,19 +318,7 @@ export default function GoodsShipped() {
               {...register("delivery_forecast")}
               errorMessage={errors.delivery_forecast?.message}
             />
-            <InputSelect
-              id="situation"
-              labelName="Situação"
-              labelId="situation"
-              options={[
-                { value: "on_time", label: "No Prazo" },
-                { value: "delivered", label: "Entregue" },
-                { value: "late", label: "Atrasada" },
-                { value: "pending", label: "Pendência" },
-              ]}
-              {...register("situation")}
-              errorMessage={errors.situation?.message}
-            />
+
             <Input
               id="delivery_date"
               type="date"
