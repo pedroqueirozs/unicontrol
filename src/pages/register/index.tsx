@@ -12,6 +12,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import { auth } from "../../services/firebaseConfig";
 import { useState } from "react";
+import { notify } from "../../utils/notify";
 
 type RegistrationData = {
   name: string;
@@ -61,9 +62,10 @@ export default function Register() {
         displayName: name,
       });
       console.log("Este são os dados do usuario criado!", user.displayName);
+      notify.success("Cadastrado com sucesso!");
       navigate("/");
     } catch (error) {
-      console.log("Erro ao cadastrar novo usuario", error);
+      notify.error("Erro ao cadastrar, verifique os dados.");
     } finally {
       setIsLoading(false);
     }

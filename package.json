@@ -29,6 +29,7 @@
     "react-hook-form": "^7.52.1",
     "react-router-dom": "^6.25.1",
     "react-simple-maps": "^3.0.0",
+    "react-toastify": "^11.0.5",
     "sort-by": "^0.0.2",
     "yup": "^1.4.0"
   },
