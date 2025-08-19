@@ -71,6 +71,56 @@ export default function GoodsShipped() {
   const [visibleForm, setVisibleForm] = useState(false);
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
 
+  const defaultFormValues: MerchandiseFormData = {
+    name: "",
+    document_number: "",
+    city: "",
+    uf: "",
+    transporter: "Braspress",
+    shipping_date: "",
+    delivery_forecast: "",
+    delivery_date: "",
+    notes: "",
+  };
+
+  const schema = yup.object({
+    name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
+    document_number: yup
+      .string()
+      .max(50, "Máximo de 50 caracteres")
+      .required("*"),
+    city: yup.string().max(100, "Máximo de 100 caracteres").required("*"),
+    uf: yup
+      .string()
+      .length(2, "O estado deve conter 2 letras")
+      .matches(/^[A-Za-z]{2}$/, "O estado deve conter apenas letras")
+      .required("*"),
+    transporter: yup.string().required("*"),
+    shipping_date: yup.string().required("*"),
+    delivery_forecast: yup.string().required("*"),
+    delivery_date: yup.string().notRequired(),
+    notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
+  });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm<MerchandiseFormData>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: "",
+      document_number: "",
+      city: "",
+      uf: "",
+      transporter: "Braspress",
+      shipping_date: "",
+      delivery_forecast: "",
+      delivery_date: "",
+      notes: "",
+    },
+  });
+
   const columns: GridColDef[] = [
     { field: "name", headerName: "Cliente", width: 150 },
     { field: "document_number", headerName: "Nota Fiscal", width: 120 },
@@ -158,32 +208,6 @@ export default function GoodsShipped() {
       notify.error("Erro ao deletar o registro.");
     }
   }
-  const schema = yup.object({
-    name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
-    document_number: yup
-      .string()
-      .max(50, "Máximo de 50 caracteres")
-      .required("*"),
-    city: yup.string().max(100, "Máximo de 100 caracteres").required("*"),
-    uf: yup
-      .string()
-      .length(2, "O estado deve conter 2 letras")
-      .matches(/^[A-Za-z]{2}$/, "O estado deve conter apenas letras")
-      .required("*"),
-    transporter: yup.string().required("*"),
-    shipping_date: yup.string().required("*"),
-    delivery_forecast: yup.string().required("*"),
-    delivery_date: yup.string().notRequired(),
-    notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
-  });
-  const {
-    handleSubmit,
-    register,
-    reset,
-    formState: { errors },
-  } = useForm<MerchandiseFormData>({
-    resolver: yupResolver(schema),
-  });
 
   async function registerNewGoodsShipped(data: MerchandiseFormData) {
     try {
@@ -205,7 +229,7 @@ export default function GoodsShipped() {
           delivery_date: deliveryDate,
           created_at: new Date(),
         });
-        reset();
+        reset(defaultFormValues);
         notify.success("Cadastrado com sucesso!");
         await getAllDocuments();
 
@@ -309,8 +333,8 @@ export default function GoodsShipped() {
         await registerNewGoodsShipped(normalizedData);
       }
 
-      reset();
       setEditItem(null);
+      reset(defaultFormValues);
       setVisibleForm(false);
       await getAllDocuments();
     } catch (error) {
@@ -421,7 +445,7 @@ export default function GoodsShipped() {
           <div className="w-52 flex gap-4 ">
             <Button text={editItem ? "Atualizar" : "Salvar"} type="submit" />
             <Button
-              onClick={() => reset()}
+              onClick={() => reset(defaultFormValues)}
               backgroundColor="#F5F7FA"
               color="#555555"
               borderColor="#E0E0E0"
@@ -434,7 +458,7 @@ export default function GoodsShipped() {
               onClick={() => {
                 setEditItem(null);
                 setVisibleForm(false);
-                reset();
+                reset(defaultFormValues);
               }}
               backgroundColor="#F5F7FA"
               color="#555555"
