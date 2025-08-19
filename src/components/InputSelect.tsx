@@ -8,7 +8,7 @@ interface InputSelectProps {
   id: string;
   labelName: string;
   labelId: string;
-  errorsSpan: string;
+  errorsMessage: string;
   options: Option[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
