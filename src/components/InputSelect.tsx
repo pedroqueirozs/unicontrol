@@ -4,25 +4,24 @@ interface Option {
   value: string;
   label: string;
 }
-interface InputSelectProps {
+interface InputSelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   id: string;
   labelName: string;
   labelId: string;
-  errorsMessage: string;
+  errorMessage?: string;
   options: Option[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
 
 const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
-  ({ id, labelName, labelId, errorsSpan, options, ...props }, ref) => {
+  ({ id, labelName, labelId, errorMessage, options, ...props }, ref) => {
     return (
       <div>
         <div className="flex gap-1">
           <label htmlFor={labelId} className="mb-1 block text-text_description">
             {labelName}
           </label>
-          <span style={{ color: "red", fontSize: 14 }}> {errorsSpan}</span>
+          <span style={{ color: "red", fontSize: 14 }}> {errorMessage}</span>
         </div>
         <div className="relative mb-2">
           <select

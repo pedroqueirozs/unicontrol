@@ -1,15 +1,11 @@
 import React from "react";
 
-interface InputProps {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
-  icon?: string;
-  type: string;
-  placeholder?: string;
+  icon?: React.ReactNode;
   labelName: string;
   labelId: string;
-  errorMessage: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  errorMessage?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
