@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 
 import InputSelect from "../../components/InputSelect";
 import Input from "../../components/Input";
@@ -18,10 +20,13 @@ import { db } from "../../services/firebaseConfig";
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   orderBy,
   query,
   Timestamp,
+  updateDoc,
 } from "firebase/firestore";
 
 import { notify } from "../../utils/notify";
@@ -59,56 +64,100 @@ export type MerchandiseUIData = Omit<
   notes: string;
 };
 
-const columns: GridColDef[] = [
-  { field: "name", headerName: "Cliente", width: 150 },
-  { field: "document_number", headerName: "Nota Fiscal", width: 120 },
-  { field: "city", headerName: "Cidade", width: 150 },
-  { field: "uf", headerName: "UF", width: 150 },
-  { field: "transporter", headerName: "Transportador", width: 150 },
-  { field: "shipping_date", headerName: "Data de Envio", width: 130 },
-  {
-    field: "situation",
-    headerName: "Situação",
-    width: 130,
-    editable: false,
-    renderCell: (params) => {
-      const value = params.value as string;
-
-      let color = "";
-      if (value === "Atrasada") color = "red";
-      if (value === "Entregue") color = "green";
-      if (value === "No Prazo") color = "blue";
-
-      return <span style={{ color, fontWeight: "bold" }}>{value}</span>;
-    },
-  },
-
-  {
-    field: "delivery_forecast",
-    headerName: "Previsão de entrega",
-    width: 130,
-    editable: true,
-  },
-  {
-    field: "delivery_date",
-    headerName: "Data da entrega",
-    width: 130,
-    editable: true,
-  },
-  {
-    field: "notes",
-    headerName: "Observação",
-    width: 130,
-    editable: true,
-  },
-];
-
 export default function GoodsShipped() {
   const [data, setData] = useState<MerchandiseUIData[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
   const [visibleForm, setVisibleForm] = useState(false);
+  const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
 
+  const columns: GridColDef[] = [
+    { field: "name", headerName: "Cliente", width: 150 },
+    { field: "document_number", headerName: "Nota Fiscal", width: 120 },
+    { field: "city", headerName: "Cidade", width: 150 },
+    { field: "uf", headerName: "UF", width: 150 },
+    { field: "transporter", headerName: "Transportador", width: 150 },
+    { field: "shipping_date", headerName: "Data de Envio", width: 130 },
+    {
+      field: "situation",
+      headerName: "Situação",
+      width: 130,
+      renderCell: (params) => {
+        const value = params.value as string;
+
+        let color = "";
+        if (value === "Atrasada") color = "#E74C3C";
+        if (value === "Entregue") color = "#34D399";
+        if (value === "No Prazo") color = "blue";
+
+        return <span style={{ color, fontWeight: "bold" }}>{value}</span>;
+      },
+    },
+
+    {
+      field: "delivery_forecast",
+      headerName: "Previsão de entrega",
+      width: 130,
+    },
+    {
+      field: "delivery_date",
+      headerName: "Data da entrega",
+      width: 130,
+    },
+    {
+      field: "notes",
+      headerName: "Observação",
+      width: 130,
+    },
+    {
+      field: "actions",
+      headerName: "Ações",
+      width: 120,
+      renderCell: (params) => (
+        <div className=" flex gap-4">
+          <button
+            className="text-color_error"
+            onClick={() => handleDelete(params.id as string)}
+          >
+            Apagar
+          </button>
+          <button onClick={() => handleEdit(params.row)}>Editar</button>
+        </div>
+      ),
+    },
+  ];
+  function handleEdit(item: MerchandiseUIData) {
+    setEditItem(item);
+    setVisibleForm(true);
+    const parseDateForInput = (dateStr?: string) => {
+      if (!dateStr) return "";
+      return dayjs(dateStr, "DD/MM/YYYY", true).format("YYYY-MM-DD");
+    };
+
+    reset({
+      name: item.name,
+      document_number: item.document_number,
+      city: item.city,
+      uf: item.uf,
+      transporter: item.transporter,
+      shipping_date: parseDateForInput(item.shipping_date),
+      delivery_forecast: parseDateForInput(item.delivery_forecast),
+      delivery_date: parseDateForInput(item.delivery_date),
+      notes: item.notes ?? "",
+    });
+  }
+  async function handleDelete(id: string) {
+    try {
+      const confirmed = await confirm("Deseja deletar este registro?");
+      if (confirmed) {
+        await deleteDoc(doc(db, "goods_shipped", id));
+        notify.success("Registro deletado com sucesso!");
+        await getAllDocuments();
+      }
+    } catch (error) {
+      notify.error("Erro ao deletar o registro.");
+    }
+  }
   const schema = yup.object({
     name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
     document_number: yup
@@ -174,7 +223,6 @@ export default function GoodsShipped() {
         collection(db, "goods_shipped"),
         orderBy("created_at", "desc")
       );
-      await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const snapshot = await getDocs(q);
 
@@ -232,14 +280,45 @@ export default function GoodsShipped() {
   }, []);
 
   async function onSubmit(formData: MerchandiseFormData) {
-    const normalizedData: MerchandiseFormData = {
+    const shippingDate = dayjs(formData.shipping_date).startOf("day").toDate();
+    const deliveryForecast = dayjs(formData.delivery_forecast)
+      .startOf("day")
+      .toDate();
+    const deliveryDate = formData.delivery_date
+      ? dayjs(formData.delivery_date).startOf("day").toDate()
+      : null;
+    const payload = {
       ...formData,
-      delivery_date: formData.delivery_date ?? "",
-      notes: formData.notes ?? "",
+      shipping_date: shippingDate,
+      delivery_forecast: deliveryForecast,
+      delivery_date: deliveryDate,
     };
 
-    await registerNewGoodsShipped(normalizedData);
+    try {
+      if (editItem) {
+        const ref = doc(db, "goods_shipped", editItem.id);
+        await updateDoc(ref, payload);
+        notify.success("Registro atualizado com sucesso!");
+      } else {
+        const normalizedData: MerchandiseFormData = {
+          ...formData,
+          delivery_date: formData.delivery_date ?? "",
+          notes: formData.notes ?? "",
+        };
+
+        await registerNewGoodsShipped(normalizedData);
+      }
+
+      reset();
+      setEditItem(null);
+      setVisibleForm(false);
+      await getAllDocuments();
+    } catch (error) {
+      notify.error("Erro ao salvar registro.");
+      console.error(error);
+    }
   }
+
   return (
     <div>
       <div className="flex justify-between text-center items-center mb-8">
@@ -251,6 +330,7 @@ export default function GoodsShipped() {
           text={visibleForm ? "Fechar" : "Cadastrar nova +"}
           onClick={() => setVisibleForm((prev) => !prev)}
         />
+        {dialog}
       </div>
 
       {visibleForm && (
@@ -339,8 +419,7 @@ export default function GoodsShipped() {
             />
           </div>
           <div className="w-52 flex gap-4 ">
-            <Button text={"Salvar"} type="submit" />
-            {dialog}
+            <Button text={editItem ? "Atualizar" : "Salvar"} type="submit" />
             <Button
               onClick={() => reset()}
               backgroundColor="#F5F7FA"
@@ -349,6 +428,19 @@ export default function GoodsShipped() {
               text={"Limpar"}
             />
           </div>
+          {editItem && (
+            <Button
+              text="Cancelar edição"
+              onClick={() => {
+                setEditItem(null);
+                setVisibleForm(false);
+                reset();
+              }}
+              backgroundColor="#F5F7FA"
+              color="#555555"
+              borderColor="#E0E0E0"
+            />
+          )}
         </form>
       )}
       <CustomDataGrid
