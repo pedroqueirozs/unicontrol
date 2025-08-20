@@ -9,15 +9,15 @@ import {
   Package,
   MapPin,
 } from "lucide-react";
-import InfoCard from "../../components/InfoCard";
+import InfoCard from "@/components/InfoCard";
 import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
-import { db } from "../../services/firebaseConfig";
+import { db } from "@/services/firebaseConfig";
 import dayjs from "dayjs";
 
 import { MerchandiseUIData, MerchandiseFirestoreData } from "../goodsShipped";
 import { GridColDef } from "@mui/x-data-grid";
-import { CustomDataGrid } from "../../components/CustomDataGrid";
+import { CustomDataGrid } from "@/components/CustomDataGrid";
 
 const columns: GridColDef[] = [
   { field: "name", headerName: "Cliente", width: 150 },

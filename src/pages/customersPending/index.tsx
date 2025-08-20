@@ -1,7 +1,7 @@
-import Button from "../../components/Button";
-import Input from "../../components/Input";
-import InputSelect from "../../components/InputSelect";
-/* import InputSelect from "../../components/InputSelect";
+import Button from "@/components/Button";
+import Input from "@/components/Input";
+import InputSelect from "@/components/InputSelect";
+/* import InputSelect from "@/components/InputSelect";
  */
 export default function CustomersPending() {
   return (

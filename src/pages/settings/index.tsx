@@ -1,6 +1,6 @@
 import { signOut } from "firebase/auth";
-import Button from "../../components/Button";
-import { auth } from "../../services/firebaseConfig";
+import Button from "@/components/Button";
+import { auth } from "@/services/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 
 export default function Settings() {

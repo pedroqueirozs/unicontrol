@@ -9,9 +9,9 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import React from "react";
-import { SidebarItem } from "./SidebarItem";
-  
-import logotipoLightSvg from "../assets/unicontrol-logo-light.svg";
+import { SidebarItem } from "@/components/SidebarItem";
+
+import logotipoLightSvg from "@/assets/unicontrol-logo-light.svg";
 
 const SideBar = React.forwardRef<HTMLElement>(() => {
   return (

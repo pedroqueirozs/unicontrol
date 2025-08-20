@@ -7,7 +7,7 @@ import {
   ReactNode,
 } from "react";
 
-import { auth } from "../services/firebaseConfig";
+import { auth } from "@/services/firebaseConfig";
 interface AuthProviderProps {
   children: ReactNode;
 }
