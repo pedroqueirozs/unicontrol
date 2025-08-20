@@ -2,17 +2,17 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import Input from "../../components/Input";
-import Button from "../../components/Button";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
-import { auth } from "../../services/firebaseConfig";
+import { auth } from "@/services/firebaseConfig";
 import { useState } from "react";
-import { notify } from "../../utils/notify";
+import { notify } from "@/utils/notify";
 
 type RegistrationData = {
   name: string;

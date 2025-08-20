@@ -1,20 +1,20 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import PublicRoutes from "./pages/public";
-import PrivateRoutes from "./pages/private";
-import AuthLayout from "./components/layouts/AuthLayout";
-import MainLayout from "./components/layouts/MainLayout";
+import PublicRoutes from "@/pages/public";
+import PrivateRoutes from "@/pages/private";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import MainLayout from "@/components/layouts/MainLayout";
 
-import Login from "./pages/login";
-import Register from "./pages/register";
-import Dashboard from "./pages/dashboard";
-import GoodsShipped from "./pages/goodsShipped";
-import Documents from "./pages/documents";
-import Financial from "./pages/financial";
-import Reports from "./pages/reports";
-import Settings from "./pages/settings";
-import CustomersPending from "./pages/customersPending";
-import SuppliersPending from "./pages/suppliersPending";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import Dashboard from "@/pages/dashboard";
+import GoodsShipped from "@/pages/goodsShipped";
+import Documents from "@/pages/documents";
+import Financial from "@/pages/financial";
+import Reports from "@/pages/reports";
+import Settings from "@/pages/settings";
+import CustomersPending from "@/pages/customersPending";
+import SuppliersPending from "@/pages/suppliersPending";
 
 const router = createBrowserRouter([
   {

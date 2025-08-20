@@ -1,6 +1,3 @@
-
-
-
 export const SITUATION_OPTIONS = [
   { value: "on_time", label: "No Prazo" },
   { value: "delivered", label: "Entregue" },

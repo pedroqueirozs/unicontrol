@@ -1,17 +1,17 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import googleIcon from "../../assets/google_icon.svg";
+import googleIcon from "@/assets/google_icon.svg";
 import { Mail, Lock } from "lucide-react";
-import Input from "../../components/Input";
-import Button from "../../components/Button";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
 import { useNavigate } from "react-router-dom";
 import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "../../services/firebaseConfig";
+import { auth } from "@/services/firebaseConfig";
 import { useState } from "react";
 
 type LoginFormImputs = {
