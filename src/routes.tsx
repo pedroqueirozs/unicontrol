@@ -4,7 +4,6 @@ import PublicRoutes from "@/pages/public";
 import PrivateRoutes from "@/pages/private";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import MainLayout from "@/components/layouts/MainLayout";
-
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
@@ -15,6 +14,7 @@ import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import CustomersPending from "@/pages/customersPending";
 import SuppliersPending from "@/pages/suppliersPending";
+import Address from "@/pages/addresses";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +48,11 @@ const router = createBrowserRouter([
             path: "goods-shipped",
             element: <GoodsShipped />,
             handle: { title: "Mercadorias enviadas" },
+          },
+          {
+            path: "address",
+            element: <Address />,
+            handle: { title: "Gestão de endereços" },
           },
           {
             path: "documents",

@@ -18,10 +18,10 @@ export default function MainLayout() {
         <Header title={title} />
         <main className="flex-1 mt-8 mx-4 p-4 border border-border_input_color rounded-md">
           <Outlet />
+          <footer className="mt-8 text-center text-sm">
+            © 2025 saojoseartigosliturgicos
+          </footer>
         </main>
-        <footer className="mt-auto  py-2 text-center text-sm">
-          © 2025 saojoseartigosliturgicos
-        </footer>
       </div>
     </div>
   );
