@@ -30,6 +30,7 @@ import {
 } from "firebase/firestore";
 
 import { notify } from "@/utils/notify";
+import { ptBR } from "@mui/x-data-grid/locales";
 
 export type MerchandiseFormData = {
   name: string;
@@ -70,6 +71,7 @@ export default function GoodsShipped() {
   const { confirm, dialog } = useConfirmDialog();
   const [visibleForm, setVisibleForm] = useState(false);
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
+  const paginationModel = { page: 0, pageSize: 10 };
 
   const defaultFormValues: MerchandiseFormData = {
     name: "",
@@ -470,7 +472,10 @@ export default function GoodsShipped() {
       <CustomDataGrid
         columns={columns}
         rows={data}
+        localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         loading={tableIsLoading}
+        initialState={{ pagination: { paginationModel } }}
+        pageSizeOptions={[10, 20, 30]}
         showToolbar
         sx={{
           "& .MuiDataGrid-columnHeaderTitle": {
