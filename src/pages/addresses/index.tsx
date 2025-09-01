@@ -11,6 +11,8 @@ import { useConfirmDialog } from "@/components/ConfimDialog";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
+import { generateDocx } from "@/utils/DocxGenerator";
+
 import { db } from "@/services/firebaseConfig";
 import {
   addDoc,
@@ -433,8 +435,17 @@ export default function Addresses() {
         <DataGrid columns={printableAddressColumns} rows={selectedAddresses} />
 
         <div className="max-w-fit  flex gap-4">
-          <Button text="Area de impressão" />
-          <Button text="Limpar selecionados" />
+          <Button
+            onClick={() => generateDocx(selectedAddresses)}
+            text="Gerar endereços"
+          />
+          <Button
+            onClick={() => {
+              setSelectedAddresses([]);
+              setSelectedAddressesIds([]);
+            }}
+            text="Limpar selecionados"
+          />
         </div>
       </div>
     </div>
