@@ -1,4 +1,3 @@
-// DocxGenerator.ts
 import { saveAs } from "file-saver";
 import {
   Document,
@@ -9,98 +8,113 @@ import {
   TableCell,
   TableRow,
   WidthType,
+  BorderStyle,
 } from "docx";
 
 import { SelectedAddress } from "@/pages/addresses";
 
-/* interface DocxGeneratorProps {
-  addresses: SelectedAddress[];
-} */
-
 export function generateDocx(addresses: SelectedAddress[]) {
-  // Gerar as linhas da tabela
-  const tableRows = [
-    // Cabeçalho
-    new TableRow({
-      children: [
-        "Destinatário",
-        "Endereço",
-        "Bairro",
-        "CEP",
-        "Cidade",
-        "Complemento",
-      ].map(
-        (header) =>
-          new TableCell({
+  const addressRows = addresses.flatMap((addr) =>
+    Array(addr.amount)
+      .fill(null)
+      .map(
+        () =>
+          new TableRow({
             children: [
-              new Paragraph({
+              new TableCell({
                 children: [
-                  new TextRun({
-                    text: header.toUpperCase(),
-                    bold: true,
-                    size: 28, // tamanho maior para cabeçalho
-                    color: "2A2A2A",
-                  }),
-                ],
-              }),
-            ],
-            width: { size: 1000, type: WidthType.DXA },
-          })
-      ),
-    }),
-    // Linhas de dados
-    ...addresses.flatMap((addr) =>
-      Array(addr.amount) // gerar duplicado de acordo com quantidade
-        .fill(null)
-        .map(
-          () =>
-            new TableRow({
-              children: [
-                addr.recipient,
-                addr.street,
-                addr.district,
-                addr.zip,
-                addr.city,
-                addr.complement ?? "",
-              ].map(
-                (text) =>
-                  new TableCell({
+                  new Paragraph({
                     children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (text ?? "").toString().toUpperCase(),
-                            size: 24, // tamanho do texto dos dados
-                          }),
-                        ],
+                      new TextRun({
+                        text: "DESTINATÁRIO: ",
+                        bold: true,
+                        size: 30,
+                      }),
+                      new TextRun({
+                        text: addr.recipient?.toUpperCase() ?? "",
+                        size: 30,
                       }),
                     ],
-                    width: { size: 1000, type: WidthType.DXA },
-                  })
-              ),
-            })
-        )
-    ),
-  ];
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "ENDEREÇO: ", bold: true, size: 30 }),
+                      new TextRun({
+                        text: addr.street?.toUpperCase() ?? "",
+                        size: 30,
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "BAIRRO: ", bold: true, size: 30 }),
+                      new TextRun({
+                        text: addr.district?.toUpperCase() ?? "",
+                        size: 30,
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "CEP: ", bold: true, size: 30 }),
+                      new TextRun({
+                        text: addr.zip?.toUpperCase() ?? "",
+                        size: 30,
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "CIDADE: ", bold: true, size: 30 }),
+                      new TextRun({
+                        text: addr.city?.toUpperCase() ?? "",
+                        size: 30,
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "COMPLEMENTO: ",
+                        bold: true,
+                        size: 30,
+                      }),
+                      new TextRun({
+                        text: addr.complement?.toUpperCase() ?? "",
+                        size: 30,
+                      }),
+                    ],
+                  }),
+                ],
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                  bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "000000",
+                  },
+                  left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                  right: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "000000",
+                  },
+                },
+                margins: { top: 200, bottom: 200, left: 200, right: 200 },
+              }),
+            ],
+          })
+      )
+  );
 
   const doc = new Document({
     sections: [
       {
         properties: {},
         children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "Endereços para impressão",
-                bold: true,
-                size: 32,
-              }),
-            ],
-            spacing: { after: 200 },
-          }),
           new Table({
-            rows: tableRows,
             width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: addressRows,
           }),
         ],
       },
