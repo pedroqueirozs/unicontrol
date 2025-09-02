@@ -31,6 +31,7 @@ import {
 
 import { notify } from "@/utils/notify";
 import { ptBR } from "@mui/x-data-grid/locales";
+import { Pencil, Trash2 } from "lucide-react";
 
 export type MerchandiseFormData = {
   name: string;
@@ -166,14 +167,16 @@ export default function GoodsShipped() {
       headerName: "Ações",
       width: 120,
       renderCell: (params) => (
-        <div className=" flex gap-4">
+        <div className=" flex h-full gap-4 items-center">
           <button
             className="text-color_error"
             onClick={() => handleDelete(params.id as string)}
           >
-            Apagar
+            <Trash2 />
           </button>
-          <button onClick={() => handleEdit(params.row)}>Editar</button>
+          <button onClick={() => handleEdit(params.row)}>
+            <Pencil />
+          </button>
         </div>
       ),
     },
@@ -481,6 +484,10 @@ export default function GoodsShipped() {
           "& .MuiDataGrid-columnHeaderTitle": {
             color: "#1A2A38",
             fontWeight: "bold ",
+          },
+          "& .MuiDataGrid-cell:focus-within": {
+            outline: "none",
+            boxShadow: "none",
           },
         }}
       />
