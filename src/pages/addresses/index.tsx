@@ -67,6 +67,7 @@ export default function Addresses() {
   const [selectedAddresses, setSelectedAddresses] = useState<SelectedAddress[]>(
     []
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const defaultFormValues: AddressFormData = {
     recipient: "",
@@ -77,7 +78,6 @@ export default function Addresses() {
     street: "",
   };
 
-  console.log(selectedAddresses);
   const schema = yup.object({
     recipient: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
     street: yup.string().max(350, "Máximo de 350 caracteres").required("*"),
@@ -116,7 +116,6 @@ export default function Addresses() {
       minWidth: 300,
       renderCell: (params) => {
         const isSelected = selectedAddressesIds.includes(params.id as string);
-        console.log(isSelected);
         return (
           <div className="flex h-full gap-4 items-center">
             <button
@@ -154,7 +153,6 @@ export default function Addresses() {
       minWidth: 150,
       renderCell: (params) => {
         const isSelected = selectedAddressesIds.includes(params.id as string);
-        console.log(isSelected);
         return (
           <div className="flex h-full gap-4 items-center">
             <button
@@ -232,7 +230,25 @@ export default function Addresses() {
         await getAllDocuments();
       }
     } catch (error) {
-      notify.error("Erro ao deletar o registro.");
+      notify.error("Erro ao deletar o registro");
+    }
+  }
+
+  async function handleGenerateDocxAddresses() {
+    try {
+      setIsLoading(true);
+
+      if (selectedAddresses.length === 0) {
+        notify.error("Nenhum endereço selecionado");
+
+        return;
+      }
+      await generateDocx(selectedAddresses);
+      notify.success("Endereços gerados com sucesso!");
+    } catch (error) {
+      notify.error("Erro ao gerar endereços");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -425,6 +441,10 @@ export default function Addresses() {
               color: "#1A2A38",
               fontWeight: "bold ",
             },
+            "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+              boxShadow: "none",
+            },
           }}
         />
       </div>
@@ -432,11 +452,23 @@ export default function Addresses() {
         <h2 className="my-8 text-color_primary_500 font-semibold">
           Endereços selecionados para impressão
         </h2>
-        <DataGrid columns={printableAddressColumns} rows={selectedAddresses} />
+        <DataGrid
+          columns={printableAddressColumns}
+          rows={selectedAddresses}
+          hideFooter
+          localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
+          sx={{
+            "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+              boxShadow: "none",
+            },
+          }}
+        />
 
         <div className="max-w-fit  flex gap-4">
           <Button
-            onClick={() => generateDocx(selectedAddresses)}
+            onClick={handleGenerateDocxAddresses}
+            isLoading={isLoading}
             text="Gerar endereços"
           />
           <Button
