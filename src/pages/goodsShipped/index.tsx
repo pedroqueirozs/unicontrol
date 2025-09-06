@@ -174,7 +174,10 @@ export default function GoodsShipped() {
           >
             <Trash2 />
           </button>
-          <button onClick={() => handleEdit(params.row)}>
+          <button
+            className="text-text_description"
+            onClick={() => handleEdit(params.row)}
+          >
             <Pencil />
           </button>
         </div>
@@ -465,7 +468,7 @@ export default function GoodsShipped() {
                 setVisibleForm(false);
                 reset(defaultFormValues);
               }}
-              backgroundColor="#F5F7FA"
+              backgroundColor="transparent"
               color="#555555"
               borderColor="#E0E0E0"
             />

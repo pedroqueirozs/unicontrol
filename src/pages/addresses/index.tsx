@@ -125,12 +125,15 @@ export default function Addresses() {
               <CircleMinus />
             </button>
             <button
+              className="text-text_description"
               onClick={() => increaseAddressQuantity(params.id as string)}
             >
               <CirclePlus />
             </button>
             <button
-              className={isSelected ? "text-[#2ECC71]" : ""}
+              className={
+                isSelected ? "text-[#2ECC71]" : "text-text_description"
+              }
               onClick={() => handleSelectedAddresses(params.row)}
             >
               {isSelected ? <CircleCheck /> : <Circle />}
@@ -161,11 +164,16 @@ export default function Addresses() {
             >
               <Trash2 />
             </button>
-            <button onClick={() => handleEdit(params.row)}>
+            <button
+              className="text-text_description"
+              onClick={() => handleEdit(params.row)}
+            >
               <Pencil />
             </button>
             <button
-              className={isSelected ? "text-[#2ECC71]" : ""}
+              className={
+                isSelected ? "text-[#2ECC71]" : "text-text_description"
+              }
               onClick={() => handleSelectedAddresses(params.row)}
             >
               {isSelected ? <CircleCheck /> : <Circle />}

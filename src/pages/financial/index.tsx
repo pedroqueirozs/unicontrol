@@ -16,14 +16,16 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   orderBy,
   query,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 import { notify } from "@/utils/notify";
-import { Trash2 } from "lucide-react";
+import { List, SquarePen, Trash2 } from "lucide-react";
 
 export type InvoiceFormData = {
   invoiceNumber: string;
@@ -42,18 +44,21 @@ export type Slips = SlipForm & {
   id: string;
 };
 
-export type SlipsMUIComplete = SlipForm & {
+export type SlipsUIComplete = SlipForm & {
   id: string;
   invoiceNumber: string;
   issuer: string;
+  idInvoiceReference: string;
 };
 
 export default function Financial() {
-  const [dataSleps, setDataSleps] = useState<SlipsMUIComplete[]>([]);
+  const [dataSleps, setDataSleps] = useState<SlipsUIComplete[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
   const [visibleForm, setVisibleForm] = useState(false);
   const [invoiceSleps, setInvoiceSleps] = useState<Slips[]>([]);
+  const [editInvoiceAndSleps, setEditInvoiceAndSleps] =
+    useState<SlipsUIComplete | null>(null);
 
   const defaultFormValues: InvoiceFormData = {
     invoiceNumber: "",
@@ -134,12 +139,16 @@ export default function Financial() {
         return (
           <div className="flex h-full gap-4 items-center">
             <button
-              className="text-color_error"
-              onClick={() => {
-                alert("Visualizar boleto");
-              }}
+              className="text-text_description"
+              onClick={() => handleEditInvoiceAndSleps(params.row)}
             >
-              Visualizar
+              <SquarePen />
+            </button>
+            <button
+              className="text-text_description"
+              onClick={() => handleEditInvoiceAndSleps(params.row)}
+            >
+              <List />
             </button>
           </div>
         );
@@ -179,19 +188,45 @@ export default function Financial() {
       maturity: "",
     });
   }
+  async function handleEditInvoiceAndSleps(item: SlipsUIComplete) {
+    try {
+      const invoiceDoc = await getDoc(
+        doc(db, "invoices", item.idInvoiceReference)
+      );
+      if (!invoiceDoc.exists()) {
+        notify.error("Nota fiscal não encontrada!");
+        return;
+      }
 
-  /*   function handleEdit(item: AddressUIData) {
-    setEditItem(item);
-    setVisibleForm(true);
-    reset({
-      issuer: item.issuer,
-      invoiceNumber: item.invoiceNumber,
-      ticketValue: item.ticketValue,
-      ticket: item.ticket,
-      invoiceValue: item.invoiceValue,
-      maturity: item.maturity ?? "",
-    });
-  } */
+      const invoiceData = invoiceDoc.data() as InvoiceFormData;
+
+      resetInvoice({
+        invoiceNumber: invoiceData.invoiceNumber,
+        issuer: invoiceData.issuer,
+        emission: invoiceData.emission,
+        invoiceValue: invoiceData.invoiceValue,
+        observations: invoiceData.observations ?? "",
+      });
+
+      const q = query(
+        collection(db, "sleps"),
+        where("idInvoiceReference", "==", item.idInvoiceReference)
+      );
+      const snapshot = await getDocs(q);
+      const slips = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as SlipForm),
+      }));
+
+      setInvoiceSleps(slips);
+      setEditInvoiceAndSleps(item);
+      setVisibleForm(true);
+    } catch (error) {
+      console.error(error);
+      notify.error("Erro ao carregar dados para edição");
+    }
+  }
+
   async function handleDeleteSlepInState(row: Slips) {
     try {
       setInvoiceSleps((prev) => prev.filter((slep) => slep.id !== row.id));
@@ -241,7 +276,7 @@ export default function Financial() {
       const snapshot = await getDocs(q);
 
       const docs = await snapshot.docs.map((doc) => {
-        const data = doc.data() as SlipsMUIComplete;
+        const data = doc.data() as SlipsUIComplete;
         return {
           ...data,
         };
@@ -263,23 +298,47 @@ export default function Financial() {
     const payloadInvoice = {
       ...formDataInvoice,
     };
+    if (editInvoiceAndSleps) {
+      try {
+        const ref = doc(db, "invoices", editInvoiceAndSleps.idInvoiceReference);
+        await updateDoc(ref, formDataInvoice);
+        const q = query(
+          collection(db, "sleps"),
+          where(
+            "idInvoiceReference",
+            "==",
+            editInvoiceAndSleps.idInvoiceReference
+          )
+        );
+        const snapshot = await getDocs(q);
 
-    try {
-      if (editItem) {
-        const ref = doc(db, "addresses", editItem.id);
-        await updateDoc(ref, payload);
+        const updatePromises = snapshot.docs.map((docSnap) =>
+          updateDoc(doc(db, "sleps", docSnap.id), {
+            issuer: formDataInvoice.issuer,
+            invoiceNumber: formDataInvoice.invoiceNumber,
+          })
+        );
+
+        await Promise.all(updatePromises);
         notify.success("Atualizado com sucesso!");
-      } else {
-        await registerInvoicesAndBills(payloadInvoice);
+        resetInvoice(defaultFormValues);
+        setInvoiceSleps([]);
+        setVisibleForm(false);
+        getAllSleps();
+      } catch (error) {
+        notify.error("Erro ao atualizar registro");
+        console.log(error);
       }
-
-      /*   setEditItem(null); */
-      resetInvoice(defaultFormValues);
-      await getAllSleps();
-    } catch (error) {
-      notify.error("Erro ao salvar registro.");
-      console.error(error);
+    } else {
+      try {
+        await registerInvoicesAndBills(payloadInvoice);
+        await getAllSleps();
+      } catch (error) {
+        notify.error("Erro ao salvar registro.");
+      }
     }
+
+    setEditInvoiceAndSleps(null);
   }
   return (
     <div>
@@ -416,7 +475,9 @@ export default function Financial() {
                     </div>
                     <div className="flex justify-between  border-t pt-4">
                       <span className="text-gray-600">Qtd. Boletos</span>
-                      <span className="font-semibold">0</span>
+                      <span className="font-semibold">
+                        {invoiceSleps.length}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -446,24 +507,30 @@ export default function Financial() {
             </div>
           </div>
           <div className=" flex justify-end gap-4">
-            <Button text={editItem ? "Atualizar" : "Salvar"} type="submit" />
             <Button
-              onClick={() => reset(defaultFormValues)}
+              text={editInvoiceAndSleps ? "Atualizar" : "Salvar"}
+              type="submit"
+            />
+            <Button
+              onClick={() => {
+                resetInvoice(defaultFormValues), setInvoiceSleps([]);
+              }}
               backgroundColor="#F5F7FA"
               color="#555555"
               borderColor="#E0E0E0"
               text={"Limpar"}
             />
           </div>
-          {editItem && (
+          {editInvoiceAndSleps && (
             <Button
               text="Cancelar edição"
               onClick={() => {
-                setEditItem(null);
+                setEditInvoiceAndSleps(null);
                 setVisibleForm(false);
-                reset(defaultFormValues);
+                resetInvoice(defaultFormValues);
+                setInvoiceSleps([]);
               }}
-              backgroundColor="#F5F7FA"
+              backgroundColor="transparent"
               color="#555555"
               borderColor="#E0E0E0"
             />
@@ -475,6 +542,16 @@ export default function Financial() {
         columns={dataSlepsColumns}
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         loading={tableIsLoading}
+        sx={{
+          "& .MuiDataGrid-columnHeaderTitle": {
+            color: "#1A2A38",
+            fontWeight: "bold ",
+          },
+          "& .MuiDataGrid-cell:focus-within": {
+            outline: "none",
+            boxShadow: "none",
+          },
+        }}
       />
     </div>
   );
