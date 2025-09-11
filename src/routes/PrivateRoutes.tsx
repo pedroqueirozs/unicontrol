@@ -1,10 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/context/auth";
+import { useAuth } from "@/hooks/useAuth";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
 const PrivateRoutes = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { authed }: any = useAuth();
+  const { authed } = useAuth();
 
   if (authed === null) {
     return <LoadingOverlay open={true} />;

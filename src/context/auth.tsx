@@ -1,11 +1,5 @@
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useEffect, useState, ReactNode } from "react";
 
 import { auth } from "@/services/firebaseConfig";
 interface AuthProviderProps {
@@ -16,10 +10,11 @@ interface AuthContextType {
   handleSignOut: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [authed, setAuthed] = useState<User | null | false>(null);
 
   async function handleSignOut() {
@@ -44,12 +39,3 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("context not fount for auth");
-  }
-  return context;
-}

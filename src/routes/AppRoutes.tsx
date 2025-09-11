@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import PublicRoutes from "@/pages/public";
-import PrivateRoutes from "@/pages/private";
+import PublicRoutes from "@/routes/PublicRoutes";
+import PrivateRoutes from "@/routes/PrivateRoutes";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 import Login from "@/pages/login";
@@ -15,7 +15,7 @@ import Settings from "@/pages/settings";
 import CustomersPending from "@/pages/customersPending";
 import SuppliersPending from "@/pages/suppliersPending";
 import Address from "@/pages/addresses";
-import { MyProfile } from "./pages/myProfile";
+import MyProfile from "@/pages/myProfile";
 
 const router = createBrowserRouter([
   {

@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useConfirmDialog } from "@/components/ConfimDialog";
 
-export function MyProfile() {
+export default function MyProfile() {
   const { confirm, dialog } = useConfirmDialog();
   const navigate = useNavigate();
 
@@ -12,9 +12,11 @@ export function MyProfile() {
     const confirmed = await confirm("Realmente deseja sair ?");
     if (confirmed) {
       signOut(auth);
-      navigate("/");
     }
   }
+  const handleClose = () => {
+    navigate(-1);
+  };
   return (
     <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
       {dialog}
@@ -67,7 +69,10 @@ export function MyProfile() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 mt-8 pt-4 border-t border-gray-200">
-          <button className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+          <button
+            onClick={handleClose}
+            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+          >
             Fechar
           </button>
           <button
