@@ -1,6 +1,6 @@
 import { Outlet, useMatches } from "react-router-dom";
-import { Header } from "../Header";
-import SideBar from "../Sidebar";
+import { Header } from "@/components/Header";
+import SideBar from "@/components/Sidebar";
 
 interface Title {
   title: string;

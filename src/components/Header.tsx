@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User } from "lucide-react";
 import { auth } from "@/services/firebaseConfig";
-import { useConfirmDialog } from "./ConfimDialog";
+import { useConfirmDialog } from "@/components/ConfimDialog";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 

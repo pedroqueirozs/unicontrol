@@ -1,4 +1,4 @@
-import logotipoDarkSvg from "../../assets/unicontrol-logo-dark.svg";
+import logotipoDarkSvg from "@/assets/unicontrol-logo-dark.svg";
 import { Outlet } from "react-router-dom";
 
 export default function AuthLayout() {
