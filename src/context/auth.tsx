@@ -1,4 +1,4 @@
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import {
   createContext,
   useContext,
@@ -11,21 +11,37 @@ import { auth } from "@/services/firebaseConfig";
 interface AuthProviderProps {
   children: ReactNode;
 }
-const AuthContext = createContext({});
+interface AuthContextType {
+  authed: User | false | null;
+  handleSignOut: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [authed, setAuthed] = useState<any>(null);
+  const [authed, setAuthed] = useState<User | null | false>(null);
+
+  async function handleSignOut() {
+    signOut(auth);
+    setAuthed(false);
+  }
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setAuthed(user);
+      } else {
+        setAuthed(false);
       }
     });
-  }, [authed, setAuthed]);
+
+    return () => unsubscribe();
+  }, []);
   return (
-    <AuthContext.Provider value={{ authed }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ authed, handleSignOut }}>
+      {children}
+    </AuthContext.Provider>
   );
 };
 

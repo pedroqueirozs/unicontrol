@@ -10,9 +10,12 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "@/services/firebaseConfig";
 import { useState } from "react";
+import { notify } from "@/utils/notify";
 
 type LoginFormImputs = {
   user_email: string;
@@ -43,6 +46,7 @@ export default function Login() {
         user_email,
         password
       );
+      await setPersistence(auth, browserLocalPersistence);
       const user = userCredential.user;
       alert(`Bem-vindo(a), ${user.displayName}`);
       navigate("/dashboard");
@@ -54,13 +58,14 @@ export default function Login() {
   }
   async function googleLogin() {
     const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
     try {
+      await setPersistence(auth, browserLocalPersistence);
+
+      const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
-      navigate("/dashboard");
-      alert(`Bem vindo, ${user.displayName}`);
+      notify.success(`Bem vindo, ${user.displayName}`);
     } catch (error) {
-      alert("Erro ao realizar login com o google");
+      notify.error("Erro ao realizar login com o google");
     }
   }
 

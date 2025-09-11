@@ -7,19 +7,27 @@ import * as yup from "yup";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 
+import { ModalInvoice } from "@/components/ModalInvoice";
 import { useConfirmDialog } from "@/components/ConfimDialog";
+import LoadingOverlay from "@/components/LoadingOverlay";
+
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
+
+import { formatCurrencyBRL } from "@/utils/ formatCurrency";
+import { formatDate } from "@/utils/formatDate";
 
 import { db } from "@/services/firebaseConfig";
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   orderBy,
   query,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -33,6 +41,9 @@ export type InvoiceFormData = {
   emission: string;
   invoiceValue: number;
   observations?: string | null;
+};
+export type Invoice = InvoiceFormData & {
+  id: string;
 };
 export type SlipForm = {
   ticketNumber: string;
@@ -52,13 +63,20 @@ export type SlipsUIComplete = SlipForm & {
 };
 
 export default function Financial() {
-  const [dataSleps, setDataSleps] = useState<SlipsUIComplete[]>([]);
+  const [dataSlips, setDataSlips] = useState<SlipsUIComplete[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
   const [visibleForm, setVisibleForm] = useState(false);
-  const [invoiceSleps, setInvoiceSleps] = useState<Slips[]>([]);
-  const [editInvoiceAndSleps, setEditInvoiceAndSleps] =
+  const [invoiceSlips, setInvoiceSlips] = useState<Slips[]>([]);
+  const [editInvoiceAndSlips, setEditInvoiceAndSlips] =
     useState<SlipsUIComplete | null>(null);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [selectedInvoiceModal, setSelectedInvoiceModal] = useState<Invoice>(
+    {} as Invoice
+  );
+  const [loading, setLoading] = useState(false);
+  const [selectedSlipsModal, setSelectedSlipsModal] = useState<Slips[]>([]);
+  const paginationModel = { page: 0, pageSize: 10 };
 
   const defaultFormValues: InvoiceFormData = {
     invoiceNumber: "",
@@ -124,11 +142,23 @@ export default function Financial() {
       maturity: "",
     },
   });
-  const dataSlepsColumns: GridColDef[] = [
+  const dataSlipsColumns: GridColDef[] = [
     { field: "issuer", headerName: "Beneficiario", width: 200 },
     { field: "ticketNumber", headerName: "Numero", width: 100 },
-    { field: "ticketValue", headerName: "Valor", width: 150 },
-    { field: "maturity", headerName: "Vencimento", width: 150 },
+    {
+      field: "ticketValue",
+      headerName: "Valor",
+      width: 150,
+      renderCell: (params) => (
+        <span>{formatCurrencyBRL(Number(params.value))}</span>
+      ),
+    },
+    {
+      field: "maturity",
+      headerName: "Vencimento",
+      width: 150,
+      renderCell: (params) => <span>{formatDate(String(params.value))}</span>,
+    },
     { field: "invoiceNumber", headerName: "Nota", width: 150 },
 
     {
@@ -140,13 +170,16 @@ export default function Financial() {
           <div className="flex h-full gap-4 items-center">
             <button
               className="text-text_description"
-              onClick={() => handleEditInvoiceAndSleps(params.row)}
+              onClick={() => handleEditInvoiceAndSlips(params.row)}
             >
               <SquarePen />
             </button>
             <button
               className="text-text_description"
-              onClick={() => handleEditInvoiceAndSleps(params.row)}
+              onClick={() => {
+                showInvoiceAndSlips(params.row);
+                setIsOpenModal(true);
+              }}
             >
               <List />
             </button>
@@ -157,8 +190,20 @@ export default function Financial() {
   ];
   const slipsColumns: GridColDef[] = [
     { field: "ticketNumber", headerName: "Numero", width: 100 },
-    { field: "ticketValue", headerName: "Valor", width: 150 },
-    { field: "maturity", headerName: "Vencimento", width: 150 },
+    {
+      field: "ticketValue",
+      headerName: "Valor",
+      width: 150,
+      renderCell: (params) => (
+        <span>{formatCurrencyBRL(Number(params.value))}</span>
+      ),
+    },
+    {
+      field: "maturity",
+      headerName: "Vencimento",
+      width: 150,
+      renderCell: (params) => <span>{formatDate(String(params.value))}</span>,
+    },
     {
       field: "actions",
       headerName: "Ações",
@@ -179,7 +224,7 @@ export default function Financial() {
   ];
 
   function addSlepToInvoice(slipFormData: SlipForm) {
-    setInvoiceSleps((prev) => {
+    setInvoiceSlips((prev) => {
       return [...prev, { id: crypto.randomUUID(), ...slipFormData }];
     });
     resetSlep({
@@ -188,7 +233,42 @@ export default function Financial() {
       maturity: "",
     });
   }
-  async function handleEditInvoiceAndSleps(item: SlipsUIComplete) {
+  async function showInvoiceAndSlips(item: SlipsUIComplete) {
+    try {
+      setLoading(true);
+      const invoiceDoc = await getDoc(
+        doc(db, "invoices", item.idInvoiceReference)
+      );
+
+      if (!invoiceDoc.exists()) {
+        notify.error("Nota fiscal não encontrada!");
+        return;
+      }
+
+      const invoiceData = {
+        id: invoiceDoc.id,
+        ...invoiceDoc.data(),
+      } as Invoice;
+
+      setSelectedInvoiceModal(invoiceData);
+
+      const q = query(
+        collection(db, "slips"),
+        where("idInvoiceReference", "==", item.idInvoiceReference)
+      );
+      const snapshot = await getDocs(q);
+      const slips = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as SlipForm),
+      }));
+      setSelectedSlipsModal(slips);
+    } catch (error) {
+      notify.error("Erro ao buscar dados");
+    } finally {
+      setLoading(false);
+    }
+  }
+  async function handleEditInvoiceAndSlips(item: SlipsUIComplete) {
     try {
       const invoiceDoc = await getDoc(
         doc(db, "invoices", item.idInvoiceReference)
@@ -209,7 +289,7 @@ export default function Financial() {
       });
 
       const q = query(
-        collection(db, "sleps"),
+        collection(db, "slips"),
         where("idInvoiceReference", "==", item.idInvoiceReference)
       );
       const snapshot = await getDocs(q);
@@ -218,8 +298,8 @@ export default function Financial() {
         ...(docSnap.data() as SlipForm),
       }));
 
-      setInvoiceSleps(slips);
-      setEditInvoiceAndSleps(item);
+      setInvoiceSlips(slips);
+      setEditInvoiceAndSlips(item);
       setVisibleForm(true);
     } catch (error) {
       console.error(error);
@@ -229,10 +309,16 @@ export default function Financial() {
 
   async function handleDeleteSlepInState(row: Slips) {
     try {
-      setInvoiceSleps((prev) => prev.filter((slep) => slep.id !== row.id));
+      setLoading(true);
+      setInvoiceSlips((prev) => prev.filter((slep) => slep.id !== row.id));
+      const slepRef = doc(db, "slips", row.id);
+      await deleteDoc(slepRef);
       notify.success("Removido");
+      getAllSlips();
     } catch (error) {
       notify.error("Erro ao remover boleto");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -242,6 +328,7 @@ export default function Financial() {
         "Tem certeza que deseja cadastrar nota e boletos?"
       );
       if (confirmed) {
+        setLoading(true);
         const docRefInvoice = await addDoc(collection(db, "invoices"), {
           ...dataInvoice,
           created_at: new Date(),
@@ -249,8 +336,8 @@ export default function Financial() {
 
         const invoiceId = docRefInvoice.id;
 
-        const promises = invoiceSleps.map((slep) =>
-          addDoc(collection(db, "sleps"), {
+        const promises = invoiceSlips.map((slep) =>
+          setDoc(doc(db, "slips", slep.id), {
             ...slep,
             issuer: dataInvoice.issuer,
             idInvoiceReference: invoiceId,
@@ -260,18 +347,19 @@ export default function Financial() {
         );
         await Promise.all(promises);
         resetInvoice(defaultFormValues);
-        setInvoiceSleps([]);
+        setInvoiceSlips([]);
         notify.success("Cadastrado com sucesso!");
       }
     } catch (error) {
       notify.error("Erro ao cadastrar, verifique os dados.");
-      console.error("Erro ao adicionar documento:", error);
+    } finally {
+      setLoading(false);
     }
   }
-  async function getAllSleps() {
+  async function getAllSlips() {
     setTableIsLoading(true);
     try {
-      const q = query(collection(db, "sleps"), orderBy("created_at", "desc"));
+      const q = query(collection(db, "slips"), orderBy("created_at", "desc"));
 
       const snapshot = await getDocs(q);
 
@@ -282,7 +370,7 @@ export default function Financial() {
         };
       });
 
-      setDataSleps(docs);
+      setDataSlips(docs);
     } catch (error) {
       console.log(error);
     } finally {
@@ -291,65 +379,93 @@ export default function Financial() {
   }
 
   useEffect(() => {
-    getAllSleps();
+    getAllSlips();
   }, []);
 
   async function onSubmit(formDataInvoice: InvoiceFormData) {
     const payloadInvoice = {
       ...formDataInvoice,
     };
-    if (editInvoiceAndSleps) {
+    if (editInvoiceAndSlips) {
       try {
-        const ref = doc(db, "invoices", editInvoiceAndSleps.idInvoiceReference);
+        setLoading(true);
+        const ref = doc(db, "invoices", editInvoiceAndSlips.idInvoiceReference);
         await updateDoc(ref, formDataInvoice);
+
         const q = query(
-          collection(db, "sleps"),
+          collection(db, "slips"),
           where(
             "idInvoiceReference",
             "==",
-            editInvoiceAndSleps.idInvoiceReference
+            editInvoiceAndSlips.idInvoiceReference
           )
         );
         const snapshot = await getDocs(q);
+        const existingSlipIds = snapshot.docs.map((docSnap) => docSnap.id);
 
-        const updatePromises = snapshot.docs.map((docSnap) =>
-          updateDoc(doc(db, "sleps", docSnap.id), {
+        const newSlips = invoiceSlips.filter(
+          (slip) => !existingSlipIds.includes(slip.id)
+        );
+        const createNewSlep = newSlips.map((slip) =>
+          setDoc(doc(db, "slips", slip.id), {
+            ...slip,
+            issuer: formDataInvoice.issuer,
+            invoiceNumber: formDataInvoice.invoiceNumber,
+            idInvoiceReference: editInvoiceAndSlips.idInvoiceReference,
+            created_at: new Date(),
+          })
+        );
+
+        const updateSleps = snapshot.docs.map((docSnap) =>
+          updateDoc(doc(db, "slips", docSnap.id), {
             issuer: formDataInvoice.issuer,
             invoiceNumber: formDataInvoice.invoiceNumber,
           })
         );
-
-        await Promise.all(updatePromises);
+        await Promise.all(createNewSlep);
+        await Promise.all(updateSleps);
         notify.success("Atualizado com sucesso!");
         resetInvoice(defaultFormValues);
-        setInvoiceSleps([]);
+        setInvoiceSlips([]);
         setVisibleForm(false);
-        getAllSleps();
+        getAllSlips();
       } catch (error) {
         notify.error("Erro ao atualizar registro");
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     } else {
       try {
+        setLoading(true);
         await registerInvoicesAndBills(payloadInvoice);
-        await getAllSleps();
+        await getAllSlips();
       } catch (error) {
         notify.error("Erro ao salvar registro.");
+      } finally {
+        setLoading(false);
       }
     }
 
-    setEditInvoiceAndSleps(null);
+    setEditInvoiceAndSlips(null);
   }
   return (
     <div>
       <div className=" flex text-center justify-between items-end mb-8">
         <h2 className="text-3xl font-bold">Notas Fiscais</h2>
-        <Button
-          type="button"
-          text={visibleForm ? "Fechar" : "Cadastrar +"}
-          onClick={() => setVisibleForm((prev) => !prev)}
-        />
+
+        {editInvoiceAndSlips ? (
+          ""
+        ) : (
+          <Button
+            type="button"
+            text={visibleForm ? "Fechar" : "Cadastrar +"}
+            onClick={() => setVisibleForm((prev) => !prev)}
+          />
+        )}
+
         {dialog}
+        <LoadingOverlay open={loading} />
       </div>
 
       {visibleForm && (
@@ -458,16 +574,20 @@ export default function Financial() {
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Numero:</span>
+                      <span className="text-gray-600">Numero da Nota:</span>
                       <span className="font-medium">{invoiceNumber}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Emissão:</span>
-                      <span className="font-medium">{emission}</span>
+                      <span className="font-medium">
+                        {formatDate(emission)}
+                      </span>
                     </div>
                     <div className="flex justify-between ">
                       <span className="text-gray-600">Valor Total:</span>
-                      <span className="font-medium">{invoiceValue}</span>
+                      <span className="font-medium">
+                        {formatCurrencyBRL(invoiceValue)}
+                      </span>
                     </div>
                     <div className="gap-1">
                       <span className="text-gray-600">Observação:</span>
@@ -476,7 +596,7 @@ export default function Financial() {
                     <div className="flex justify-between  border-t pt-4">
                       <span className="text-gray-600">Qtd. Boletos</span>
                       <span className="font-semibold">
-                        {invoiceSleps.length}
+                        {invoiceSlips.length}
                       </span>
                     </div>
                   </div>
@@ -484,7 +604,7 @@ export default function Financial() {
                 <div className="mt-4">
                   <DataGrid
                     columns={slipsColumns}
-                    rows={invoiceSleps}
+                    rows={invoiceSlips}
                     localeText={
                       ptBR.components.MuiDataGrid.defaultProps.localeText
                     }
@@ -508,12 +628,12 @@ export default function Financial() {
           </div>
           <div className=" flex justify-end gap-4">
             <Button
-              text={editInvoiceAndSleps ? "Atualizar" : "Salvar"}
+              text={editInvoiceAndSlips ? "Atualizar" : "Salvar"}
               type="submit"
             />
             <Button
               onClick={() => {
-                resetInvoice(defaultFormValues), setInvoiceSleps([]);
+                resetInvoice(defaultFormValues), setInvoiceSlips([]);
               }}
               backgroundColor="#F5F7FA"
               color="#555555"
@@ -521,14 +641,14 @@ export default function Financial() {
               text={"Limpar"}
             />
           </div>
-          {editInvoiceAndSleps && (
+          {editInvoiceAndSlips && (
             <Button
               text="Cancelar edição"
               onClick={() => {
-                setEditInvoiceAndSleps(null);
+                setEditInvoiceAndSlips(null);
                 setVisibleForm(false);
                 resetInvoice(defaultFormValues);
-                setInvoiceSleps([]);
+                setInvoiceSlips([]);
               }}
               backgroundColor="transparent"
               color="#555555"
@@ -538,10 +658,12 @@ export default function Financial() {
         </form>
       )}
       <DataGrid
-        rows={dataSleps}
-        columns={dataSlepsColumns}
+        rows={dataSlips}
+        columns={dataSlipsColumns}
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         loading={tableIsLoading}
+        initialState={{ pagination: { paginationModel } }}
+        showToolbar
         sx={{
           "& .MuiDataGrid-columnHeaderTitle": {
             color: "#1A2A38",
@@ -552,6 +674,13 @@ export default function Financial() {
             boxShadow: "none",
           },
         }}
+      />
+      <ModalInvoice
+        isOpen={isOpenModal}
+        onClose={() => setIsOpenModal(false)}
+        invoiceData={selectedInvoiceModal}
+        slipsData={selectedSlipsModal}
+        getAllSlips={getAllSlips}
       />
     </div>
   );

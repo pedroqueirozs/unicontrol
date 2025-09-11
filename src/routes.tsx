@@ -15,34 +15,36 @@ import Settings from "@/pages/settings";
 import CustomersPending from "@/pages/customersPending";
 import SuppliersPending from "@/pages/suppliersPending";
 import Address from "@/pages/addresses";
+import { MyProfile } from "./pages/myProfile";
 
 const router = createBrowserRouter([
   {
-    path: "/",
     element: <PublicRoutes />,
     children: [
       {
-        path: "/",
         element: <AuthLayout />,
         children: [
-          { path: "/", element: <Login /> },
-          { path: "/register", element: <Register /> },
+          { index: true, element: <Login /> },
+          { path: "register", element: <Register /> },
         ],
       },
     ],
   },
   {
-    path: "/",
     element: <PrivateRoutes />,
     children: [
       {
-        path: "/",
         element: <MainLayout />,
         children: [
           {
             path: "dashboard",
             element: <Dashboard />,
             handle: { title: "Dashboard" },
+          },
+          {
+            path: "profile",
+            element: <MyProfile />,
+            handle: { title: "Meu Perfil" },
           },
           {
             path: "goods-shipped",

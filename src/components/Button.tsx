@@ -11,7 +11,6 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
   isLoading?: boolean;
   onClick?: () => void;
-  /* [key: string]: any; */
 }
 
 const Button: React.FC<ButtonProps> = ({
