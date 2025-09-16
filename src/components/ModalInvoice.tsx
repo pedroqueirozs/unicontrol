@@ -8,7 +8,7 @@ import Button from "./Button";
 import { X } from "lucide-react";
 
 import { formatDate } from "@/utils/formatDate";
-import { formatCurrencyBRL } from "@/utils/ formatCurrency";
+import { formatCurrencyBRL } from "@/utils/formatCurrency";
 import { notify } from "@/utils/notify";
 
 import { doc, runTransaction } from "firebase/firestore";

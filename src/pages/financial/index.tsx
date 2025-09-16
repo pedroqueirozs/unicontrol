@@ -14,7 +14,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
-import { formatCurrencyBRL } from "@/utils/ formatCurrency";
+import { formatCurrencyBRL } from "@/utils/formatCurrency";
 import { formatDate } from "@/utils/formatDate";
 
 import { db } from "@/services/firebaseConfig";

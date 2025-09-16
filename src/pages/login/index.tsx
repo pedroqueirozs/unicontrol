@@ -51,7 +51,7 @@ export default function Login() {
       alert(`Bem-vindo(a), ${user.displayName}`);
       navigate("/dashboard");
     } catch (error) {
-      alert("Erro ao fazer login. Verifique suas credenciais.");
+      notify.error("Erro ao fazer login. Verifique suas credenciais");
     } finally {
       setIsLoading(false);
     }

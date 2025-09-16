@@ -32,9 +32,13 @@ export function Header({ title }: HeaderProps) {
         <span>Bem vindo, {auth?.currentUser?.displayName}</span>
 
         <div className="h-full flex items-center text-center justify-center px-6  ">
-          <button onClick={() => setOpen((prev) => !prev)}>
+          <button
+            data-cy="user-avatar"
+            onClick={() => setOpen((prev) => !prev)}
+          >
             {auth?.currentUser?.photoURL ? (
               <img
+                alt="Avatar com a imagem do usuário logado no sistema"
                 className="w-16 h-16 rounded-full object-cover"
                 src={auth?.currentUser?.photoURL}
               />
