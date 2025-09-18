@@ -1,0 +1,30 @@
+{
+  "newUserValid": {
+    "name": "Pedro Queiroz",
+    "email": "pedro@gmail.com",
+    "confirm_email": "pedro@gmail.com",
+    "password": "12345678",
+    "confirm_password": "12345678"
+  },
+  "newUserEmailDifferent": {
+    "name": "Maria Souza",
+    "email": "maria@gmail.com",
+    "confirm_email": "maria_errado@gmail.com",
+    "password": "abcdef123",
+    "confirm_password": "abcdef123"
+  },
+  "newUserPasswordDifferent": {
+    "name": "João Silva",
+    "email": "joao@gmail.com",
+    "confirm_email": "joao@gmail.com",
+    "password": "123456789",
+    "confirm_password": "987654321"
+  },
+  "newUserPasswordShort": {
+    "name": "Ana Clara",
+    "email": "ana@gmail.com",
+    "confirm_email": "ana@gmail.com",
+    "password": "123",
+    "confirm_password": "123"
+  }
+}

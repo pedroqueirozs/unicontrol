@@ -3,9 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
 const PrivateRoutes = () => {
-  const { authed } = useAuth();
+  const { authed, registering } = useAuth();
 
-  if (authed === null) {
+  if (authed === null || registering) {
     return <LoadingOverlay open={true} />;
   }
 

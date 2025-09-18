@@ -8,6 +8,8 @@ interface AuthProviderProps {
 interface AuthContextType {
   authed: User | false | null;
   handleSignOut: () => void;
+  registering: boolean;
+  setRegistering: (value: boolean) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -16,6 +18,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authed, setAuthed] = useState<User | null | false>(null);
+  const [registering, setRegistering] = useState(false);
 
   async function handleSignOut() {
     signOut(auth);
@@ -34,7 +37,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, []);
   return (
-    <AuthContext.Provider value={{ authed, handleSignOut }}>
+    <AuthContext.Provider
+      value={{ authed, handleSignOut, registering, setRegistering }}
+    >
       {children}
     </AuthContext.Provider>
   );

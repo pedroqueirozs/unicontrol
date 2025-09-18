@@ -8,11 +8,16 @@ import Button from "@/components/Button";
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
 
 import { auth } from "@/services/firebaseConfig";
 import { useState } from "react";
 import { notify } from "@/utils/notify";
+import { useAuth } from "@/hooks/useAuth";
 
 type RegistrationData = {
   name: string;
@@ -21,6 +26,7 @@ type RegistrationData = {
 };
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
+  const { setRegistering } = useAuth();
   const schema = yup.object({
     name: yup.string().required("*"),
     email: yup.string().email("Digite um e-mail valido ").required("*"),
@@ -50,6 +56,7 @@ export default function Register() {
 
   async function handleRegister(data: RegistrationData) {
     setIsLoading(true);
+    setRegistering(true);
     try {
       const { email, password, name } = data;
       const userCredential = await createUserWithEmailAndPassword(
@@ -61,6 +68,9 @@ export default function Register() {
       await updateProfile(user, {
         displayName: name,
       });
+      await signOut(auth);
+      setRegistering(false);
+
       console.log("Este são os dados do usuario criado!", user.displayName);
       notify.success("Cadastrado com sucesso!");
       navigate("/");
@@ -68,6 +78,7 @@ export default function Register() {
       notify.error("Erro ao cadastrar, verifique os dados.");
     } finally {
       setIsLoading(false);
+      setRegistering(false);
     }
   }
 
