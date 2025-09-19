@@ -1,6 +1,12 @@
 import { defineConfig } from "cypress";
 import * as admin from "firebase-admin";
-import serviceAccount from "./cypress/firebase/serviceAccountKey.json";
+import * as path from "path";
+
+const serviceAccount = path.resolve(
+  "cypress",
+  "firebase",
+  "serviceAccountKey.json"
+);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
