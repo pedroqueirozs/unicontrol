@@ -21,7 +21,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
+
+      - name: Verificar versão do Node e npm
+        run: node -v && npm -v
 
       - name: Instalar dependências
         run: npm ci
