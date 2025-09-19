@@ -27,7 +27,7 @@ jobs:
         run: node -v && npm -v
 
       - name: Instalar dependências
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Build do projeto (Vite)
         run: npm run build
