@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #Pegar o código
+      # Pegar o código
       - name: Checkout código
         uses: actions/checkout@v4
 
-      #Configurações do node
+      # Configurações do node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,7 +31,6 @@ jobs:
 
       - name: Build do projeto (Vite)
         run: npm run build
-
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -53,20 +52,14 @@ jobs:
 
       - name: Aguardar servidor (wait-on)
         run: npx wait-on --timeout 60000 http://localhost:5173
-      - name: Criar serviceAccountKey.json
+
+      # Adicionei esta etapa para decodificar e criar o arquivo
+      - name: Criar serviceAccountKey.json com Segredo
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 }} # Assumindo que você criou este segredo
         run: |
-          echo '{
-            "type": "service_account",
-            "project_id": "'"$FIREBASE_PROJECT_ID"'",
-            "private_key_id": "random",
-            "private_key": "'"$FIREBASE_PRIVATE_KEY"'",
-            "client_email": "'"$FIREBASE_CLIENT_EMAIL"'",
-            "client_id": "random",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/$FIREBASE_CLIENT_EMAIL"
-          }' > serviceAccountKey.json
+          mkdir -p cypress/firebase
+          echo "$FIREBASE_SERVICE_ACCOUNT_KEY" | base64 -d > cypress/firebase/serviceAccountKey.json
 
       - name: Rodar Cypress (E2E tests)
         run: npx cypress run
