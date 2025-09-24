@@ -24,7 +24,7 @@ export function Header({ title }: HeaderProps) {
   }
 
   return (
-    <div className="bg-text_color_white flex w-full justify-between items-center h-20 p-5 rounded-tr-2xl ">
+    <div className="bg-text_color_white flex w-full justify-between items-center h-20 p-5  ">
       <h1 className="text-color_primary_400 font-bold text-xl uppercase">
         {title}
       </h1>

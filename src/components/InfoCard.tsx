@@ -31,7 +31,7 @@ export default function InfoCard({
       } ${to ? "cursor-pointer" : ""}`}
     >
       <div className="flex justify-center items-center text-center gap-4">
-        <span className="text-3xl">{icon}</span>
+        <span className="text-3xl text-blue-600">{icon}</span>
         <span className="text-sm">{title}</span>
       </div>
       <span className="text-3xl font-semibold">{value}</span>

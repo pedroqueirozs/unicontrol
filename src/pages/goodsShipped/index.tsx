@@ -141,7 +141,7 @@ export default function GoodsShipped() {
         let color = "";
         if (value === "Atrasada") color = "#E74C3C";
         if (value === "Entregue") color = "#34D399";
-        if (value === "No Prazo") color = "blue";
+        if (value === "No Prazo") color = "#3B82F6";
 
         return <span style={{ color, fontWeight: "bold" }}>{value}</span>;
       },
@@ -169,7 +169,7 @@ export default function GoodsShipped() {
       renderCell: (params) => (
         <div className=" flex h-full gap-4 items-center">
           <button
-            className="text-color_error"
+            className="text-text_description"
             onClick={() => handleDelete(params.id as string)}
           >
             <Trash2 />

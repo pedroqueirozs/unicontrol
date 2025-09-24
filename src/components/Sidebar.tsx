@@ -7,6 +7,7 @@ import {
   Settings,
   Users,
   ShieldAlert,
+  MapPin,
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "@/components/SidebarItem";
@@ -15,65 +16,54 @@ import logotipoLightSvg from "@/assets/unicontrol-logo-light.svg";
 
 const SideBar = React.forwardRef<HTMLElement>(() => {
   return (
-    <aside className="w-80 bg-color_primary_400 text-text_color_white rounded-s-2xl">
+    <aside className="w-80 bg-color_primary_400 text-text_color_white">
       <nav>
-        <div className="bg-color_primary_500 h-20 text-tex_color_white flex w-full justify-center items-center gap-2 rounded-tl-2xl">
+        <div className="bg-color_primary_500 h-20 text-tex_color_white flex w-full justify-center items-center gap-2 ">
           <img className=" w-auto" src={logotipoLightSvg} alt="" />
         </div>
-        <ul className="space-y-4 text-center flex flex-col gap-8 py-8 ">
+        <ul className="text-center flex flex-col gap-2 py-8 ">
           <SidebarItem
-            icon={
-              <ChartColumnIncreasing className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<ChartColumnIncreasing size={24} />}
             label="Dashboard"
             to="/dashboard"
           />
           <SidebarItem
-            icon={
-              <PackagePlus className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<PackagePlus size={24} />}
             label="Mercadorias"
             to="/goods-shipped"
           />
           <SidebarItem
-            icon={
-              <Folder className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<Folder size={24} />}
             label="Documentos"
             to="/documents"
           />
           <SidebarItem
-            icon={
-              <DollarSign className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<DollarSign size={24} />}
             label="Financeiro"
             to="/financial"
           />
           <SidebarItem
-            icon={
-              <AlignJustify className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<AlignJustify size={24} />}
             label="Relatórios"
             to="/reports"
           />
           <SidebarItem
-            icon={
-              <Users className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<MapPin size={24} />}
+            label="Endereços"
+            to="/address"
+          />
+          <SidebarItem
+            icon={<Users size={24} />}
             label="Pendências/Clientes"
             to="/customers-pending"
           />
           <SidebarItem
-            icon={
-              <ShieldAlert className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<ShieldAlert size={24} />}
             label="Pendências/Fornecedores"
             to="/suppliers-pending"
           />
           <SidebarItem
-            icon={
-              <Settings className="size-11  bg-color_primary_300 rounded-full p-2" />
-            }
+            icon={<Settings size={24} />}
             label="Configurações"
             to="/settings"
           />
