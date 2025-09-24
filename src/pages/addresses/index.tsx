@@ -465,7 +465,11 @@ export default function Addresses() {
           rows={selectedAddresses}
           hideFooter
           localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-          sx={{
+         sx={{
+            "& .MuiDataGrid-columnHeaderTitle": {
+              color: "#1A2A38",
+              fontWeight: "bold ",
+            },
             "& .MuiDataGrid-cell:focus-within": {
               outline: "none",
               boxShadow: "none",

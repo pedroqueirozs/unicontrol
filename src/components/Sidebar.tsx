@@ -18,8 +18,12 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
   return (
     <aside className="w-80 bg-color_primary_400 text-text_color_white">
       <nav>
-        <div className="bg-color_primary_500 h-20 text-tex_color_white flex w-full justify-center items-center gap-2 ">
-          <img className=" w-auto" src={logotipoLightSvg} alt="" />
+        <div className="bg-color_primary_500 h-20 text-text_color_white flex w-full justify-center items-center p-4">
+          <img
+            className=""
+            src={logotipoLightSvg}
+            alt="logomarca do software unicontrol"
+          />
         </div>
         <ul className="text-center flex flex-col gap-2 py-8 ">
           <SidebarItem

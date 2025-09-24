@@ -49,7 +49,7 @@ const router = createBrowserRouter([
           {
             path: "goods-shipped",
             element: <GoodsShipped />,
-            handle: { title: "Mercadorias enviadas" },
+            handle: { title: "Gestão de mercadorias" },
           },
           {
             path: "address",

@@ -67,7 +67,6 @@ export default function MyProfile() {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex gap-3 mt-8 pt-4 border-t border-gray-200">
           <button
             onClick={handleClose}

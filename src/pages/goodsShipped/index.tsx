@@ -475,25 +475,27 @@ export default function GoodsShipped() {
           )}
         </form>
       )}
-      <CustomDataGrid
-        columns={columns}
-        rows={data}
-        localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-        loading={tableIsLoading}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[10, 20, 30]}
-        showToolbar
-        sx={{
-          "& .MuiDataGrid-columnHeaderTitle": {
-            color: "#1A2A38",
-            fontWeight: "bold ",
-          },
-          "& .MuiDataGrid-cell:focus-within": {
-            outline: "none",
-            boxShadow: "none",
-          },
-        }}
-      />
+      <div>
+        <CustomDataGrid
+          columns={columns}
+          rows={data}
+          localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
+          loading={tableIsLoading}
+          initialState={{ pagination: { paginationModel } }}
+          pageSizeOptions={[10, 20, 30]}
+          showToolbar
+          sx={{
+            "& .MuiDataGrid-columnHeaderTitle": {
+              color: "#1A2A38",
+              fontWeight: "bold ",
+            },
+            "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+              boxShadow: "none",
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }
