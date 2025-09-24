@@ -145,7 +145,7 @@ export default function Dashboard() {
                   paddingAngle={2}
                   dataKey="value"
                 >
-                  {pieData.map((entry, index) => (
+                  {pieData.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
@@ -153,7 +153,7 @@ export default function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value, name, props) => [
+                  formatter={(value, _name, props) => [
                     `${value}%`,
                     props.payload.name,
                   ]}
