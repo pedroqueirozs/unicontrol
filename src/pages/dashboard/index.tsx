@@ -48,7 +48,7 @@ export default function Dashboard() {
     enviadas: m.sent,
     entregues: m.delivered,
   }));
-
+  console.log(chartData);
   // Dados do gráfico de pizza
   const pieData = transporterStats.map((t) => ({
     name: t.name,

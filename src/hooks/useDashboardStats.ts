@@ -8,6 +8,9 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
+dayjs.locale("pt-br");
 
 interface Shipment {
   shipping_date: Timestamp;
@@ -62,6 +65,7 @@ export function useDashboardStats() {
         (doc) => doc.data() as Shipment
       );
 
+      console.log("Dados Brutos", docs);
       //KPIs gerais
       const general = calculateGeneralStats(docs, currentDate);
       setGeneralStats(general);
@@ -121,7 +125,7 @@ function calculateMonthlyStats(docs: Shipment[]): MonthlyStats[] {
 
   docs.forEach((doc) => {
     //Mês de envio
-    const sentMonth = dayjs(doc.shipping_date.toDate()).format("MMM/YYYY");
+    const sentMonth = dayjs(doc.shipping_date.toDate()).format("YYYY-MM");
     if (!monthlyMap[sentMonth]) {
       monthlyMap[sentMonth] = { sent: 0, delivered: 0 };
     }
@@ -130,7 +134,7 @@ function calculateMonthlyStats(docs: Shipment[]): MonthlyStats[] {
     //Mês de entrega
     if (doc.delivery_date) {
       const deliveredMonth = dayjs(doc.delivery_date.toDate()).format(
-        "MMM/YYYY"
+        "YYYY-MM"
       );
       if (!monthlyMap[deliveredMonth]) {
         monthlyMap[deliveredMonth] = { sent: 0, delivered: 0 };
@@ -139,10 +143,12 @@ function calculateMonthlyStats(docs: Shipment[]): MonthlyStats[] {
     }
   });
 
-  return Object.entries(monthlyMap).map(([month, values]) => ({
-    month,
-    sent: values.sent,
-    delivered: values.delivered,
+  const orderedMonths = Object.keys(monthlyMap).sort();
+
+  return orderedMonths.map((key) => ({
+    month: dayjs(key).format("MMM/YYYY"),
+    sent: monthlyMap[key].sent,
+    delivered: monthlyMap[key].delivered,
   }));
 }
 
