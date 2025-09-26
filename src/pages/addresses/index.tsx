@@ -342,7 +342,7 @@ export default function Addresses() {
   return (
     <div>
       <div className="flex justify-between text-center items-center mb-8">
-        <h2 className="text-color_primary_400 font-bold">
+        <h2 className="text-2xl text-color_primary_400 font-bold">
           Endereços cadastrados
         </h2>
         <Button
@@ -465,7 +465,7 @@ export default function Addresses() {
           rows={selectedAddresses}
           hideFooter
           localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
-         sx={{
+          sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
               color: "#1A2A38",
               fontWeight: "bold ",

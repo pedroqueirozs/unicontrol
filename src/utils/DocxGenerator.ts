@@ -9,6 +9,7 @@ import {
   TableRow,
   WidthType,
   BorderStyle,
+  AlignmentType,
 } from "docx";
 
 import { SelectedAddress } from "@/pages/addresses";
@@ -17,83 +18,92 @@ export async function generateDocx(addresses: SelectedAddress[]) {
   const recipientBlock = (addr: SelectedAddress) => [
     new Paragraph({
       children: [
-        new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 25 }),
+        new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 28 }),
         new TextRun({
           text: addr.recipient?.toUpperCase() ?? "",
-          size: 25,
+          size: 30,
           bold: true,
         }),
       ],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 100 },
     }),
     new Paragraph({
       children: [
-        new TextRun({ text: "ENDEREÇO: ", bold: true, size: 25 }),
-        new TextRun({ text: addr.street?.toUpperCase() ?? "", size: 25 }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "BAIRRO: ", bold: true, size: 25 }),
-        new TextRun({ text: addr.district?.toUpperCase() ?? "", size: 25 }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "CEP: ", bold: true, size: 25 }),
-        new TextRun({ text: addr.zip?.toUpperCase() ?? "", size: 25 }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "CIDADE: ", bold: true, size: 25 }),
-        new TextRun({ text: addr.city?.toUpperCase() ?? "", size: 25 }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "COMPLEMENTO: ", bold: true, size: 25 }),
-        new TextRun({ text: addr.complement?.toUpperCase() ?? "", size: 25 }),
-      ],
-    }),
-  ];
-  const senderBlock = () => [
-    new Paragraph({ text: "" }),
-    new Paragraph({
-      children: [
+        new TextRun({ text: "Endereço: ", bold: true, size: 22 }),
+        new TextRun({ text: addr.street ?? "", size: 22 }),
         new TextRun({
-          text: "REMETENTE",
+          text: addr.complement ? ` - ${addr.complement}` : "",
           size: 22,
         }),
       ],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 50 },
     }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Bairro: ", bold: true, size: 22 }),
+        new TextRun({ text: addr.district ?? "", size: 22 }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 50 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "CEP: ", bold: true, size: 22 }),
+        new TextRun({ text: addr.zip ?? "", size: 22 }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 50 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: "Cidade: ", bold: true, size: 22 }),
+        new TextRun({
+          text: `${addr.city ?? ""} `,
+          size: 22,
+        }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 50 },
+    }),
+  ];
+
+  const senderBlock = () => [
     new Paragraph({
       children: [
         new TextRun({
           text: "SÃO JOSÉ ARTIGOS LITÚRGICOS LTDA",
-          size: 22,
+          size: 24,
+          bold: true,
         }),
       ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 100 },
     }),
     new Paragraph({
       children: [
         new TextRun({
           text: "Rua João Rebelo, 839 - Cândida Câmara",
-          size: 22,
+          size: 18,
         }),
       ],
+      alignment: AlignmentType.CENTER,
     }),
     new Paragraph({
       children: [
-        new TextRun({ text: "Montes Claros - MG - 39401-036", size: 22 }),
+        new TextRun({ text: "Montes Claros - MG - 39401-036", size: 18 }),
       ],
+      alignment: AlignmentType.CENTER,
     }),
     new Paragraph({
       children: [
         new TextRun({
-          text: "Tel.: (38) 3321-4705 | Tel.: (38) 3321-1025 | WhatsApp.: (38) 9 9895-3646",
-          size: 22,
+          text: "Tel.: (38) 3321-4705 | WhatsApp: (38) 9 9895-3646",
         }),
       ],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 50 },
     }),
   ];
 
@@ -105,7 +115,22 @@ export async function generateDocx(addresses: SelectedAddress[]) {
           new TableRow({
             children: [
               new TableCell({
-                children: [...recipientBlock(addr), ...senderBlock()],
+                children: [
+                  ...recipientBlock(addr),
+                  new Paragraph({
+                    children: [new TextRun({ text: " ", size: 1, break: 1 })],
+                    border: {
+                      top: {
+                        style: BorderStyle.SINGLE,
+                        size: 2,
+                        color: "000000",
+                      },
+                    },
+                    spacing: { before: 100, after: 100 },
+                  }),
+                  ...senderBlock(),
+                ],
+
                 borders: {
                   top: {
                     style: BorderStyle.SINGLE,
@@ -150,6 +175,7 @@ export async function generateDocx(addresses: SelectedAddress[]) {
   });
 
   Packer.toBlob(doc).then((blob) => {
-    saveAs(blob, "endereços.docx");
+    saveAs(blob, "Endereços.docx");
   });
 }
+  

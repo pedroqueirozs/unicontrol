@@ -354,7 +354,7 @@ export default function GoodsShipped() {
   return (
     <div>
       <div className="flex justify-between text-center items-center mb-8">
-        <h2 className="text-color_primary_400 font-bold">
+        <h2 className="text-2xl text-color_primary_400 font-bold">
           Lista de mercadorias enviadas
         </h2>
         <Button

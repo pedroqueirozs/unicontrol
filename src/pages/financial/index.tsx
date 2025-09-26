@@ -452,7 +452,9 @@ export default function Financial() {
   return (
     <div>
       <div className=" flex text-center justify-between items-end mb-8">
-        <h2 className="text-3xl font-bold">Notas Fiscais</h2>
+        <h2 className="text-2xl text-color_primary_400 font-bold">
+          Notas Fiscais
+        </h2>
 
         {editInvoiceAndSlips ? (
           ""
