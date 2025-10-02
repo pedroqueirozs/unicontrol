@@ -8,7 +8,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import GoodsShipped from "@/pages/goodsShipped";
-import Documents from "@/pages/documents";
+import UsefulDocuments from "@/pages/usefulDocuments";
 import Financial from "@/pages/financial";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
@@ -16,6 +16,7 @@ import CustomersPending from "@/pages/customersPending";
 import SuppliersPending from "@/pages/suppliersPending";
 import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
+import { ResetPassword } from "@/pages/ResetPassword";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Login /> },
           { path: "register", element: <Register /> },
+          { path: "reset-password", element: <ResetPassword /> },
         ],
       },
     ],
@@ -57,9 +59,9 @@ const router = createBrowserRouter([
             handle: { title: "Gestão de endereços" },
           },
           {
-            path: "documents",
-            element: <Documents />,
-            handle: { title: "Documentos" },
+            path: "useful-documents",
+            element: <UsefulDocuments />,
+            handle: { title: "Documentos Úteis" },
           },
           {
             path: "financial",

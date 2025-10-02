@@ -71,7 +71,6 @@ export default function Register() {
       await signOut(auth);
       setRegistering(false);
 
-      console.log("Este são os dados do usuario criado!", user.displayName);
       notify.success("Cadastrado com sucesso!");
       navigate("/");
     } catch (error) {

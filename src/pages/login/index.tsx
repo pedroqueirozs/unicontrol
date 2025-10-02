@@ -1,20 +1,25 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+
 import googleIcon from "@/assets/google_icon.svg";
+
 import { Mail, Lock } from "lucide-react";
+
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { useNavigate } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
+
 import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   setPersistence,
-  browserLocalPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 import { auth } from "@/services/firebaseConfig";
-import { useState } from "react";
 import { notify } from "@/utils/notify";
 
 type LoginFormImputs = {
@@ -25,6 +30,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+
   const schema = yup.object({
     user_email: yup.string().email("Digite um e-mail valido ").required("*"),
     password: yup.string().required("*").min(6, "Minimo 6 caracteres"),
@@ -41,14 +47,14 @@ export default function Login() {
   async function handleLogin({ user_email, password }: LoginFormImputs) {
     setIsLoading(true);
     try {
+      await setPersistence(auth, browserSessionPersistence);
       const userCredential = await signInWithEmailAndPassword(
         auth,
         user_email,
         password
       );
-      await setPersistence(auth, browserLocalPersistence);
       const user = userCredential.user;
-      alert(`Bem-vindo(a), ${user.displayName}`);
+      notify.success(`Bem vindo, ${user.displayName}`);
       navigate("/dashboard");
     } catch (error) {
       notify.error("Erro ao fazer login. Verifique suas credenciais");
@@ -59,8 +65,7 @@ export default function Login() {
   async function googleLogin() {
     const provider = new GoogleAuthProvider();
     try {
-      await setPersistence(auth, browserLocalPersistence);
-
+      await setPersistence(auth, browserSessionPersistence);
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
       notify.success(`Bem vindo, ${user.displayName}`);
@@ -93,9 +98,13 @@ export default function Login() {
           {...register("password")}
           errorMessage={errors.password?.message}
         />
-        <a className="justify-items-end text-end hover:underline" href="#">
+        <Link
+          className="justify-items-end text-end hover:underline"
+          to="/reset-password"
+        >
           Esqueceu a senha?
-        </a>
+        </Link>
+
         <Button
           isLoading={isLoading}
           type="submit"
@@ -105,7 +114,7 @@ export default function Login() {
       </form>
       <div className="justify-center mt-8 flex gap-4 ">
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
-        <div className="text-[#C2C2C2]">OR</div>
+        <div className="text-[#C2C2C2]">OU</div>
         <div className="h-0.5 w-full bg-[#C2C2C2] m-auto"></div>
       </div>
       <Button

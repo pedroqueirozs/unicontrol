@@ -38,8 +38,8 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
           />
           <SidebarItem
             icon={<Folder size={24} />}
-            label="Documentos"
-            to="/documents"
+            label="Documentos Úteis"
+            to="/useful-documents"
           />
           <SidebarItem
             icon={<DollarSign size={24} />}

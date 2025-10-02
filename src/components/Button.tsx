@@ -29,7 +29,7 @@ const Button: React.FC<ButtonProps> = ({
     <div>
       <button
         type={type}
-        className={`w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-60 ${
+        className={`w-full h-12 flex justify-center items-center mt-3 gap-3 p-2 border-none rounded-md hover:opacity-80 font-semibold ${
           isLoading ? "cursor-progress" : ""
         }`}
         style={{

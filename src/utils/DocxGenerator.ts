@@ -178,4 +178,3 @@ export async function generateDocx(addresses: SelectedAddress[]) {
     saveAs(blob, "Endereços.docx");
   });
 }
-  
