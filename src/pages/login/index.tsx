@@ -48,13 +48,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await setPersistence(auth, browserSessionPersistence);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        user_email,
-        password
-      );
-      const user = userCredential.user;
-      notify.success(`Bem vindo, ${user.displayName}`);
+      await signInWithEmailAndPassword(auth, user_email, password);
       navigate("/dashboard");
     } catch (error) {
       notify.error("Erro ao fazer login. Verifique suas credenciais");
