@@ -9,23 +9,21 @@ interface InputSelectProps
   id: string;
   labelName: string;
   labelId: string;
-  errorMessage?: string;
   options: Option[];
 }
 
 const InputSelect = React.forwardRef<HTMLSelectElement, InputSelectProps>(
-  ({ id, labelName, labelId, errorMessage, options, ...props }, ref) => {
+  ({ id, labelName, labelId, options, ...props }, ref) => {
     return (
       <div>
         <div className="flex gap-1">
-          <label htmlFor={labelId} className="mb-1 block text-text_description">
+          <label htmlFor={labelId} className="mb-1 block">
             {labelName}
           </label>
-          <span style={{ color: "red", fontSize: 14 }}> {errorMessage}</span>
         </div>
         <div className="relative mb-2">
           <select
-            className="bg-bg_input_color rounded-md h-11 w-full pl-3 outline-none border border-solid border-border_input_color focus:border-color_secondary"
+            className="rounded-md h-11 w-full pl-3 outline-none bg-input_bg border border-solid border-input_border focus:border-input_border_focus"
             id={id}
             ref={ref}
             {...props}

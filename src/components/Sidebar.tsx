@@ -16,9 +16,9 @@ import logotipoLightSvg from "@/assets/unicontrol-logo-light.svg";
 
 const SideBar = React.forwardRef<HTMLElement>(() => {
   return (
-    <aside className="w-80 bg-color_primary_400 text-text_color_white">
+    <aside className="w-80 bg-background_primary_400 rounded-r-2xl text-text_white">
       <nav>
-        <div className="bg-color_primary_500 h-20 text-text_color_white flex w-full justify-center items-center p-4">
+        <div className="h-20 flex w-full justify-center items-center p-4">
           <img
             className=""
             src={logotipoLightSvg}

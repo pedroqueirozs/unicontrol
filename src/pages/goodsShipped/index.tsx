@@ -414,7 +414,6 @@ export default function GoodsShipped() {
                 { value: "Outro", label: "Outro" },
               ]}
               {...register("transporter")}
-              errorMessage={errors.transporter?.message}
             />
             <Input
               id="shipping_date"

@@ -186,7 +186,7 @@ export default function DocumentManagerFirebase() {
   const getFileIcon = (type: string) => {
     if (type?.includes("pdf")) return <File className="w-8 h-8 text-red-500" />;
     if (type?.includes("word") || type?.includes("document"))
-      return <FileText className="w-8 h-8 text-blue-500" />;
+      return <FileText className="w-8 h-8 text-notification_warn" />;
     if (type?.startsWith("image/"))
       return <Image className="w-8 h-8 text-green-500" />;
     return <FileArchive className="w-8 h-8 text-gray-500" />;

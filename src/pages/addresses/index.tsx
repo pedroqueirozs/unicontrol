@@ -119,21 +119,19 @@ export default function Addresses() {
         return (
           <div className="flex h-full gap-4 items-center">
             <button
-              className="text-color_error"
+              className="text-notification_error"
               onClick={() => decreaseAddressQuantity(params.id as string)}
             >
               <CircleMinus />
             </button>
             <button
-              className="text-text_description"
+              className="text-text_secondary"
               onClick={() => increaseAddressQuantity(params.id as string)}
             >
               <CirclePlus />
             </button>
             <button
-              className={
-                isSelected ? "text-[#2ECC71]" : "text-text_description"
-              }
+              className={isSelected ? "text-notification_success" : ""}
               onClick={() => handleSelectedAddresses(params.row)}
             >
               {isSelected ? <CircleCheck /> : <Circle />}
@@ -159,20 +157,20 @@ export default function Addresses() {
         return (
           <div className="flex h-full gap-4 items-center">
             <button
-              className="text-color_error"
+              className="text-notification_error"
               onClick={() => handleDelete(params.id as string)}
             >
               <Trash2 />
             </button>
             <button
-              className="text-text_description"
+              className="text-text_secondary"
               onClick={() => handleEdit(params.row)}
             >
               <Pencil />
             </button>
             <button
               className={
-                isSelected ? "text-[#2ECC71]" : "text-text_description"
+                isSelected ? "text-notification_success" : "text-text_secondary"
               }
               onClick={() => handleSelectedAddresses(params.row)}
             >

@@ -18,9 +18,9 @@ export default function MyProfile() {
     navigate(-1);
   };
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+    <div className="max-w-md mx-auto bg-background_primary_400 rounded-lg shadow-lg overflow-hidden text-text_white">
       {dialog}
-      <header className="bg-color_primary_400 text-white px-6 py-8">
+      <header className="px-6 py-8">
         <div className="flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
             {auth?.currentUser?.photoURL ? (
@@ -38,32 +38,24 @@ export default function MyProfile() {
             <h1 className="text-xl font-semibold">
               {auth.currentUser?.displayName}
             </h1>
-            <p className="text-blue-100 text-sm font-medium">
-              Administrador do sistema
-            </p>
+            <p className="text-sm font-medium">Administrador do sistema</p>
           </div>
         </div>
       </header>
       <div className="px-6 py-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">
           Informações pessoais
         </h2>
 
         <div className="space-y-4">
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-gray-600">
-              Nome Completo
-            </span>
-            <span className="text-gray-900 font-medium">
-              {auth.currentUser?.displayName}
-            </span>
+            <span className="text-sm font-medium">Nome Completo</span>
+            <span className="font-medium">{auth.currentUser?.displayName}</span>
           </div>
 
           <div className="flex flex-col space-y-1">
-            <span className="text-sm font-medium text-gray-600">E-mail</span>
-            <span className="text-gray-900 font-medium">
-              {auth.currentUser?.email}
-            </span>
+            <span className="text-sm font-medium">E-mail</span>
+            <span className="font-medium">{auth.currentUser?.email}</span>
           </div>
         </div>
 

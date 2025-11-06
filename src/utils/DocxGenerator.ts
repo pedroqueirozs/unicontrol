@@ -12,7 +12,7 @@ import {
   AlignmentType,
 } from "docx";
 
-import { SelectedAddress } from "@/pages/addresses";
+import { SelectedAddress } from "src/pages/addresses";
 
 export async function generateDocx(addresses: SelectedAddress[]) {
   const recipientBlock = (addr: SelectedAddress) => [

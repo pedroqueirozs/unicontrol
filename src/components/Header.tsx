@@ -24,8 +24,8 @@ export function Header({ title }: HeaderProps) {
   }
 
   return (
-    <div className="bg-text_color_white flex w-full justify-between items-center h-20 p-5  ">
-      <h1 className="text-color_primary_400 font-bold text-xl uppercase">
+    <div className="flex w-full justify-between items-center h-20 p-5">
+      <h1 className="text-text_primary_400 font-bold text-xl uppercase">
         {title}
       </h1>
       <div className="flex gap-4 justify-center items-center  ">
@@ -43,25 +43,25 @@ export function Header({ title }: HeaderProps) {
                 src={auth?.currentUser?.photoURL}
               />
             ) : (
-              <User className="bg-neutral size-11 text-text_color_white p-2 rounded-full" />
+              <User className="bg-neutral size-11 text-text_white p-2 rounded-full" />
             )}
           </button>
         </div>
 
         {open && (
-          <div className="absolute right-0 top-16 w-48 bg-white shadow-lg rounded-xl py-2 z-50">
+          <div className="absolute right-0 top-16 w-48 bg-background_white shadow-lg rounded-xl py-2 z-50">
             <button
               onClick={() => {
                 navigate("/profile");
                 setOpen(false);
               }}
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+              className="block w-full text-left px-4 py-2 hover:opacity-70"
             >
               Meu Perfil
             </button>
             <button
               onClick={handleSignout}
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+              className="block w-full text-left px-4 py-2 hover:opacity-70"
             >
               Sair
             </button>

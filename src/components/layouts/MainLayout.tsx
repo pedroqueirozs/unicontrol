@@ -16,7 +16,7 @@ export default function MainLayout() {
       <SideBar />
       <div className="flex flex-col w-full">
         <Header title={title} />
-        <main className="flex-1 mt-8 mx-4 p-4 border border-border_input_color rounded-md">
+        <main className="flex-1 mt-8 mx-4 p-4 border border-input_border rounded-md">
           <Outlet />
           <footer className="mt-8 text-center text-sm">
             © 2025 saojoseartigosliturgicos

@@ -12,9 +12,9 @@ export function SidebarItem({ icon, to, label }: SidebarItemProps) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `hover:text-gray-300  flex items-center justify-start gap-2 p-4  ${
+        `hover:opacity-70 flex items-center justify-start gap-2 p-4  ${
           isActive
-            ? "bg-color_primary_300 border-l-4 border-color_secondary rounded-lg font-semibold"
+            ? "border-l-4 border-details_green rounded-lg font-semibold"
             : ""
         }`
       }
