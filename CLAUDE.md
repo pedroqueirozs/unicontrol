@@ -42,4 +42,31 @@ Sempre avisar Pedro antes de:
 - Modificar configurações de build ou Firebase
 - Qualquer ação que não possa ser desfeita facilmente
 
+## Documentação de Negócio
+
+Toda a documentação dos fluxos e regras da empresa está em `docs/`:
+- `docs/regras-de-negocio.md` — regras consolidadas e problemas identificados (RN-01 a RN-13)
+- `docs/glossario.md` — termos específicos da empresa
+- `docs/fluxos/vendas.md` — fluxo do setor de vendas
+- `docs/fluxos/expedicao.md` — fluxo do setor de expedição
+- `docs/fluxos/administrativo-financeiro.md` — fluxo do setor administrativo e financeiro
+
+**Antes de implementar qualquer módulo novo, ler os arquivos relevantes em `docs/`.**
+
+## Status dos Módulos
+
+| Módulo | Status | Referência |
+|--------|--------|------------|
+| Dashboard | ✅ Pronto | — |
+| Gestão de Mercadorias | ✅ Pronto | `docs/fluxos/administrativo-financeiro.md` §3.4 |
+| Contas a Pagar | ✅ Pronto | `docs/fluxos/administrativo-financeiro.md` §3.5 |
+| Gestão de Endereços | ✅ Pronto | — |
+| Documentos Úteis | ✅ Pronto | — |
+| Autenticação | ✅ Pronto | — |
+| Perfil do Usuário | ✅ Pronto | — |
+| Pendências de Clientes | 🔧 Incompleto | `docs/regras-de-negocio.md` P-07 |
+| Pendências com Fornecedores | 🔧 Não iniciado | `docs/regras-de-negocio.md` P-07 |
+| Relatórios | 🔧 Placeholder | — |
+| Configurações | 🔧 Placeholder | — |
+
 
