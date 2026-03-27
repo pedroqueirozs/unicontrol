@@ -33,6 +33,44 @@ import { notify } from "@/utils/notify";
 import { ptBR } from "@mui/x-data-grid/locales";
 import { Pencil, Trash2 } from "lucide-react";
 
+const BRAZILIAN_STATES = [
+  { value: "AC", label: "AC - Acre" },
+  { value: "AL", label: "AL - Alagoas" },
+  { value: "AP", label: "AP - Amapá" },
+  { value: "AM", label: "AM - Amazonas" },
+  { value: "BA", label: "BA - Bahia" },
+  { value: "CE", label: "CE - Ceará" },
+  { value: "DF", label: "DF - Distrito Federal" },
+  { value: "ES", label: "ES - Espírito Santo" },
+  { value: "GO", label: "GO - Goiás" },
+  { value: "MA", label: "MA - Maranhão" },
+  { value: "MT", label: "MT - Mato Grosso" },
+  { value: "MS", label: "MS - Mato Grosso do Sul" },
+  { value: "MG", label: "MG - Minas Gerais" },
+  { value: "PA", label: "PA - Pará" },
+  { value: "PB", label: "PB - Paraíba" },
+  { value: "PR", label: "PR - Paraná" },
+  { value: "PE", label: "PE - Pernambuco" },
+  { value: "PI", label: "PI - Piauí" },
+  { value: "RJ", label: "RJ - Rio de Janeiro" },
+  { value: "RN", label: "RN - Rio Grande do Norte" },
+  { value: "RS", label: "RS - Rio Grande do Sul" },
+  { value: "RO", label: "RO - Rondônia" },
+  { value: "RR", label: "RR - Roraima" },
+  { value: "SC", label: "SC - Santa Catarina" },
+  { value: "SP", label: "SP - São Paulo" },
+  { value: "SE", label: "SE - Sergipe" },
+  { value: "TO", label: "TO - Tocantins" },
+];
+
+const TRANSPORTERS = [
+  { value: "Braspress", label: "Braspress" },
+  { value: "Correios", label: "Correios" },
+  { value: "Via Ônibus", label: "Via Ônibus" },
+  { value: "Retirada na Empresa", label: "Retirada na Empresa" },
+  { value: "Outro", label: "Outro" },
+];
+
 export type MerchandiseFormData = {
   name: string;
   document_number: string;
@@ -44,6 +82,7 @@ export type MerchandiseFormData = {
   delivery_date?: string | null;
   notes?: string | null;
 };
+
 export type MerchandiseFirestoreData = Omit<
   MerchandiseFormData,
   "shipping_date" | "delivery_forecast" | "delivery_date"
@@ -64,7 +103,43 @@ export type MerchandiseUIData = Omit<
   delivery_date?: string;
   created_at: string;
   notes: string;
+  situation: string;
 };
+
+const defaultFormValues: MerchandiseFormData = {
+  name: "",
+  document_number: "",
+  city: "",
+  uf: "SP",
+  transporter: "Braspress",
+  shipping_date: "",
+  delivery_forecast: "",
+  delivery_date: "",
+  notes: "",
+};
+
+const schema = yup.object({
+  name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
+  document_number: yup
+    .string()
+    .max(50, "Máximo de 50 caracteres")
+    .required("*"),
+  city: yup.string().max(100, "Máximo de 100 caracteres").required("*"),
+  uf: yup.string().required("*"),
+  transporter: yup.string().required("*"),
+  shipping_date: yup.string().required("*"),
+  delivery_forecast: yup.string().when("transporter", {
+    is: "Retirada na Empresa",
+    then: (s) => s.notRequired(),
+    otherwise: (s) => s.required("*"),
+  }),
+  delivery_date: yup.string().when("transporter", {
+    is: "Retirada na Empresa",
+    then: (s) => s.required("Informe a data de entrega"),
+    otherwise: (s) => s.notRequired(),
+  }),
+  notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
+}) as yup.ObjectSchema<MerchandiseFormData>;
 
 export default function GoodsShipped() {
   const [data, setData] = useState<MerchandiseUIData[]>([]);
@@ -74,62 +149,42 @@ export default function GoodsShipped() {
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
   const paginationModel = { page: 0, pageSize: 10 };
 
-  const defaultFormValues: MerchandiseFormData = {
-    name: "",
-    document_number: "",
-    city: "",
-    uf: "",
-    transporter: "Braspress",
-    shipping_date: "",
-    delivery_forecast: "",
-    delivery_date: "",
-    notes: "",
-  };
-
-  const schema = yup.object({
-    name: yup.string().max(200, "Máximo de 200 caracteres").required("*"),
-    document_number: yup
-      .string()
-      .max(50, "Máximo de 50 caracteres")
-      .required("*"),
-    city: yup.string().max(100, "Máximo de 100 caracteres").required("*"),
-    uf: yup
-      .string()
-      .length(2, "O estado deve conter 2 letras")
-      .matches(/^[A-Za-z]{2}$/, "O estado deve conter apenas letras")
-      .required("*"),
-    transporter: yup.string().required("*"),
-    shipping_date: yup.string().required("*"),
-    delivery_forecast: yup.string().required("*"),
-    delivery_date: yup.string().notRequired(),
-    notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
-  });
   const {
     handleSubmit,
     register,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<MerchandiseFormData>({
     resolver: yupResolver(schema),
-    defaultValues: {
-      name: "",
-      document_number: "",
-      city: "",
-      uf: "",
-      transporter: "Braspress",
-      shipping_date: "",
-      delivery_forecast: "",
-      delivery_date: "",
-      notes: "",
-    },
+    defaultValues: defaultFormValues,
   });
+
+  const watchedTransporter = watch("transporter");
+  const watchedShippingDate = watch("shipping_date");
+  const isPickup = watchedTransporter === "Retirada na Empresa";
+
+  // Quando Retirada na Empresa: preenche data de entrega com a data de saída
+  useEffect(() => {
+    if (isPickup && watchedShippingDate) {
+      setValue("delivery_date", watchedShippingDate);
+    }
+  }, [isPickup, watchedShippingDate, setValue]);
+
+  // Quando muda para Retirada na Empresa: limpa previsão de entrega
+  useEffect(() => {
+    if (isPickup) {
+      setValue("delivery_forecast", "");
+    }
+  }, [isPickup, setValue]);
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Cliente", width: 150 },
     { field: "document_number", headerName: "Nota Fiscal", width: 120 },
     { field: "city", headerName: "Cidade", width: 150 },
-    { field: "uf", headerName: "UF", width: 150 },
-    { field: "transporter", headerName: "Transportador", width: 150 },
+    { field: "uf", headerName: "UF", width: 70 },
+    { field: "transporter", headerName: "Transportador", width: 160 },
     { field: "shipping_date", headerName: "Data de Envio", width: 130 },
     {
       field: "situation",
@@ -137,20 +192,17 @@ export default function GoodsShipped() {
       width: 130,
       renderCell: (params) => {
         const value = params.value as string;
-
         let color = "";
         if (value === "Atrasada") color = "#E74C3C";
         if (value === "Entregue") color = "#34D399";
         if (value === "No Prazo") color = "#3B82F6";
-
         return <span style={{ color, fontWeight: "bold" }}>{value}</span>;
       },
     },
-
     {
       field: "delivery_forecast",
       headerName: "Previsão de entrega",
-      width: 130,
+      width: 150,
     },
     {
       field: "delivery_date",
@@ -160,14 +212,14 @@ export default function GoodsShipped() {
     {
       field: "notes",
       headerName: "Observação",
-      width: 130,
+      width: 200,
     },
     {
       field: "actions",
       headerName: "Ações",
       width: 120,
       renderCell: (params) => (
-        <div className=" flex h-full gap-4 items-center">
+        <div className="flex h-full gap-4 items-center">
           <button
             className="text-text_description"
             onClick={() => handleDelete(params.id as string)}
@@ -184,6 +236,7 @@ export default function GoodsShipped() {
       ),
     },
   ];
+
   function handleEdit(item: MerchandiseUIData) {
     setEditItem(item);
     setVisibleForm(true);
@@ -204,6 +257,7 @@ export default function GoodsShipped() {
       notes: item.notes ?? "",
     });
   }
+
   async function handleDelete(id: string) {
     try {
       const confirmed = await confirm("Deseja deletar este registro?");
@@ -212,42 +266,11 @@ export default function GoodsShipped() {
         notify.success("Registro deletado com sucesso!");
         await getAllDocuments();
       }
-    } catch (error) {
+    } catch {
       notify.error("Erro ao deletar o registro.");
     }
   }
 
-  async function registerNewGoodsShipped(data: MerchandiseFormData) {
-    try {
-      const shippingDate = dayjs(data.shipping_date).startOf("day").toDate();
-      const deliveryForecast = dayjs(data.delivery_forecast)
-        .startOf("day")
-        .toDate();
-      const deliveryDate = data.delivery_date
-        ? dayjs(data.delivery_date).startOf("day").toDate()
-        : null;
-      const confirmed = await confirm(
-        "Tem certeza que deseja cadastrar essa mercadoria?"
-      );
-      if (confirmed) {
-        const docRef = await addDoc(collection(db, "goods_shipped"), {
-          ...data,
-          shipping_date: shippingDate,
-          delivery_forecast: deliveryForecast,
-          delivery_date: deliveryDate,
-          created_at: new Date(),
-        });
-        reset(defaultFormValues);
-        notify.success("Cadastrado com sucesso!");
-        await getAllDocuments();
-
-        console.log("Documento criado com ID:", docRef.id);
-      }
-    } catch (error) {
-      notify.error("Erro ao cadastrar, verifique os dados.");
-      console.error("Erro ao adicionar documento:", error);
-    }
-  }
   async function getAllDocuments() {
     setTableIsLoading(true);
     try {
@@ -258,7 +281,7 @@ export default function GoodsShipped() {
 
       const snapshot = await getDocs(q);
 
-      const docs = await snapshot.docs.map((doc) => {
+      const docs = snapshot.docs.map((doc) => {
         const data = doc.data() as MerchandiseFirestoreData;
         const deliveryDate = data.delivery_date
           ? data.delivery_date.toDate()
@@ -268,12 +291,8 @@ export default function GoodsShipped() {
         return {
           id: doc.id,
           ...data,
-          shipping_date: dayjs(data.shipping_date.toDate()).format(
-            "DD/MM/YYYY"
-          ),
-          delivery_forecast: dayjs(data.delivery_forecast.toDate()).format(
-            "DD/MM/YYYY"
-          ),
+          shipping_date: dayjs(data.shipping_date.toDate()).format("DD/MM/YYYY"),
+          delivery_forecast: dayjs(data.delivery_forecast.toDate()).format("DD/MM/YYYY"),
           delivery_date: data.delivery_date
             ? dayjs(data.delivery_date.toDate()).format("DD/MM/YYYY")
             : "",
@@ -284,26 +303,21 @@ export default function GoodsShipped() {
       });
 
       setData(docs);
-    } catch (error) {
-      console.log(error);
+    } catch {
+      notify.error("Erro ao carregar os registros.");
     } finally {
       setTableIsLoading(false);
     }
   }
+
   function calculateSituation(
     deliveryDate: Date | null,
     deliveryForecast: Date
   ): string {
     const today = dayjs().startOf("day");
 
-    if (deliveryDate) {
-      return "Entregue";
-    }
-
-    if (today.isAfter(dayjs(deliveryForecast))) {
-      return "Atrasada";
-    }
-
+    if (deliveryDate) return "Entregue";
+    if (today.isAfter(dayjs(deliveryForecast))) return "Atrasada";
     return "No Prazo";
   }
 
@@ -313,12 +327,14 @@ export default function GoodsShipped() {
 
   async function onSubmit(formData: MerchandiseFormData) {
     const shippingDate = dayjs(formData.shipping_date).startOf("day").toDate();
-    const deliveryForecast = dayjs(formData.delivery_forecast)
-      .startOf("day")
-      .toDate();
+    // Para Retirada na Empresa, previsão = data de saída (já foi entregue)
+    const deliveryForecast = isPickup
+      ? shippingDate
+      : dayjs(formData.delivery_forecast).startOf("day").toDate();
     const deliveryDate = formData.delivery_date
       ? dayjs(formData.delivery_date).startOf("day").toDate()
       : null;
+
     const payload = {
       ...formData,
       shipping_date: shippingDate,
@@ -327,27 +343,31 @@ export default function GoodsShipped() {
     };
 
     try {
+      const confirmed = await confirm(
+        editItem
+          ? "Deseja salvar as alterações?"
+          : "Tem certeza que deseja cadastrar essa mercadoria?"
+      );
+      if (!confirmed) return;
+
       if (editItem) {
         const ref = doc(db, "goods_shipped", editItem.id);
         await updateDoc(ref, payload);
         notify.success("Registro atualizado com sucesso!");
       } else {
-        const normalizedData: MerchandiseFormData = {
-          ...formData,
-          delivery_date: formData.delivery_date ?? "",
-          notes: formData.notes ?? "",
-        };
-
-        await registerNewGoodsShipped(normalizedData);
+        await addDoc(collection(db, "goods_shipped"), {
+          ...payload,
+          created_at: new Date(),
+        });
+        notify.success("Cadastrado com sucesso!");
       }
 
       setEditItem(null);
       reset(defaultFormValues);
       setVisibleForm(false);
       await getAllDocuments();
-    } catch (error) {
+    } catch {
       notify.error("Erro ao salvar registro.");
-      console.error(error);
     }
   }
 
@@ -368,9 +388,9 @@ export default function GoodsShipped() {
       {visibleForm && (
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className=" flex flex-col gap-4 my-8"
+          className="flex flex-col gap-4 my-8"
         >
-          <div className="grid grid-cols-3 gap-4 w-full ">
+          <div className="grid grid-cols-3 gap-4 w-full">
             <Input
               id="name"
               type="text"
@@ -394,25 +414,18 @@ export default function GoodsShipped() {
               {...register("city")}
               errorMessage={errors.city?.message}
             />
-            <Input
+            <InputSelect
               id="uf"
-              type="text"
               labelName="UF"
               labelId="uf"
+              options={BRAZILIAN_STATES}
               {...register("uf")}
-              errorMessage={errors.uf?.message}
             />
-
             <InputSelect
               id="carrier"
               labelName="Transportadora"
               labelId="carrier"
-              options={[
-                { value: "Braspress", label: "Braspress" },
-                { value: "Correios", label: "Correios" },
-                { value: "Retirada na Empresa", label: "Retirada na Empresa" },
-                { value: "Outro", label: "Outro" },
-              ]}
+              options={TRANSPORTERS}
               {...register("transporter")}
             />
             <Input
@@ -423,23 +436,27 @@ export default function GoodsShipped() {
               {...register("shipping_date")}
               errorMessage={errors.shipping_date?.message}
             />
-            <Input
-              id="delivery_forecast"
-              type="date"
-              labelName="Previsão de Entrega"
-              labelId="delivery_forecast"
-              {...register("delivery_forecast")}
-              errorMessage={errors.delivery_forecast?.message}
-            />
+
+            {!isPickup && (
+              <Input
+                id="delivery_forecast"
+                type="date"
+                labelName="Previsão de Entrega"
+                labelId="delivery_forecast"
+                {...register("delivery_forecast")}
+                errorMessage={errors.delivery_forecast?.message}
+              />
+            )}
 
             <Input
               id="delivery_date"
               type="date"
-              labelName="Data da Entrega"
+              labelName={isPickup ? "Data da Entrega (Retirada) *" : "Data da Entrega"}
               labelId="delivery_date"
               {...register("delivery_date")}
               errorMessage={errors.delivery_date?.message}
             />
+
             <Input
               id="notes"
               type="text"
@@ -449,14 +466,15 @@ export default function GoodsShipped() {
               errorMessage={errors.notes?.message}
             />
           </div>
-          <div className="w-52 flex gap-4 ">
+
+          <div className="w-52 flex gap-4">
             <Button text={editItem ? "Atualizar" : "Salvar"} type="submit" />
             <Button
               onClick={() => reset(defaultFormValues)}
               backgroundColor="#F5F7FA"
               color="#555555"
               borderColor="#E0E0E0"
-              text={"Limpar"}
+              text="Limpar"
             />
           </div>
           {editItem && (
@@ -474,6 +492,7 @@ export default function GoodsShipped() {
           )}
         </form>
       )}
+
       <div>
         <CustomDataGrid
           columns={columns}
@@ -486,7 +505,7 @@ export default function GoodsShipped() {
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
               color: "#1A2A38",
-              fontWeight: "bold ",
+              fontWeight: "bold",
             },
             "& .MuiDataGrid-cell:focus-within": {
               outline: "none",
