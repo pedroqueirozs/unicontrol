@@ -48,7 +48,6 @@ export default function Dashboard() {
     enviadas: m.sent,
     entregues: m.delivered,
   }));
-  console.log(chartData);
   // Dados do gráfico de pizza
   const pieData = transporterStats.map((t) => ({
     name: t.name,
@@ -85,7 +84,7 @@ export default function Dashboard() {
         <KPICard
           title="Taxa de Entrega"
           value={
-            generalStats ? `${generalStats.deliveryRate.toFixed(2)}%` : "—"
+            generalStats ? `${generalStats.deliveryRate.toFixed(1)}%` : "—"
           }
           change="em relação ao total enviado"
           changeType="increase"
@@ -107,8 +106,9 @@ export default function Dashboard() {
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="mes" />
-                <YAxis />
+                <YAxis allowDecimals={false} />
                 <Tooltip />
+                <Legend verticalAlign="top" height={36} />
                 <Line
                   type="monotone"
                   dataKey="enviadas"
@@ -191,7 +191,7 @@ export default function Dashboard() {
           to="/customers-pending"
         />
         <InfoCard icon={<PiggyBank />} title="Contas a pagar" to="/financial" />
-        <InfoCard icon={<ChartLine />} title="Controle de Fretes" />
+        <InfoCard icon={<ChartLine />} title="Controle de Fretes" comingSoon />
         <InfoCard
           icon={<Package />}
           title="Mercadorias enviadas"

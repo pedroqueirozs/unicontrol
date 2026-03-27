@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
+import { toast } from "react-toastify";
 
 dayjs.locale("pt-br");
 
@@ -50,35 +51,36 @@ export function useDashboardStats() {
     async function fetchStats() {
       setLoading(true);
 
-      const currentDate = new Date();
-      const pastDate = new Date();
-      pastDate.setMonth(currentDate.getMonth() - 5);
+      try {
+        const currentDate = new Date();
+        const pastDate = new Date();
+        pastDate.setMonth(currentDate.getMonth() - 5);
 
-      const q = query(
-        collection(db, "goods_shipped"),
-        where("shipping_date", ">=", Timestamp.fromDate(pastDate)),
-        where("shipping_date", "<=", Timestamp.fromDate(currentDate))
-      );
+        const q = query(
+          collection(db, "goods_shipped"),
+          where("shipping_date", ">=", Timestamp.fromDate(pastDate)),
+          where("shipping_date", "<=", Timestamp.fromDate(currentDate))
+        );
 
-      const snapshot = await getDocs(q);
-      const docs: Shipment[] = snapshot.docs.map(
-        (doc) => doc.data() as Shipment
-      );
+        const snapshot = await getDocs(q);
+        const docs: Shipment[] = snapshot.docs.map(
+          (doc) => doc.data() as Shipment
+        );
 
-      console.log("Dados Brutos", docs);
-      //KPIs gerais
-      const general = calculateGeneralStats(docs, currentDate);
-      setGeneralStats(general);
+        const general = calculateGeneralStats(docs, currentDate);
+        setGeneralStats(general);
 
-      //Estatísticas por mês
-      const monthly = calculateMonthlyStats(docs);
-      setMonthlyStats(monthly);
+        const monthly = calculateMonthlyStats(docs);
+        setMonthlyStats(monthly);
 
-      //Estatísticas por transportadora
-      const transporter = calculateTransporterStats(docs, general.totalSent);
-      setTransporterStats(transporter);
-
-      setLoading(false);
+        const transporter = calculateTransporterStats(docs, general.totalSent);
+        setTransporterStats(transporter);
+      } catch (error) {
+        console.error("Erro ao carregar dados do dashboard:", error);
+        toast.error("Erro ao carregar dados do dashboard. Tente novamente.");
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchStats();

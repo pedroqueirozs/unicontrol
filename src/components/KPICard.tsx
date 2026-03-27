@@ -16,11 +16,13 @@ export const KPICard = ({
   color?: string;
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 border-blue-200",
-    green: "bg-green-50 border-green-200",
-    yellow: "bg-yellow-50 border-yellow-200",
-    red: "bg-red-50 border-red-200",
+    blue: { card: "bg-blue-50 border-blue-200", icon: "text-blue-500" },
+    green: { card: "bg-green-50 border-green-200", icon: "text-green-500" },
+    yellow: { card: "bg-yellow-50 border-yellow-200", icon: "text-yellow-500" },
+    red: { card: "bg-red-50 border-red-200", icon: "text-red-500" },
   };
+
+  const colors = colorClasses[color as keyof typeof colorClasses] ?? colorClasses.blue;
 
   const changeColor =
     changeType === "increase"
@@ -37,11 +39,7 @@ export const KPICard = ({
       : Clock;
 
   return (
-    <div
-      className={`p-6 rounded-2xl border shadow-sm ${
-        colorClasses[color as keyof typeof colorClasses]
-      } bg-white`}
-    >
+    <div className={`p-6 rounded-2xl border shadow-sm ${colors.card}`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
@@ -51,7 +49,7 @@ export const KPICard = ({
             <span>{change}</span>
           </div>
         </div>
-        <div className="text-gray-400">{icon}</div>
+        <div className={colors.icon}>{icon}</div>
       </div>
     </div>
   );
