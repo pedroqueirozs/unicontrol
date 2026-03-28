@@ -131,7 +131,16 @@ const schema = yup.object({
   delivery_forecast: yup.string().when("transporter", {
     is: "Retirada na Empresa",
     then: (s) => s.notRequired(),
-    otherwise: (s) => s.required("*"),
+    otherwise: (s) =>
+      s.required("*").test(
+        "delivery-forecast-after-shipping",
+        "Deve ser igual ou posterior à data de envio",
+        function (value) {
+          const { shipping_date } = this.parent;
+          if (!value || !shipping_date) return true;
+          return value >= shipping_date;
+        }
+      ),
   }),
   delivery_date: yup.string().when("transporter", {
     is: "Retirada na Empresa",
