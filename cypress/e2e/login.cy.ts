@@ -2,14 +2,18 @@ import { UserFixture } from "../support/types";
 
 describe("Teste de login", () => {
   let users: UserFixture;
+
   before(() => {
     cy.fixture("users.json").then((data) => {
       users = data;
     });
   });
 
-  it("Deve fazer login com sucesso utilizando credenciais de um usuário válido e realizar o logout com segurança", () => {
+  beforeEach(() => {
     cy.visit("/");
+  });
+
+  it("Deve fazer login com sucesso utilizando credenciais de um usuário válido e realizar o logout com segurança", () => {
     cy.get("#user_email").type(users.validUser.email);
     cy.get("#password").type(users.validUser.password);
 
@@ -23,7 +27,6 @@ describe("Teste de login", () => {
   });
 
   it("Deve mostrar uma mensagem de erro com um usuário inválido", () => {
-    cy.visit("/");
     cy.get("#user_email").type(users.invalidUser.email);
     cy.get("#password").type(users.invalidUser.password);
     cy.contains("Entrar").click();
@@ -32,10 +35,11 @@ describe("Teste de login", () => {
       "be.visible"
     );
   });
+
   it("Deve mostrar erro ao tentar fazer login com campos vazios", () => {
-    cy.visit("/");
     cy.contains("Entrar").click();
-    cy.contains("span", "*").should("be.visible");
-    cy.contains("span", "*").should("be.visible");
+
+    cy.get("label[for='user_email']").next("span").should("contain", "*");
+    cy.get("label[for='password']").next("span").should("contain", "*");
   });
 });
