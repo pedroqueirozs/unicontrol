@@ -21,6 +21,7 @@ Sempre explique o **porquê** das decisões importantes, não só o **o quê**.
 
 ### Commits
 - **Nunca fazer commit sem Pedro pedir explicitamente**
+- Nunca incluir co-autores automáticos (IA ou ferramentas)
 - Mensagens de commit em **ingles**, no formato: `type: short description`
 - Tipos: `feat` (nova funcionalidade), `fix` (correção), `refactor` (refatoração), `style` (estilo), `docs` (documentação)
 - Exemplos:
