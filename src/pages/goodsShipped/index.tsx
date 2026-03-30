@@ -144,8 +144,26 @@ const schema = yup.object({
   }),
   delivery_date: yup.string().when("transporter", {
     is: "Retirada na Empresa",
-    then: (s) => s.required("Informe a data de entrega"),
-    otherwise: (s) => s.notRequired(),
+    then: (s) =>
+      s.required("Informe a data de entrega").test(
+        "delivery-date-pickup-after-shipping",
+        "Deve ser igual ou posterior à data de envio",
+        function (value) {
+          const { shipping_date } = this.parent;
+          if (!value || !shipping_date) return true;
+          return value >= shipping_date;
+        }
+      ),
+    otherwise: (s) =>
+      s.notRequired().test(
+        "delivery-date-after-shipping",
+        "Deve ser igual ou posterior à data de envio",
+        function (value) {
+          const { shipping_date } = this.parent;
+          if (!value || !shipping_date) return true;
+          return value >= shipping_date;
+        }
+      ),
   }),
   notes: yup.string().notRequired().max(1000, "Máximo de 1000 caracteres"),
 }) as yup.ObjectSchema<MerchandiseFormData>;
@@ -460,7 +478,7 @@ export default function GoodsShipped() {
             <Input
               id="delivery_date"
               type="date"
-              labelName={isPickup ? "Data da Entrega (Retirada) *" : "Data da Entrega"}
+              labelName={isPickup ? "Data da Entrega (Retirada)" : "Data da Entrega"}
               labelId="delivery_date"
               {...register("delivery_date")}
               errorMessage={errors.delivery_date?.message}
