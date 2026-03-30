@@ -60,6 +60,14 @@ Documento consolidado com as regras identificadas a partir do fluxo da empresa.
 - Atualmente **não existe** controle formal de estoque
 - Qualquer solução deve ser **extremamente simples e intuitiva** (desafio cultural)
 
+## RN-14 — Previsão de Entrega
+- A previsão de entrega deve ser **igual ou posterior à data de envio**
+- Não é possível prever entrega antes da mercadoria sair da empresa
+
+## RN-15 — Data de Entrega
+- A data de entrega deve ser **igual ou posterior à data de envio**
+- Válido tanto para entregas via transportadora quanto para retiradas na empresa
+
 ---
 
 ## Problemas e Oportunidades de Melhoria
