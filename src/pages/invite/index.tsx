@@ -27,6 +27,12 @@ type InviteFormData = {
   confirm_password: string;
 };
 
+const ROLE_LABELS: Record<UserRole, string> = {
+  admin: "Administrador",
+  expedicao: "Expedição",
+  vendas: "Vendas",
+};
+
 const schema = yup.object({
   name: yup.string().required("*"),
   email: yup.string().email("Digite um e-mail válido").required("*"),
@@ -121,7 +127,7 @@ export default function Invite() {
 
   if (tokenStatus === "loading") {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center py-16">
         <p>Validando convite...</p>
       </div>
     );
@@ -129,7 +135,7 @@ export default function Invite() {
 
   if (tokenStatus === "invalid") {
     return (
-      <div className="flex flex-col justify-center items-center h-screen gap-2">
+      <div className="flex flex-col items-center py-16 gap-2">
         <p className="text-lg font-semibold">Link de convite inválido.</p>
         <p className="text-sm text-gray-500">Solicite um novo convite ao administrador.</p>
       </div>
@@ -138,7 +144,7 @@ export default function Invite() {
 
   if (tokenStatus === "used") {
     return (
-      <div className="flex flex-col justify-center items-center h-screen gap-2">
+      <div className="flex flex-col items-center py-16 gap-2">
         <p className="text-lg font-semibold">Este convite já foi utilizado.</p>
         <p className="text-sm text-gray-500">Solicite um novo convite ao administrador.</p>
       </div>
@@ -147,7 +153,7 @@ export default function Invite() {
 
   if (tokenStatus === "expired") {
     return (
-      <div className="flex flex-col justify-center items-center h-screen gap-2">
+      <div className="flex flex-col items-center py-16 gap-2">
         <p className="text-lg font-semibold">Este convite expirou.</p>
         <p className="text-sm text-gray-500">Solicite um novo convite ao administrador.</p>
       </div>
@@ -155,10 +161,11 @@ export default function Invite() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16 p-6">
+    <div className="mt-8">
       <h1 className="text-xl font-bold text-center mb-2">Criar sua conta</h1>
       <p className="text-sm text-center text-gray-500 mb-8">
-        Você foi convidado como <strong>{inviteData?.role}</strong>
+        Você foi convidado como{" "}
+        <strong>{inviteData ? ROLE_LABELS[inviteData.role] : ""}</strong>
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
