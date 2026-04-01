@@ -29,7 +29,7 @@ export function Header({ title }: HeaderProps) {
         {title}
       </h1>
       <div className="flex gap-4 justify-center items-center  ">
-        <span>Bem vindo, {auth?.currentUser?.displayName}</span>
+        <span>Bem vindo, {auth?.currentUser?.displayName?.split(" ")[0]}</span>
 
         <div className="h-full flex items-center text-center justify-center px-6  ">
           <button

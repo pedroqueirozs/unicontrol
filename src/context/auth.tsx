@@ -12,6 +12,7 @@ export type UserRole = "admin" | "expedicao" | "vendas";
 
 export interface UserData {
   companyId: string;
+  companyName: string;
   role: UserRole;
   name: string;
   email: string;
@@ -45,7 +46,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          setUserData(userDoc.data() as UserData);
+          const data = userDoc.data() as Omit<UserData, "companyName">;
+          const companyDoc = await getDoc(doc(db, "companies", data.companyId));
+          const companyName = companyDoc.exists() ? companyDoc.data().name : "";
+          setUserData({ ...data, companyName });
         } else {
           setUserData(null);
         }
