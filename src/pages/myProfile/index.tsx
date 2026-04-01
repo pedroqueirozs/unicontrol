@@ -45,7 +45,7 @@ export default function MyProfile() {
 
       {/* Avatar e nome */}
       <div className="flex flex-col items-center py-8">
-        <div className="w-24 h-24 bg-color_primary_400 rounded-full flex items-center justify-center mb-4">
+        <div className="w-24 h-24 bg-background_primary_400 rounded-full flex items-center justify-center mb-4">
           {auth.currentUser?.photoURL ? (
             <img
               src={auth.currentUser.photoURL}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import { auth } from "@/services/firebaseConfig";
 import { useConfirmDialog } from "@/components/ConfimDialog";
@@ -14,6 +14,16 @@ export function Header({ title }: HeaderProps) {
   const { confirm, dialog } = useConfirmDialog();
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
   async function handleSignout() {
     const confirmed = await confirm("Realmente deseja sair ?");
     if (confirmed) {
@@ -38,18 +48,24 @@ export function Header({ title }: HeaderProps) {
           >
             {auth?.currentUser?.photoURL ? (
               <img
-                alt="Avatar com a imagem do usuário logado no sistema"
+                alt="Avatar do usuário"
                 className="w-16 h-16 rounded-full object-cover"
                 src={auth?.currentUser?.photoURL}
               />
             ) : (
-              <User className="bg-neutral size-11 text-text_white p-2 rounded-full" />
+              <User className="bg-background_primary_400 size-11 text-white p-2 rounded-full" />
             )}
           </button>
         </div>
 
         {open && (
-          <div className="absolute right-0 top-16 w-48 bg-background_white shadow-lg rounded-xl py-2 z-50">
+          <>
+            {/* overlay invisível — fecha o dropdown ao clicar fora */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setOpen(false)}
+            />
+            <div className="absolute right-0 top-16 w-48 bg-background_white shadow-lg rounded-xl py-2 z-50">
             <button
               onClick={() => {
                 navigate("/profile");
@@ -67,6 +83,7 @@ export function Header({ title }: HeaderProps) {
             </button>
             {dialog}
           </div>
+          </>
         )}
       </div>
     </div>
