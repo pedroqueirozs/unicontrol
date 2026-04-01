@@ -19,6 +19,7 @@ import SuppliersPending from "@/pages/suppliersPending";
 import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
 import { ResetPassword } from "@/pages/ResetPassword";
+import ManageUsers from "@/pages/manageUsers";
 
 const router = createBrowserRouter([
   {
@@ -124,6 +125,15 @@ const router = createBrowserRouter([
             element: (
               <RoleRoute allowedRoles={["admin"]}>
                 <SuppliersPending />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: "manage-users",
+            handle: { title: "Gerenciar Usuários" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <ManageUsers />
               </RoleRoute>
             ),
           },
