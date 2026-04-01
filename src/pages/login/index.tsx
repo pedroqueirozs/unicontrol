@@ -41,9 +41,6 @@ export default function Login() {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  function registerUser() {
-    navigate(`/register`);
-  }
   async function handleLogin({ user_email, password }: LoginFormImputs) {
     setIsLoading(true);
     try {
@@ -118,13 +115,6 @@ export default function Login() {
         borderColor="#C2C2C2"
         color="#555555"
         onClick={googleLogin}
-      />
-      <Button
-        onClick={registerUser}
-        text="Cadastre-se"
-        backgroundColor="#FFFF"
-        borderColor="#C2C2C2"
-        color="#555555"
       />
     </div>
   );

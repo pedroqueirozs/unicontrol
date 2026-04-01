@@ -7,6 +7,7 @@ import AuthLayout from "@/components/layouts/AuthLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import Invite from "@/pages/invite";
 import Dashboard from "@/pages/dashboard";
 import GoodsShipped from "@/pages/goodsShipped";
 import UsefulDocuments from "@/pages/usefulDocuments";
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
           { index: true, element: <Login /> },
           { path: "register", element: <Register /> },
           { path: "reset-password", element: <ResetPassword /> },
+          { path: "invite", element: <Invite /> },
         ],
       },
     ],

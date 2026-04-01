@@ -36,6 +36,16 @@ Sempre explique o **porquê** das decisões importantes, não só o **o quê**.
 - Páginas novas vão em `src/pages/`
 - Sempre usar o alias `@/` ao invés de caminhos relativos longos
 
+### Documentação — Regra obrigatória
+Sempre que uma funcionalidade for criada ou modificada, verificar se precisa ser documentada em `docs/`.
+O que deve ser documentado:
+- Novas regras de negócio → `docs/regras-de-negocio.md`
+- Novos fluxos de usuário ou processos → `docs/fluxos/`
+- Estruturas de dados do Firestore (coleções, campos) → `docs/arquitetura.md`
+- Decisões arquiteturais importantes → `docs/arquitetura.md`
+
+Após implementar qualquer funcionalidade, perguntar a Pedro se deseja documentar antes de avançar.
+
 ### Alertas obrigatórios
 Sempre avisar Pedro antes de:
 - Deletar arquivos
@@ -46,8 +56,9 @@ Sempre avisar Pedro antes de:
 ## Documentação de Negócio
 
 Toda a documentação dos fluxos e regras da empresa está em `docs/`:
-- `docs/regras-de-negocio.md` — regras consolidadas e problemas identificados (RN-01 a RN-13)
+- `docs/regras-de-negocio.md` — regras consolidadas e problemas identificados (RN-01 a RN-16)
 - `docs/glossario.md` — termos específicos da empresa
+- `docs/arquitetura.md` — estrutura de dados do Firestore e decisões arquiteturais
 - `docs/fluxos/vendas.md` — fluxo do setor de vendas
 - `docs/fluxos/expedicao.md` — fluxo do setor de expedição
 - `docs/fluxos/administrativo-financeiro.md` — fluxo do setor administrativo e financeiro
@@ -65,9 +76,8 @@ Toda a documentação dos fluxos e regras da empresa está em `docs/`:
 | Documentos Úteis | ✅ Pronto | — |
 | Autenticação | ✅ Pronto | — |
 | Perfil do Usuário | ✅ Pronto | — |
+| Gerenciar Usuários | 🔧 Em andamento | `docs/regras-de-negocio.md` RN-16 |
 | Pendências de Clientes | 🔧 Incompleto | `docs/regras-de-negocio.md` P-07 |
 | Pendências com Fornecedores | 🔧 Não iniciado | `docs/regras-de-negocio.md` P-07 |
 | Relatórios | 🔧 Placeholder | — |
 | Configurações | 🔧 Placeholder | — |
-
-
