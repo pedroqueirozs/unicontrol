@@ -18,6 +18,7 @@ import { formatCurrencyBRL } from "@/utils/formatCurrency";
 import { formatDate } from "@/utils/formatDate";
 
 import { db } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import {
   addDoc,
   collection,
@@ -71,6 +72,8 @@ const defaultFormValues: InvoiceFormData = {
 };
 
 export default function Financial() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [dataSlips, setDataSlips] = useState<SlipsUIComplete[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -255,7 +258,7 @@ export default function Financial() {
     try {
       setLoading(true);
       const invoiceDoc = await getDoc(
-        doc(db, "invoices", item.idInvoiceReference)
+        doc(db, "companies", companyId, "invoices", item.idInvoiceReference)
       );
 
       if (!invoiceDoc.exists()) {
@@ -271,7 +274,7 @@ export default function Financial() {
       setSelectedInvoiceModal(invoiceData);
 
       const q = query(
-        collection(db, "slips"),
+        collection(db, "companies", companyId, "slips"),
         where("idInvoiceReference", "==", item.idInvoiceReference)
       );
       const snapshot = await getDocs(q);
@@ -289,7 +292,7 @@ export default function Financial() {
   async function handleEditInvoiceAndSlips(item: SlipsUIComplete) {
     try {
       const invoiceDoc = await getDoc(
-        doc(db, "invoices", item.idInvoiceReference)
+        doc(db, "companies", companyId, "invoices", item.idInvoiceReference)
       );
       if (!invoiceDoc.exists()) {
         notify.error("Nota fiscal não encontrada!");
@@ -308,7 +311,7 @@ export default function Financial() {
       setInvoiceValueDisplay(formatCurrencyBRL(invoiceData.invoiceValue));
 
       const q = query(
-        collection(db, "slips"),
+        collection(db, "companies", companyId, "slips"),
         where("idInvoiceReference", "==", item.idInvoiceReference)
       );
       const snapshot = await getDocs(q);
@@ -341,7 +344,7 @@ export default function Financial() {
       );
       if (confirmed) {
         setLoading(true);
-        const docRefInvoice = await addDoc(collection(db, "invoices"), {
+        const docRefInvoice = await addDoc(collection(db, "companies", companyId, "invoices"), {
           ...dataInvoice,
           created_at: new Date(),
         });
@@ -349,7 +352,7 @@ export default function Financial() {
         const invoiceId = docRefInvoice.id;
 
         const promises = invoiceSlips.map((slep) =>
-          setDoc(doc(db, "slips", slep.id), {
+          setDoc(doc(db, "companies", companyId, "slips", slep.id), {
             ...slep,
             issuer: dataInvoice.issuer,
             idInvoiceReference: invoiceId,
@@ -373,7 +376,7 @@ export default function Financial() {
   async function getAllSlips() {
     setTableIsLoading(true);
     try {
-      const q = query(collection(db, "slips"), orderBy("created_at", "desc"));
+      const q = query(collection(db, "companies", companyId, "slips"), orderBy("created_at", "desc"));
       const snapshot = await getDocs(q);
       const docs = snapshot.docs.map((doc) => doc.data() as SlipsUIComplete);
       setDataSlips(docs);
@@ -385,8 +388,9 @@ export default function Financial() {
   }
 
   useEffect(() => {
+    if (!companyId) return;
     getAllSlips();
-  }, []);
+  }, [companyId]);
 
   async function onSubmit(formDataInvoice: InvoiceFormData) {
     if (invoiceSlips.length === 0) {
@@ -411,11 +415,11 @@ export default function Financial() {
     if (editInvoiceAndSlips) {
       try {
         setLoading(true);
-        const ref = doc(db, "invoices", editInvoiceAndSlips.idInvoiceReference);
+        const ref = doc(db, "companies", companyId, "invoices", editInvoiceAndSlips.idInvoiceReference);
         await updateDoc(ref, formDataInvoice);
 
         const q = query(
-          collection(db, "slips"),
+          collection(db, "companies", companyId, "slips"),
           where(
             "idInvoiceReference",
             "==",
@@ -429,7 +433,7 @@ export default function Financial() {
           (slip) => !existingSlipIds.includes(slip.id)
         );
         const createNewSlep = newSlips.map((slip) =>
-          setDoc(doc(db, "slips", slip.id), {
+          setDoc(doc(db, "companies", companyId, "slips", slip.id), {
             ...slip,
             issuer: formDataInvoice.issuer,
             invoiceNumber: formDataInvoice.invoiceNumber,
@@ -439,13 +443,13 @@ export default function Financial() {
         );
 
         const updateSleps = snapshot.docs.map((docSnap) =>
-          updateDoc(doc(db, "slips", docSnap.id), {
+          updateDoc(doc(db, "companies", companyId, "slips", docSnap.id), {
             issuer: formDataInvoice.issuer,
             invoiceNumber: formDataInvoice.invoiceNumber,
           })
         );
         const deleteRemoved = removedSlipIds.map((id) =>
-          deleteDoc(doc(db, "slips", id))
+          deleteDoc(doc(db, "companies", companyId, "slips", id))
         );
         await Promise.all(createNewSlep);
         await Promise.all(updateSleps);

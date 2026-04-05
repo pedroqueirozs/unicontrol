@@ -17,6 +17,7 @@ import { useConfirmDialog } from "@/components/ConfimDialog";
 import { GridColDef } from "@mui/x-data-grid";
 
 import { db } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import {
   addDoc,
   collection,
@@ -169,6 +170,8 @@ const schema = yup.object({
 }) as yup.ObjectSchema<MerchandiseFormData>;
 
 export default function GoodsShipped() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [data, setData] = useState<MerchandiseUIData[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -289,7 +292,7 @@ export default function GoodsShipped() {
     try {
       const confirmed = await confirm("Deseja deletar este registro?");
       if (confirmed) {
-        await deleteDoc(doc(db, "goods_shipped", id));
+        await deleteDoc(doc(db, "companies", companyId, "goods_shipped", id));
         notify.success("Registro deletado com sucesso!");
         await getAllDocuments();
       }
@@ -299,10 +302,11 @@ export default function GoodsShipped() {
   }
 
   async function getAllDocuments() {
+    if (!companyId) return;
     setTableIsLoading(true);
     try {
       const q = query(
-        collection(db, "goods_shipped"),
+        collection(db, "companies", companyId, "goods_shipped"),
         orderBy("created_at", "desc")
       );
 
@@ -350,7 +354,7 @@ export default function GoodsShipped() {
 
   useEffect(() => {
     getAllDocuments();
-  }, []);
+  }, [companyId]);
 
   async function onSubmit(formData: MerchandiseFormData) {
     const shippingDate = dayjs(formData.shipping_date).startOf("day").toDate();
@@ -378,11 +382,11 @@ export default function GoodsShipped() {
       if (!confirmed) return;
 
       if (editItem) {
-        const ref = doc(db, "goods_shipped", editItem.id);
+        const ref = doc(db, "companies", companyId, "goods_shipped", editItem.id);
         await updateDoc(ref, payload);
         notify.success("Registro atualizado com sucesso!");
       } else {
-        await addDoc(collection(db, "goods_shipped"), {
+        await addDoc(collection(db, "companies", companyId, "goods_shipped"), {
           ...payload,
           created_at: new Date(),
         });
