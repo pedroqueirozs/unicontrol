@@ -50,10 +50,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const companyDoc = await getDoc(doc(db, "companies", data.companyId));
           const companyName = companyDoc.exists() ? companyDoc.data().name : "";
           setUserData({ ...data, companyName });
+          setAuthed(user);
         } else {
+          await signOut(auth);
+          setAuthed(false);
           setUserData(null);
         }
-        setAuthed(user);
       } else {
         setAuthed(false);
         setUserData(null);

@@ -11,11 +11,12 @@ import { useConfirmDialog } from "@/components/ConfimDialog";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
-import { generateDocx } from "@/utils/DocxGenerator";
+import { generateDocx, CompanySender } from "@/utils/DocxGenerator";
 
 import { db } from "@/services/firebaseConfig";
 import {
   addDoc,
+  getDoc,
   collection,
   deleteDoc,
   doc,
@@ -249,10 +250,17 @@ export default function Addresses() {
 
       if (selectedAddresses.length === 0) {
         notify.error("Nenhum endereço selecionado");
-
         return;
       }
-      await generateDocx(selectedAddresses);
+
+      const companyDoc = await getDoc(doc(db, "companies", companyId));
+      if (!companyDoc.exists()) {
+        notify.error("Dados da empresa não encontrados.");
+        return;
+      }
+
+      const company = companyDoc.data() as CompanySender;
+      await generateDocx(selectedAddresses, company);
       notify.success("Endereços gerados com sucesso!");
     } catch (error) {
       notify.error("Erro ao gerar endereços");

@@ -116,7 +116,7 @@ export default function Invite() {
 
       await updateDoc(doc(db, "invites", token), { used: true });
 
-      notify.success("Cadastro realizado com sucesso! Faça login para continuar.");
+      notify.success("Cadastro realizado com sucesso!");
       navigate("/");
     } catch {
       notify.error("Erro ao realizar cadastro. Verifique os dados e tente novamente.");
