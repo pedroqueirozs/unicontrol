@@ -68,7 +68,23 @@ Documento consolidado com as regras identificadas a partir do fluxo da empresa.
 - A data de entrega deve ser **igual ou posterior à data de envio**
 - Válido tanto para entregas via transportadora quanto para retiradas na empresa
 
-## RN-16 — Roles e Permissões de Acesso
+## RN-16 — Regras do Módulo Financeiro
+
+- Uma nota fiscal **deve ter ao menos um boleto** para ser salva
+- O **total dos boletos deve ser igual ao valor da nota fiscal** (tolerância de R$ 0,01)
+- A **data de emissão** da nota não pode ser futura — deve ser igual ou anterior à data atual
+- O **vencimento do boleto** não pode ser anterior à data atual
+- Durante a edição, boletos removidos só são excluídos do Firestore ao confirmar a atualização
+- Cancelar a edição restaura o estado original sem alterar nenhum dado
+
+## RN-17 — Remoção de Membros
+
+- Ao remover um membro, seu documento `users/{uid}` é deletado do Firestore
+- O usuário removido é deslogado automaticamente na próxima tentativa de acesso
+- A conta no Firebase Auth permanece tecnicamente, mas o acesso à aplicação é bloqueado
+- Para readmitir um usuário removido, o admin deve gerar um novo convite
+
+## RN-18 — Roles e Permissões de Acesso
 
 O sistema possui 3 roles de usuário:
 

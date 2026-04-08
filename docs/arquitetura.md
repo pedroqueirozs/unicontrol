@@ -19,9 +19,17 @@ Representa uma empresa cadastrada no sistema.
 | Campo | Tipo | Descrição |
 |---|---|---|
 | `name` | string | Nome da empresa |
+| `street` | string | Endereço (rua e número) |
+| `district` | string | Bairro |
+| `city` | string | Cidade |
+| `state` | string | Estado (ex: MG) |
+| `zip` | string | CEP |
+| `phone` | string | Telefone fixo |
+| `whatsapp` | string | WhatsApp |
 | `createdAt` | Timestamp | Data de criação |
 
 > Criado manualmente pelo proprietário do SaaS (Pedro) para cada novo cliente.
+> Os campos de endereço e contato são usados como remetente na geração de etiquetas (.docx).
 
 ---
 
@@ -64,7 +72,7 @@ companies/{companyId}/financial/{docId}
 companies/{companyId}/addresses/{docId}
 ```
 
-> **Status:** migração dos módulos para esta estrutura está em andamento na branch `feat/multi-tenant`.
+> **Status:** migração concluída. Todos os módulos já utilizam esta estrutura.
 
 ---
 
