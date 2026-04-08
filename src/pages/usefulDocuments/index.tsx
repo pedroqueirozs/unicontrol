@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { db, storage } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import {
   collection,
   addDoc,
@@ -44,6 +45,8 @@ type DocumentsProps = {
 };
 
 export default function DocumentManagerFirebase() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [documents, setDocuments] = useState<DocumentsProps[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<DocumentsProps[]>(
     []
@@ -86,7 +89,7 @@ export default function DocumentManagerFirebase() {
       // URL de download
       const downloadURL = await getDownloadURL(storageRef);
 
-      await addDoc(collection(db, "documents"), {
+      await addDoc(collection(db, "companies", companyId, "documents"), {
         name: file.name,
         type: file.type,
         sizeFormatted: formatFileSize(file.size),
@@ -114,7 +117,7 @@ export default function DocumentManagerFirebase() {
       await deleteObject(storageRef);
 
       // Remove do Firestore
-      await deleteDoc(doc(db, "documents", documentId));
+      await deleteDoc(doc(db, "companies", companyId, "documents", documentId));
 
       setSuccess("Documento removido com sucesso!");
       setTimeout(() => setSuccess(null), 3000);
@@ -157,7 +160,8 @@ export default function DocumentManagerFirebase() {
   };
 
   useEffect(() => {
-    const q = query(collection(db, "documents"), orderBy("uploadDate", "desc"));
+    if (!companyId) return;
+    const q = query(collection(db, "companies", companyId, "documents"), orderBy("uploadDate", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -169,7 +173,7 @@ export default function DocumentManagerFirebase() {
       setDocuments(docs);
     });
     return () => unsubscribe();
-  }, []);
+  }, [companyId]);
 
   // Filtrar
   useEffect(() => {

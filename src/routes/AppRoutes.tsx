@@ -2,10 +2,12 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import PublicRoutes from "@/routes/PublicRoutes";
 import PrivateRoutes from "@/routes/PrivateRoutes";
+import { RoleRoute } from "@/routes/RoleRoute";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import Invite from "@/pages/invite";
 import Dashboard from "@/pages/dashboard";
 import GoodsShipped from "@/pages/goodsShipped";
 import UsefulDocuments from "@/pages/usefulDocuments";
@@ -17,6 +19,7 @@ import SuppliersPending from "@/pages/suppliersPending";
 import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
 import { ResetPassword } from "@/pages/ResetPassword";
+import ManageUsers from "@/pages/manageUsers";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +31,7 @@ const router = createBrowserRouter([
           { index: true, element: <Login /> },
           { path: "register", element: <Register /> },
           { path: "reset-password", element: <ResetPassword /> },
+          { path: "invite", element: <Invite /> },
         ],
       },
     ],
@@ -40,8 +44,12 @@ const router = createBrowserRouter([
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
             handle: { title: "Dashboard" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <Dashboard />
+              </RoleRoute>
+            ),
           },
           {
             path: "profile",
@@ -50,43 +58,84 @@ const router = createBrowserRouter([
           },
           {
             path: "goods-shipped",
-            element: <GoodsShipped />,
             handle: { title: "Gestão de mercadorias" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <GoodsShipped />
+              </RoleRoute>
+            ),
           },
           {
             path: "address",
-            element: <Address />,
             handle: { title: "Gestão de endereços" },
+            element: (
+              <RoleRoute allowedRoles={["admin", "expedicao"]}>
+                <Address />
+              </RoleRoute>
+            ),
           },
           {
             path: "useful-documents",
-            element: <UsefulDocuments />,
             handle: { title: "Documentos Úteis" },
+            element: (
+              <RoleRoute allowedRoles={["admin", "expedicao"]}>
+                <UsefulDocuments />
+              </RoleRoute>
+            ),
           },
           {
             path: "financial",
-            element: <Financial />,
             handle: { title: "Contas a pagar" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <Financial />
+              </RoleRoute>
+            ),
           },
           {
             path: "reports",
-            element: <Reports />,
             handle: { title: "Relatórios" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <Reports />
+              </RoleRoute>
+            ),
           },
           {
             path: "settings",
-            element: <Settings />,
             handle: { title: "Configurações" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <Settings />
+              </RoleRoute>
+            ),
           },
           {
             path: "customers-pending",
-            element: <CustomersPending />,
             handle: { title: "Pendências/ Trocas de clientes" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <CustomersPending />
+              </RoleRoute>
+            ),
           },
           {
             path: "suppliers-pending",
-            element: <SuppliersPending />,
             handle: { title: "Pendências com Fornecedores" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <SuppliersPending />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: "manage-users",
+            handle: { title: "Gerenciar Usuários" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <ManageUsers />
+              </RoleRoute>
+            ),
           },
         ],
       },

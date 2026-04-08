@@ -1,13 +1,27 @@
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { createContext, useEffect, useState, ReactNode } from "react";
+import { doc, getDoc } from "firebase/firestore";
 
-import { auth } from "@/services/firebaseConfig";
+import { auth, db } from "@/services/firebaseConfig";
+
 interface AuthProviderProps {
   children: ReactNode;
 }
+
+export type UserRole = "admin" | "expedicao" | "vendas";
+
+export interface UserData {
+  companyId: string;
+  companyName: string;
+  role: UserRole;
+  name: string;
+  email: string;
+}
+
 interface AuthContextType {
   authed: User | false | null;
-  handleSignOut: () => void;
+  userData: UserData | null;
+  handleSignOut: () => Promise<void>;
   registering: boolean;
   setRegistering: (value: boolean) => void;
 }
@@ -18,27 +32,42 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authed, setAuthed] = useState<User | null | false>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [registering, setRegistering] = useState(false);
 
   async function handleSignOut() {
-    signOut(auth);
+    await signOut(auth);
     setAuthed(false);
+    setUserData(null);
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setAuthed(user);
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data() as Omit<UserData, "companyName">;
+          const companyDoc = await getDoc(doc(db, "companies", data.companyId));
+          const companyName = companyDoc.exists() ? companyDoc.data().name : "";
+          setUserData({ ...data, companyName });
+          setAuthed(user);
+        } else {
+          await signOut(auth);
+          setAuthed(false);
+          setUserData(null);
+        }
       } else {
         setAuthed(false);
+        setUserData(null);
       }
     });
 
     return () => unsubscribe();
   }, []);
+
   return (
     <AuthContext.Provider
-      value={{ authed, handleSignOut, registering, setRegistering }}
+      value={{ authed, userData, handleSignOut, registering, setRegistering }}
     >
       {children}
     </AuthContext.Provider>

@@ -68,6 +68,28 @@ Documento consolidado com as regras identificadas a partir do fluxo da empresa.
 - A data de entrega deve ser **igual ou posterior à data de envio**
 - Válido tanto para entregas via transportadora quanto para retiradas na empresa
 
+## RN-16 — Roles e Permissões de Acesso
+
+O sistema possui 3 roles de usuário:
+
+| Módulo | admin | expedicao | vendas |
+|---|---|---|---|
+| Dashboard | ✅ | ❌ | ❌ |
+| Gestão de Mercadorias | ✅ | ❌ | ❌ |
+| Contas a Pagar | ✅ | ❌ | ❌ |
+| Gestão de Endereços | ✅ | ✅ | ❌ |
+| Documentos Úteis | ✅ | ✅ | ❌ |
+| Pendências de Clientes | ✅ | ❌ | ❌ |
+| Pendências com Fornecedores | ✅ | ❌ | ❌ |
+| Relatórios | ✅ | ❌ | ❌ |
+| Configurações | ✅ | ❌ | ❌ |
+| Gerenciar Usuários | ✅ | ❌ | ❌ |
+
+- O role `admin` é definido pelo proprietário do SaaS diretamente no Firestore
+- O `admin` é responsável por convidar novos membros via link com token
+- O `admin` pode promover ou rebaixar qualquer usuário da empresa
+- O role `vendas` não possui módulos ativos no momento — serão implementados futuramente
+
 ---
 
 ## Problemas e Oportunidades de Melhoria

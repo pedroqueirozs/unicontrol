@@ -14,7 +14,18 @@ import {
 
 import { SelectedAddress } from "src/pages/addresses";
 
-export async function generateDocx(addresses: SelectedAddress[]) {
+export type CompanySender = {
+  name: string;
+  street: string;
+  district: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  whatsapp: string;
+};
+
+export async function generateDocx(addresses: SelectedAddress[], sender: CompanySender) {
   const recipientBlock = (addr: SelectedAddress) => [
     new Paragraph({
       children: [
@@ -73,7 +84,7 @@ export async function generateDocx(addresses: SelectedAddress[]) {
     new Paragraph({
       children: [
         new TextRun({
-          text: "SÃO JOSÉ ARTIGOS LITÚRGICOS LTDA",
+          text: sender.name.toUpperCase(),
           size: 24,
           bold: true,
         }),
@@ -84,7 +95,7 @@ export async function generateDocx(addresses: SelectedAddress[]) {
     new Paragraph({
       children: [
         new TextRun({
-          text: "Rua João Rebelo, 839 - Cândida Câmara",
+          text: `${sender.street} - ${sender.district}`,
           size: 18,
         }),
       ],
@@ -92,14 +103,18 @@ export async function generateDocx(addresses: SelectedAddress[]) {
     }),
     new Paragraph({
       children: [
-        new TextRun({ text: "Montes Claros - MG - 39401-036", size: 18 }),
+        new TextRun({
+          text: `${sender.city} - ${sender.state} - ${sender.zip}`,
+          size: 18,
+        }),
       ],
       alignment: AlignmentType.CENTER,
     }),
     new Paragraph({
       children: [
         new TextRun({
-          text: "Tel.: (38) 3321-4705 | WhatsApp: (38) 9 9895-3646",
+          text: `Tel.: ${sender.phone} | WhatsApp: ${sender.whatsapp}`,
+          size: 18,
         }),
       ],
       alignment: AlignmentType.CENTER,

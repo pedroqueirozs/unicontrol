@@ -10,6 +10,7 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import { toast } from "react-toastify";
+import { useAuth } from "@/hooks/useAuth";
 
 dayjs.locale("pt-br");
 
@@ -40,6 +41,8 @@ interface TransporterStats {
 }
 
 export function useDashboardStats() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [generalStats, setGeneralStats] = useState<GeneralStats | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
   const [transporterStats, setTransporterStats] = useState<TransporterStats[]>(
@@ -48,6 +51,8 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!companyId) return;
+
     async function fetchStats() {
       setLoading(true);
 
@@ -57,7 +62,7 @@ export function useDashboardStats() {
         pastDate.setMonth(currentDate.getMonth() - 5);
 
         const q = query(
-          collection(db, "goods_shipped"),
+          collection(db, "companies", companyId, "goods_shipped"),
           where("shipping_date", ">=", Timestamp.fromDate(pastDate)),
           where("shipping_date", "<=", Timestamp.fromDate(currentDate))
         );
@@ -84,7 +89,7 @@ export function useDashboardStats() {
     }
 
     fetchStats();
-  }, []);
+  }, [companyId]);
 
   return { generalStats, monthlyStats, transporterStats, loading };
 }

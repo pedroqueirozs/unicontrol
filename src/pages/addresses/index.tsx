@@ -11,11 +11,12 @@ import { useConfirmDialog } from "@/components/ConfimDialog";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
-import { generateDocx } from "@/utils/DocxGenerator";
+import { generateDocx, CompanySender } from "@/utils/DocxGenerator";
 
 import { db } from "@/services/firebaseConfig";
 import {
   addDoc,
+  getDoc,
   collection,
   deleteDoc,
   doc,
@@ -27,6 +28,7 @@ import {
 } from "firebase/firestore";
 
 import { notify } from "@/utils/notify";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Circle,
   CircleCheck,
@@ -55,6 +57,8 @@ export type SelectedAddress = AddressUIData & {
 };
 
 export default function Addresses() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [data, setData] = useState<AddressFormData[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -231,7 +235,7 @@ export default function Addresses() {
     try {
       const confirmed = await confirm("Deseja deletar este registro?");
       if (confirmed) {
-        await deleteDoc(doc(db, "addresses", id));
+        await deleteDoc(doc(db, "companies", companyId, "addresses", id));
         notify.success("Deletado com sucesso!");
         await getAllDocuments();
       }
@@ -246,10 +250,17 @@ export default function Addresses() {
 
       if (selectedAddresses.length === 0) {
         notify.error("Nenhum endereço selecionado");
-
         return;
       }
-      await generateDocx(selectedAddresses);
+
+      const companyDoc = await getDoc(doc(db, "companies", companyId));
+      if (!companyDoc.exists()) {
+        notify.error("Dados da empresa não encontrados.");
+        return;
+      }
+
+      const company = companyDoc.data() as CompanySender;
+      await generateDocx(selectedAddresses, company);
       notify.success("Endereços gerados com sucesso!");
     } catch (error) {
       notify.error("Erro ao gerar endereços");
@@ -264,14 +275,13 @@ export default function Addresses() {
         "Tem certeza que deseja cadastrar este endereço?"
       );
       if (confirmed) {
-        const docRef = await addDoc(collection(db, "addresses"), {
+        await addDoc(collection(db, "companies", companyId, "addresses"), {
           ...data,
           created_at: new Date(),
         });
         reset(defaultFormValues);
         notify.success("Cadastrado com sucesso!");
         await getAllDocuments();
-        console.log("Documento criado com ID:", docRef.id);
       }
     } catch (error) {
       notify.error("Erro ao cadastrar, verifique os dados.");
@@ -279,27 +289,21 @@ export default function Addresses() {
     }
   }
   async function getAllDocuments() {
+    if (!companyId) return;
     setTableIsLoading(true);
     try {
       const q = query(
-        collection(db, "addresses"),
+        collection(db, "companies", companyId, "addresses"),
         orderBy("created_at", "desc")
       );
-
       const snapshot = await getDocs(q);
-
-      const docs = await snapshot.docs.map((doc) => {
+      const docs = snapshot.docs.map((doc) => {
         const data = doc.data() as AddressFormData;
-        return {
-          id: doc.id,
-          ...data,
-          complement: data.complement ?? "",
-        };
+        return { id: doc.id, ...data, complement: data.complement ?? "" };
       });
-
       setData(docs);
     } catch (error) {
-      console.log(error);
+      notify.error("Erro ao carregar endereços.");
     } finally {
       setTableIsLoading(false);
     }
@@ -307,7 +311,7 @@ export default function Addresses() {
 
   useEffect(() => {
     getAllDocuments();
-  }, []);
+  }, [companyId]);
 
   async function onSubmit(formData: AddressFormData) {
     const payload = {
@@ -316,7 +320,7 @@ export default function Addresses() {
 
     try {
       if (editItem) {
-        const ref = doc(db, "addresses", editItem.id);
+        const ref = doc(db, "companies", companyId, "addresses", editItem.id);
         await updateDoc(ref, payload);
         notify.success("Atualizado com sucesso!");
       } else {

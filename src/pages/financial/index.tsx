@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -18,6 +18,7 @@ import { formatCurrencyBRL } from "@/utils/formatCurrency";
 import { formatDate } from "@/utils/formatDate";
 
 import { db } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 import {
   addDoc,
   collection,
@@ -62,7 +63,17 @@ export type SlipsUIComplete = SlipForm & {
   idInvoiceReference: string;
 };
 
+const defaultFormValues: InvoiceFormData = {
+  invoiceNumber: "",
+  issuer: "",
+  emission: "",
+  invoiceValue: 0,
+  observations: "",
+};
+
 export default function Financial() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [dataSlips, setDataSlips] = useState<SlipsUIComplete[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -76,15 +87,8 @@ export default function Financial() {
   );
   const [loading, setLoading] = useState(false);
   const [selectedSlipsModal, setSelectedSlipsModal] = useState<Slips[]>([]);
+  const [removedSlipIds, setRemovedSlipIds] = useState<string[]>([]);
   const paginationModel = { page: 0, pageSize: 10 };
-
-  const defaultFormValues: InvoiceFormData = {
-    invoiceNumber: "",
-    issuer: "",
-    emission: "",
-    invoiceValue: 0,
-    observations: "",
-  };
 
   const schemaInvoice = yup.object({
     invoiceNumber: yup
@@ -92,15 +96,26 @@ export default function Financial() {
       .max(20, "Máximo de 20 caracteres")
       .required("*"),
     issuer: yup.string().max(100, "Máximo de 100 caracteres").required("*"),
-    emission: yup.string().required("*"),
-    invoiceValue: yup.number().typeError("Digite um valor").required("*"),
+    emission: yup.string().required("*").test(
+      "not-future",
+      "Não pode ser uma data futura",
+      (value) => {
+        const today = new Date().toISOString().split("T")[0];
+        return !value || value <= today;
+      }
+    ),
+    invoiceValue: yup.number().typeError("Digite um valor").min(0.01, "Valor deve ser maior que zero").required("*"),
     observations: yup.string().notRequired(),
   });
+  const [invoiceValueDisplay, setInvoiceValueDisplay] = useState("");
+  const [ticketValueDisplay, setTicketValueDisplay] = useState("");
+
   const {
     handleSubmit: handleSubmitInvoice,
     watch,
     register: registerInvoice,
     reset: resetInvoice,
+    control: invoiceControl,
     formState: { errors: errorsInvoice },
   } = useForm<InvoiceFormData>({
     resolver: yupResolver(schemaInvoice),
@@ -126,13 +141,21 @@ export default function Financial() {
       .min(0, "O valor não pode ser negativo")
       .nullable()
       .required("*"),
-    maturity: yup.string().required("*"),
+    maturity: yup.string().required("*").test(
+      "not-past",
+      "Não pode ser anterior a hoje",
+      (value) => {
+        const today = new Date().toISOString().split("T")[0];
+        return !value || value >= today;
+      }
+    ),
   });
 
   const {
     handleSubmit: handleSubmitSlip,
     register: registerSlip,
     reset: resetSlep,
+    control: slipControl,
     formState: { errors: errorsSlip },
   } = useForm<SlipForm>({
     resolver: yupResolver(schemaSlips),
@@ -224,20 +247,18 @@ export default function Financial() {
   ];
 
   function addSlepToInvoice(slipFormData: SlipForm) {
-    setInvoiceSlips((prev) => {
-      return [...prev, { id: crypto.randomUUID(), ...slipFormData }];
-    });
-    resetSlep({
-      ticketNumber: "",
-      ticketValue: 0.0,
-      maturity: "",
-    });
+    setInvoiceSlips((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), ...slipFormData },
+    ]);
+    resetSlep({ ticketNumber: "", ticketValue: 0, maturity: "" });
+    setTicketValueDisplay("");
   }
   async function showInvoiceAndSlips(item: SlipsUIComplete) {
     try {
       setLoading(true);
       const invoiceDoc = await getDoc(
-        doc(db, "invoices", item.idInvoiceReference)
+        doc(db, "companies", companyId, "invoices", item.idInvoiceReference)
       );
 
       if (!invoiceDoc.exists()) {
@@ -253,7 +274,7 @@ export default function Financial() {
       setSelectedInvoiceModal(invoiceData);
 
       const q = query(
-        collection(db, "slips"),
+        collection(db, "companies", companyId, "slips"),
         where("idInvoiceReference", "==", item.idInvoiceReference)
       );
       const snapshot = await getDocs(q);
@@ -271,7 +292,7 @@ export default function Financial() {
   async function handleEditInvoiceAndSlips(item: SlipsUIComplete) {
     try {
       const invoiceDoc = await getDoc(
-        doc(db, "invoices", item.idInvoiceReference)
+        doc(db, "companies", companyId, "invoices", item.idInvoiceReference)
       );
       if (!invoiceDoc.exists()) {
         notify.error("Nota fiscal não encontrada!");
@@ -287,9 +308,10 @@ export default function Financial() {
         invoiceValue: invoiceData.invoiceValue,
         observations: invoiceData.observations ?? "",
       });
+      setInvoiceValueDisplay(formatCurrencyBRL(invoiceData.invoiceValue));
 
       const q = query(
-        collection(db, "slips"),
+        collection(db, "companies", companyId, "slips"),
         where("idInvoiceReference", "==", item.idInvoiceReference)
       );
       const snapshot = await getDocs(q);
@@ -307,18 +329,11 @@ export default function Financial() {
     }
   }
 
-  async function handleDeleteSlepInState(row: Slips) {
-    try {
-      setLoading(true);
-      setInvoiceSlips((prev) => prev.filter((slep) => slep.id !== row.id));
-      const slepRef = doc(db, "slips", row.id);
-      await deleteDoc(slepRef);
-      notify.success("Removido");
-      getAllSlips();
-    } catch (error) {
-      notify.error("Erro ao remover boleto");
-    } finally {
-      setLoading(false);
+  function handleDeleteSlepInState(row: Slips) {
+    setInvoiceSlips((prev) => prev.filter((slep) => slep.id !== row.id));
+    if (editInvoiceAndSlips) {
+      // Rastreia para deletar no Firestore apenas quando o usuário salvar
+      setRemovedSlipIds((prev) => [...prev, row.id]);
     }
   }
 
@@ -329,7 +344,7 @@ export default function Financial() {
       );
       if (confirmed) {
         setLoading(true);
-        const docRefInvoice = await addDoc(collection(db, "invoices"), {
+        const docRefInvoice = await addDoc(collection(db, "companies", companyId, "invoices"), {
           ...dataInvoice,
           created_at: new Date(),
         });
@@ -337,7 +352,7 @@ export default function Financial() {
         const invoiceId = docRefInvoice.id;
 
         const promises = invoiceSlips.map((slep) =>
-          setDoc(doc(db, "slips", slep.id), {
+          setDoc(doc(db, "companies", companyId, "slips", slep.id), {
             ...slep,
             issuer: dataInvoice.issuer,
             idInvoiceReference: invoiceId,
@@ -348,6 +363,8 @@ export default function Financial() {
         await Promise.all(promises);
         resetInvoice(defaultFormValues);
         setInvoiceSlips([]);
+        setInvoiceValueDisplay("");
+        setVisibleForm(false);
         notify.success("Cadastrado com sucesso!");
       }
     } catch (error) {
@@ -359,41 +376,50 @@ export default function Financial() {
   async function getAllSlips() {
     setTableIsLoading(true);
     try {
-      const q = query(collection(db, "slips"), orderBy("created_at", "desc"));
-
+      const q = query(collection(db, "companies", companyId, "slips"), orderBy("created_at", "desc"));
       const snapshot = await getDocs(q);
-
-      const docs = await snapshot.docs.map((doc) => {
-        const data = doc.data() as SlipsUIComplete;
-        return {
-          ...data,
-        };
-      });
-
+      const docs = snapshot.docs.map((doc) => doc.data() as SlipsUIComplete);
       setDataSlips(docs);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setTableIsLoading(false);
     }
   }
 
   useEffect(() => {
+    if (!companyId) return;
     getAllSlips();
-  }, []);
+  }, [companyId]);
 
   async function onSubmit(formDataInvoice: InvoiceFormData) {
-    const payloadInvoice = {
-      ...formDataInvoice,
-    };
+    if (invoiceSlips.length === 0) {
+      notify.error("Adicione ao menos um boleto antes de salvar.");
+      return;
+    }
+
+    if (invoiceSlips.length > 0) {
+      const slipTotal = invoiceSlips.reduce(
+        (sum, slip) => sum + slip.ticketValue,
+        0
+      );
+      if (Math.abs(slipTotal - formDataInvoice.invoiceValue) > 0.01) {
+        notify.error(
+          `Total dos boletos (${formatCurrencyBRL(slipTotal)}) não confere com o valor da nota (${formatCurrencyBRL(formDataInvoice.invoiceValue)})`
+        );
+        return;
+      }
+    }
+
+    const payloadInvoice = { ...formDataInvoice };
     if (editInvoiceAndSlips) {
       try {
         setLoading(true);
-        const ref = doc(db, "invoices", editInvoiceAndSlips.idInvoiceReference);
+        const ref = doc(db, "companies", companyId, "invoices", editInvoiceAndSlips.idInvoiceReference);
         await updateDoc(ref, formDataInvoice);
 
         const q = query(
-          collection(db, "slips"),
+          collection(db, "companies", companyId, "slips"),
           where(
             "idInvoiceReference",
             "==",
@@ -407,7 +433,7 @@ export default function Financial() {
           (slip) => !existingSlipIds.includes(slip.id)
         );
         const createNewSlep = newSlips.map((slip) =>
-          setDoc(doc(db, "slips", slip.id), {
+          setDoc(doc(db, "companies", companyId, "slips", slip.id), {
             ...slip,
             issuer: formDataInvoice.issuer,
             invoiceNumber: formDataInvoice.invoiceNumber,
@@ -417,21 +443,27 @@ export default function Financial() {
         );
 
         const updateSleps = snapshot.docs.map((docSnap) =>
-          updateDoc(doc(db, "slips", docSnap.id), {
+          updateDoc(doc(db, "companies", companyId, "slips", docSnap.id), {
             issuer: formDataInvoice.issuer,
             invoiceNumber: formDataInvoice.invoiceNumber,
           })
         );
+        const deleteRemoved = removedSlipIds.map((id) =>
+          deleteDoc(doc(db, "companies", companyId, "slips", id))
+        );
         await Promise.all(createNewSlep);
         await Promise.all(updateSleps);
+        await Promise.all(deleteRemoved);
         notify.success("Atualizado com sucesso!");
         resetInvoice(defaultFormValues);
         setInvoiceSlips([]);
+        setRemovedSlipIds([]);
+        setInvoiceValueDisplay("");
         setVisibleForm(false);
         getAllSlips();
       } catch (error) {
         notify.error("Erro ao atualizar registro");
-        console.log(error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -507,16 +539,28 @@ export default function Financial() {
                     {...registerInvoice("emission")}
                     errorMessage={errorsInvoice.emission?.message}
                   />
-                  <Input
-                    id="invoiceValue"
-                    type="number"
-                    labelName="Valor da Nota"
-                    labelId="invoiceValue"
-                    {...registerInvoice("invoiceValue", {
-                      valueAsNumber: true,
-                    })}
-                    errorMessage={errorsInvoice.invoiceValue?.message}
-                  />{" "}
+                  <Controller
+                    name="invoiceValue"
+                    control={invoiceControl}
+                    render={({ field, fieldState }) => (
+                      <Input
+                        id="invoiceValue"
+                        type="text"
+                        inputMode="numeric"
+                        labelName="Valor da Nota"
+                        labelId="invoiceValue"
+                        placeholder="R$ 0,00"
+                        value={invoiceValueDisplay}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "");
+                          const numeric = digits ? parseInt(digits) / 100 : 0;
+                          setInvoiceValueDisplay(digits ? formatCurrencyBRL(numeric) : "");
+                          field.onChange(numeric);
+                        }}
+                        errorMessage={fieldState.error?.message}
+                      />
+                    )}
+                  />
                   <Input
                     id="observations"
                     type="text"
@@ -539,13 +583,27 @@ export default function Financial() {
                       {...registerSlip("ticketNumber")}
                       errorMessage={errorsSlip.ticketNumber?.message}
                     />
-                    <Input
-                      id="ticketValue"
-                      type="number"
-                      labelName="Valor"
-                      labelId="ticketValue"
-                      {...registerSlip("ticketValue", { valueAsNumber: true })}
-                      errorMessage={errorsSlip.ticketValue?.message}
+                    <Controller
+                      name="ticketValue"
+                      control={slipControl}
+                      render={({ field, fieldState }) => (
+                        <Input
+                          id="ticketValue"
+                          type="text"
+                          inputMode="numeric"
+                          labelName="Valor"
+                          labelId="ticketValue"
+                          placeholder="R$ 0,00"
+                          value={ticketValueDisplay}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "");
+                            const numeric = digits ? parseInt(digits) / 100 : 0;
+                            setTicketValueDisplay(digits ? formatCurrencyBRL(numeric) : "");
+                            field.onChange(numeric);
+                          }}
+                          errorMessage={fieldState.error?.message}
+                        />
+                      )}
                     />
 
                     <Input
@@ -651,6 +709,8 @@ export default function Financial() {
                 setVisibleForm(false);
                 resetInvoice(defaultFormValues);
                 setInvoiceSlips([]);
+                setRemovedSlipIds([]);
+                setInvoiceValueDisplay("");
               }}
               backgroundColor="transparent"
               color="#555555"
@@ -665,6 +725,7 @@ export default function Financial() {
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         loading={tableIsLoading}
         initialState={{ pagination: { paginationModel } }}
+        pageSizeOptions={[10, 25, 50]}
         showToolbar
         sx={{
           "& .MuiDataGrid-columnHeaderTitle": {

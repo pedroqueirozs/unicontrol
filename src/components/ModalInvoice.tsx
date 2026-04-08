@@ -13,6 +13,7 @@ import { notify } from "@/utils/notify";
 
 import { doc, runTransaction } from "firebase/firestore";
 import { db } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ModalInvoiceProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export function ModalInvoice({
   getAllSlips,
 }: ModalInvoiceProps) {
   const { confirm, dialog } = useConfirmDialog();
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
   const [loading, setLoading] = useState(false);
 
   async function deleteInvoiceWithSlips(
@@ -50,7 +53,7 @@ export function ModalInvoice({
           if (!slip.id) {
             throw new Error("Id do boleto não esta definido");
           }
-          const slipRef = doc(db, "slips", slip.id);
+          const slipRef = doc(db, "companies", companyId, "slips", slip.id);
 
           transaction.delete(slipRef);
         });
@@ -58,7 +61,7 @@ export function ModalInvoice({
         if (!invoiceData.id) {
           throw new Error("Id da nota não esta definido");
         }
-        const invoiceRef = doc(db, "invoices", invoiceData.id);
+        const invoiceRef = doc(db, "companies", companyId, "invoices", invoiceData.id);
         transaction.delete(invoiceRef);
       });
 
