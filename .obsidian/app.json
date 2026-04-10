@@ -1,0 +1,9 @@
+{
+  "userIgnoreFilters": [
+    "node_modules",
+    "dist",
+    ".git",
+    "cypress/downloads",
+    "src/assets"
+  ]
+}

@@ -53,17 +53,26 @@ Sempre avisar Pedro antes de:
 - Modificar configurações de build ou Firebase
 - Qualquer ação que não possa ser desfeita facilmente
 
+## Contexto do Projeto (ler ao iniciar qualquer sessão)
+
+- `docs/para-ia.md` — **ponto de entrada**: visão geral do projeto, stack, módulos, estrutura de pastas
+- `docs/sessoes/contexto-atual.md` — **estado vivo**: onde o projeto está agora, próximos passos
+
 ## Documentação de Negócio
 
 Toda a documentação dos fluxos e regras da empresa está em `docs/`:
-- `docs/regras-de-negocio.md` — regras consolidadas e problemas identificados (RN-01 a RN-16)
+- `docs/regras-de-negocio.md` — regras consolidadas e problemas identificados (RN-01 a RN-18)
 - `docs/glossario.md` — termos específicos da empresa
 - `docs/arquitetura.md` — estrutura de dados do Firestore e decisões arquiteturais
 - `docs/fluxos/vendas.md` — fluxo do setor de vendas
 - `docs/fluxos/expedicao.md` — fluxo do setor de expedição
 - `docs/fluxos/administrativo-financeiro.md` — fluxo do setor administrativo e financeiro
+- `docs/sessoes/` — logs de cada sessão de trabalho
 
 **Antes de implementar qualquer módulo novo, ler os arquivos relevantes em `docs/`.**
+
+### Regra de sessão
+Ao encerrar uma sessão (quando Pedro pedir), criar `docs/sessoes/YYYY-MM-DD.md` com o que foi feito e atualizar `docs/sessoes/contexto-atual.md`.
 
 ## Status dos Módulos
 
