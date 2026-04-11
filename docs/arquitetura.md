@@ -70,7 +70,31 @@ Exemplos:
 companies/{companyId}/goods_shipped/{docId}
 companies/{companyId}/financial/{docId}
 companies/{companyId}/addresses/{docId}
+companies/{companyId}/customers_pending/{docId}
 ```
+
+---
+
+### `companies/{companyId}/customers_pending/{docId}`
+Representa uma pendência com um cliente.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `clientName` | string | Nome do cliente |
+| `city` | string | Cidade |
+| `document` | string | NF ou outro documento de referência |
+| `openedAt` | Timestamp | Data de abertura da pendência |
+| `status` | string | `aberta`, `em_andamento` ou `resolvida` |
+| `createdAt` | Timestamp | Data de criação do registro |
+| `updates` | array | Lista de atualizações (ver abaixo) |
+
+**Estrutura de cada item em `updates`:**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string | UUID gerado no cliente (evita duplicatas no arrayUnion) |
+| `text` | string | Texto da atualização |
+| `createdAt` | Timestamp | Data e hora da atualização |
 
 > **Status:** migração concluída. Todos os módulos já utilizam esta estrutura.
 
