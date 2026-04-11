@@ -114,7 +114,11 @@ export default function ManageUsers() {
     loadInvites();
   }, [userData?.companyId]);
 
-  async function handleRoleChange(uid: string, newRole: UserRole) {
+  async function handleRoleChange(uid: string, newRole: UserRole, name: string) {
+    const confirmed = await confirm(
+      `Alterar o cargo de "${name}" para ${ROLE_LABELS[newRole]}?`
+    );
+    if (!confirmed) return;
     try {
       await updateDoc(doc(db, "users", uid), { role: newRole });
       setMembers((prev) =>
@@ -217,7 +221,7 @@ export default function ManageUsers() {
           size="small"
           value={params.row.role}
           onChange={(e) =>
-            handleRoleChange(params.row.uid, e.target.value as UserRole)
+            handleRoleChange(params.row.uid, e.target.value as UserRole, params.row.name)
           }
           disabled={params.row.uid === currentUid}
           sx={{ fontSize: 14, width: "100%" }}
