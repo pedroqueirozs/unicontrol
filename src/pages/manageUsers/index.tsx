@@ -43,12 +43,22 @@ type Member = {
   role: UserRole;
 };
 
+type PendingInvite = {
+  token: string;
+  role: UserRole;
+  expiresAt: Timestamp;
+  createdAt: Timestamp;
+};
+
 export default function ManageUsers() {
   const { userData, authed } = useAuth();
   const { confirm, dialog } = useConfirmDialog();
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(true);
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteRole, setInviteRole] = useState<UserRole>("expedicao");
@@ -77,8 +87,31 @@ export default function ManageUsers() {
     }
   }
 
+  async function loadInvites() {
+    if (!userData?.companyId) return;
+    setInvitesLoading(true);
+    try {
+      const q = query(
+        collection(db, "invites"),
+        where("companyId", "==", userData.companyId),
+        where("used", "==", false)
+      );
+      const snapshot = await getDocs(q);
+      const now = new Date();
+      const list: PendingInvite[] = snapshot.docs
+        .map((d) => ({ token: d.id, ...(d.data() as Omit<PendingInvite, "token">) }))
+        .filter((inv) => inv.expiresAt.toDate() > now);
+      setPendingInvites(list);
+    } catch (err) {
+      console.error("Erro ao carregar convites:", err);
+    } finally {
+      setInvitesLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadMembers();
+    loadInvites();
   }, [userData?.companyId]);
 
   async function handleRoleChange(uid: string, newRole: UserRole) {
@@ -124,6 +157,7 @@ export default function ManageUsers() {
       });
       const link = `${window.location.origin}/invite?token=${token}`;
       setGeneratedLink(link);
+      await loadInvites();
     } catch {
       notify.error("Erro ao gerar convite.");
     } finally {
@@ -232,6 +266,50 @@ export default function ManageUsers() {
           sx={{ height: "auto" }}
         />
       </div>
+
+      {/* Convites pendentes */}
+      {(invitesLoading || pendingInvites.length > 0) && (
+        <div className="mt-8">
+          <h2 className="text-base font-semibold text-color_primary_400 mb-3">
+            Convites pendentes
+          </h2>
+          {invitesLoading ? (
+            <p className="text-sm text-gray-400">Carregando convites...</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {pendingInvites.map((inv) => {
+                const link = `${window.location.origin}/invite?token=${inv.token}`;
+                return (
+                  <div
+                    key={inv.token}
+                    className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-4 py-3"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium text-gray-700">
+                        {ROLE_LABELS[inv.role]}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        Expira em{" "}
+                        {inv.expiresAt.toDate().toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    <button
+                      className="text-emerald-600 hover:text-emerald-800 p-1"
+                      title="Copiar link do convite"
+                      onClick={() => {
+                        navigator.clipboard.writeText(link);
+                        notify.success("Link copiado!");
+                      }}
+                    >
+                      <Copy size={18} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dialog de convite */}
       <Dialog
