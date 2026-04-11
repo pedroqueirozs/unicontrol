@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, XCircle } from "lucide-react";
 
 import { db } from "@/services/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -165,6 +165,20 @@ export default function ManageUsers() {
     }
   }
 
+  async function handleRevokeInvite(token: string) {
+    const confirmed = await confirm(
+      "Revogar este convite? O link ficará inválido imediatamente."
+    );
+    if (!confirmed) return;
+    try {
+      await deleteDoc(doc(db, "invites", token));
+      setPendingInvites((prev) => prev.filter((inv) => inv.token !== token));
+      notify.success("Convite revogado.");
+    } catch {
+      notify.error("Erro ao revogar convite.");
+    }
+  }
+
   function handleCopyLink() {
     if (!generatedLink) return;
     navigator.clipboard.writeText(generatedLink);
@@ -293,16 +307,25 @@ export default function ManageUsers() {
                         {inv.expiresAt.toDate().toLocaleDateString("pt-BR")}
                       </span>
                     </div>
-                    <button
-                      className="text-emerald-600 hover:text-emerald-800 p-1"
-                      title="Copiar link do convite"
-                      onClick={() => {
-                        navigator.clipboard.writeText(link);
-                        notify.success("Link copiado!");
-                      }}
-                    >
-                      <Copy size={18} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        className="text-emerald-600 hover:text-emerald-800 p-1"
+                        title="Copiar link do convite"
+                        onClick={() => {
+                          navigator.clipboard.writeText(link);
+                          notify.success("Link copiado!");
+                        }}
+                      >
+                        <Copy size={18} />
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Revogar convite"
+                        onClick={() => handleRevokeInvite(inv.token)}
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
