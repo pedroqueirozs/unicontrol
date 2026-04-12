@@ -3,8 +3,8 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-04-09
-**Sessão mais recente:** [[2026-04-09]]
+**Última atualização:** 2026-04-12
+**Sessão mais recente:** [[2026-04-12]]
 
 ---
 
@@ -19,31 +19,28 @@
 | Documentos Úteis | ✅ Pronto | Upload/download Firebase Storage |
 | Autenticação | ✅ Pronto | Login, registro, reset senha |
 | Perfil do Usuário | ✅ Pronto | — |
-| Gerenciar Usuários | 🔧 Em andamento | Fluxo de convite pronto; remover membro pronto (RN-17); revisar pendências |
-| Pendências de Clientes | 🔧 Incompleto | Pasta existe, código parcial comentado; fluxo não definido |
-| Pendências com Fornecedores | 🔧 Não iniciado | Pasta existe, sem implementação; fluxo não definido |
+| Gerenciar Usuários | ✅ Pronto | Convite, remoção, alteração de cargo com confirmação, lista e revogação de convites pendentes |
+| Pendências de Clientes | ✅ Pronto | CRUD completo com histórico de atualizações em linha do tempo e filtro por status |
+| Pendências com Fornecedores | ✅ Pronto | CRUD completo com histórico de atualizações em linha do tempo e filtro por status |
 | Relatórios | 🔧 Placeholder | Sem definição de quais relatórios serão gerados |
 | Configurações | 🔧 Placeholder | Sem definição de escopo |
 
 ---
 
-## O que Foi Feito Recentemente
+## O que Foi Feito Recentemente (sessão 2026-04-12)
 
-- Migração completa para multi-tenant (`companies/{companyId}`)
-- Fluxo de convite de membros implementado
-- Remoção de membros com auto-logout implementada (RN-17)
-- Remetente dinâmico na geração de .docx
-- Documentação de negócio criada (`docs/`)
-- Sistema de "segundo cérebro" com Obsidian configurado (esta sessão)
+- Sistema de segundo cérebro com Obsidian configurado (`docs/para-ia.md`, `docs/sessoes/`)
+- Gerenciar Usuários concluído: lista de convites pendentes, revogar convite, confirmação ao alterar cargo
+- Pendências de Clientes implementado do zero: linha do tempo, filtro por status, modal de detalhe
+- Pendências com Fornecedores implementado: mesma lógica, sem campo cidade
 
 ---
 
 ## Próximos Passos
 
-- [ ] Definir fluxo de Pendências de Clientes (quais campos, estados, quem usa)
-- [ ] Definir fluxo de Pendências com Fornecedores
-- [ ] Revisar módulo Gerenciar Usuários (verificar o que está incompleto)
-- [ ] Definir escopo de Relatórios e Configurações
+- [ ] Definir escopo do módulo Relatórios (quais relatórios, filtros, dados)
+- [ ] Definir escopo do módulo Configurações
+- [ ] Documentar coleção `suppliers_pending` em `docs/arquitetura.md`
 
 ---
 

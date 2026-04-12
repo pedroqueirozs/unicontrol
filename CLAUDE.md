@@ -85,8 +85,8 @@ Ao encerrar uma sessão (quando Pedro pedir), criar `docs/sessoes/YYYY-MM-DD.md`
 | Documentos Úteis | ✅ Pronto | — |
 | Autenticação | ✅ Pronto | — |
 | Perfil do Usuário | ✅ Pronto | — |
-| Gerenciar Usuários | 🔧 Em andamento | `docs/regras-de-negocio.md` RN-16 |
-| Pendências de Clientes | 🔧 Incompleto | `docs/regras-de-negocio.md` P-07 |
-| Pendências com Fornecedores | 🔧 Não iniciado | `docs/regras-de-negocio.md` P-07 |
+| Gerenciar Usuários | ✅ Pronto | `docs/regras-de-negocio.md` RN-17, RN-18 |
+| Pendências de Clientes | ✅ Pronto | `docs/arquitetura.md` — coleção `customers_pending` |
+| Pendências com Fornecedores | ✅ Pronto | `docs/arquitetura.md` — coleção `suppliers_pending` |
 | Relatórios | 🔧 Placeholder | — |
 | Configurações | 🔧 Placeholder | — |
