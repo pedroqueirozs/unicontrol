@@ -15,6 +15,13 @@ import Button from "@/components/Button";
 import { CustomDataGrid } from "@/components/CustomDataGrid";
 import { useConfirmDialog } from "@/components/ConfimDialog";
 import { GridColDef } from "@mui/x-data-grid";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button as MuiButton,
+} from "@mui/material";
 
 import { db } from "@/services/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -177,6 +184,7 @@ export default function GoodsShipped() {
   const { confirm, dialog } = useConfirmDialog();
   const [visibleForm, setVisibleForm] = useState(false);
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
+  const [detailItem, setDetailItem] = useState<MerchandiseUIData | null>(null);
   const paginationModel = { page: 0, pageSize: 10 };
 
   const {
@@ -240,11 +248,6 @@ export default function GoodsShipped() {
       width: 130,
     },
     {
-      field: "notes",
-      headerName: "Observação",
-      width: 200,
-    },
-    {
       field: "actions",
       headerName: "Ações",
       width: 120,
@@ -252,13 +255,19 @@ export default function GoodsShipped() {
         <div className="flex h-full gap-4 items-center">
           <button
             className="text-text_description"
-            onClick={() => handleDelete(params.id as string)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(params.id as string);
+            }}
           >
             <Trash2 />
           </button>
           <button
             className="text-text_description"
-            onClick={() => handleEdit(params.row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(params.row);
+            }}
           >
             <Pencil />
           </button>
@@ -533,7 +542,9 @@ export default function GoodsShipped() {
           initialState={{ pagination: { paginationModel } }}
           pageSizeOptions={[10, 20, 30]}
           showToolbar
+          onRowClick={(params) => setDetailItem(params.row as MerchandiseUIData)}
           sx={{
+            cursor: "pointer",
             "& .MuiDataGrid-columnHeaderTitle": {
               color: "#1A2A38",
               fontWeight: "bold",
@@ -545,6 +556,48 @@ export default function GoodsShipped() {
           }}
         />
       </div>
+
+      {/* Modal de observação */}
+      <Dialog
+        open={!!detailItem}
+        onClose={() => setDetailItem(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {detailItem && (
+          <>
+            <DialogTitle sx={{ pb: 1 }}>
+              <span className="font-bold text-color_primary_400">
+                {detailItem.name}
+              </span>
+              <p className="text-sm font-normal text-gray-500 mt-1">
+                NF {detailItem.document_number} · {detailItem.city}/{detailItem.uf} · Envio: {detailItem.shipping_date}
+              </p>
+            </DialogTitle>
+
+            <DialogContent dividers>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                Observação
+              </p>
+              {detailItem.notes ? (
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {detailItem.notes}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">
+                  Nenhuma observação registrada.
+                </p>
+              )}
+            </DialogContent>
+
+            <DialogActions>
+              <MuiButton onClick={() => setDetailItem(null)} sx={{ color: "#555" }}>
+                Fechar
+              </MuiButton>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }
