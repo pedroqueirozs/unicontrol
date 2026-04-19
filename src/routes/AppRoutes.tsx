@@ -20,6 +20,7 @@ import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
 import { ResetPassword } from "@/pages/ResetPassword";
 import ManageUsers from "@/pages/manageUsers";
+import NotFound from "@/pages/notFound";
 
 const router = createBrowserRouter([
   {
@@ -141,6 +142,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  { path: "*", element: <NotFound /> },
 ]);
 
 export function AppRoutes() {
