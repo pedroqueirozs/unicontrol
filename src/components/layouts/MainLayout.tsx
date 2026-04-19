@@ -14,11 +14,11 @@ export default function MainLayout() {
   const { userData } = useAuth();
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <SideBar />
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full min-h-0">
         <Header title={title} />
-        <main className="flex-1 mt-8 mx-4 p-4 border border-input_border rounded-md">
+        <main className="flex-1 overflow-auto mt-8 mx-4 p-4 border border-input_border rounded-md">
           <Outlet />
           <footer className="mt-8 text-center text-sm">
             © {new Date().getFullYear()} {userData?.companyName}
