@@ -5,12 +5,14 @@ interface SidebarItemProps {
   icon: ReactNode;
   to: string;
   label: string;
+  onClick?: () => void;
 }
 
-export function SidebarItem({ icon, to, label }: SidebarItemProps) {
+export function SidebarItem({ icon, to, label, onClick }: SidebarItemProps) {
   return (
     <NavLink
       to={to}
+      onClick={onClick}
       className={({ isActive }) =>
         `hover:opacity-70 flex items-center justify-start gap-2 p-4  ${
           isActive

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { auth } from "@/services/firebaseConfig";
 import { useConfirmDialog } from "@/components/ConfimDialog";
 import { useNavigate } from "react-router-dom";
@@ -7,9 +7,10 @@ import { signOut } from "firebase/auth";
 
 interface HeaderProps {
   title: string;
+  onMenuClick: () => void;
 }
 
-export function Header({ title }: HeaderProps) {
+export function Header({ title, onMenuClick }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
 
@@ -35,9 +36,18 @@ export function Header({ title }: HeaderProps) {
 
   return (
     <div className="flex w-full justify-between items-center h-20 p-5">
-      <h1 className="text-text_primary_400 font-bold text-xl uppercase">
-        {title}
-      </h1>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden text-text_primary_400"
+          aria-label="Abrir menu"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="text-text_primary_400 font-bold text-xl uppercase">
+          {title}
+        </h1>
+      </div>
       <div className="flex gap-4 justify-center items-center  ">
         <span>Bem vindo, {auth?.currentUser?.displayName?.split(" ")[0]}</span>
 

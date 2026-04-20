@@ -87,7 +87,12 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const SideBar = React.forwardRef<HTMLElement>(() => {
+interface SideBarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SideBar = React.forwardRef<HTMLElement, SideBarProps>(({ isOpen, onClose }) => {
   const { userData } = useAuth();
   const role = userData?.role;
 
@@ -96,26 +101,45 @@ const SideBar = React.forwardRef<HTMLElement>(() => {
   );
 
   return (
-    <aside className="w-80 bg-background_primary_400 rounded-r-2xl text-text_white">
-      <nav>
-        <div className="h-20 flex w-full justify-center items-center p-4">
-          <img
-            src={logotipoLightSvg}
-            alt="logomarca do software unicontrol"
-          />
-        </div>
-        <ul className="text-center flex flex-col gap-2 py-8">
-          {visibleItems.map((item) => (
-            <SidebarItem
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
+    <>
+      {/* Backdrop — mobile only, fecha ao clicar fora */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed md:static inset-y-0 left-0 z-40
+          w-72 bg-background_primary_400 rounded-r-2xl text-text_white
+          transition-transform duration-300
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:flex-shrink-0
+        `}
+      >
+        <nav>
+          <div className="h-20 flex w-full justify-center items-center p-4">
+            <img
+              src={logotipoLightSvg}
+              alt="logomarca do software unicontrol"
             />
-          ))}
-        </ul>
-      </nav>
-    </aside>
+          </div>
+          <ul className="text-center flex flex-col gap-2 py-8">
+            {visibleItems.map((item) => (
+              <SidebarItem
+                key={item.to}
+                icon={item.icon}
+                label={item.label}
+                to={item.to}
+                onClick={onClose}
+              />
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    </>
   );
 });
 
