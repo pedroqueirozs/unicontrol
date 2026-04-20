@@ -76,9 +76,9 @@ export default function MyProfile() {
 
         <div className="flex items-center gap-4 px-6 py-4">
           <Mail size={18} className="text-text_description shrink-0" />
-          <div>
+          <div className="min-w-0">
             <p className="text-xs text-text_description">E-mail</p>
-            <p className="font-medium">{auth.currentUser?.email}</p>
+            <p className="font-medium break-all">{auth.currentUser?.email}</p>
           </div>
         </div>
 

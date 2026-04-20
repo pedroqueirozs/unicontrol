@@ -358,7 +358,7 @@ export default function CustomersPending() {
       </div>
 
       {/* Filtros de status */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {(
           [
             { key: "todas", label: "Todas" },
