@@ -124,6 +124,7 @@ const SideBar = React.forwardRef<HTMLElement, SideBarProps>(({ isOpen, onClose }
             <img
               src={logotipoLightSvg}
               alt="logomarca do software unicontrol"
+              className="h-14 w-auto"
             />
           </div>
           <ul className="text-center flex flex-col gap-2 py-8">

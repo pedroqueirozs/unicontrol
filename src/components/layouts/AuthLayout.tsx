@@ -5,7 +5,7 @@ export default function AuthLayout() {
   return (
     <div className="max-w-xl px-8 pt-8 pb-16 mx-auto mt-20">
       <div className="flex justify-center items-center gap-2 ">
-        <img src={logotipoDarkSvg} alt="Logo" />
+        <img src={logotipoDarkSvg} alt="Logo" className="h-16 w-auto" />
       </div>
       <Outlet />
     </div>
