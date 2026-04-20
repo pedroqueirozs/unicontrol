@@ -71,6 +71,7 @@ companies/{companyId}/goods_shipped/{docId}
 companies/{companyId}/financial/{docId}
 companies/{companyId}/addresses/{docId}
 companies/{companyId}/customers_pending/{docId}
+companies/{companyId}/suppliers_pending/{docId}
 ```
 
 ---
@@ -97,6 +98,31 @@ Representa uma pendência com um cliente.
 | `createdAt` | Timestamp | Data e hora da atualização |
 
 > **Status:** migração concluída. Todos os módulos já utilizam esta estrutura.
+
+---
+
+### `companies/{companyId}/suppliers_pending/{docId}`
+Representa uma pendência com um fornecedor.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `supplierName` | string | Nome do fornecedor |
+| `document` | string | NF ou outro documento de referência |
+| `openedAt` | Timestamp | Data de abertura da pendência |
+| `status` | string | `aberta`, `em_andamento` ou `resolvida` |
+| `createdAt` | Timestamp | Data de criação do registro |
+| `updates` | array | Lista de atualizações (ver abaixo) |
+
+**Estrutura de cada item em `updates`:**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string | UUID gerado no cliente (evita duplicatas no arrayUnion) |
+| `text` | string | Texto da atualização |
+| `createdAt` | Timestamp | Data e hora da atualização |
+
+> Estrutura idêntica à `customers_pending`, com a diferença de que o campo de referência é `supplierName` (fornecedor) em vez de `clientName` + `city` (cliente).
+> A primeira `update` é criada automaticamente no momento da criação da pendência, a partir do campo "Descrição inicial" do formulário.
 
 ---
 
