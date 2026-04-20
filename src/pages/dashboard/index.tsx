@@ -10,6 +10,7 @@ import {
   Clock,
   Target,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import InfoCard from "@/components/InfoCard";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import {
@@ -31,6 +32,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { generalStats, monthlyStats, transporterStats, loading } =
     useDashboardStats();
 
@@ -58,20 +60,22 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Pedidos Entregues"
+          title="Entregues"
           value={generalStats ? String(generalStats.totalDelivered) : "—"}
           change="Entregues no último semestre"
           changeType="increase"
           icon={<Package size={32} />}
           color="blue"
+          onClick={() => navigate("/goods-shipped?situation=Entregue")}
         />
         <KPICard
-          title="Mercadorias Atrasadas"
+          title="Atrasadas"
           value={generalStats ? String(generalStats.totalOverdue) : "—"}
           change="Atualmente em atraso"
           changeType="decrease"
           icon={<TriangleAlert size={32} />}
           color="red"
+          onClick={() => navigate("/goods-shipped?situation=Atrasada")}
         />
         <KPICard
           title="Em Trânsito"
@@ -80,6 +84,7 @@ export default function Dashboard() {
           changeType="neutral"
           icon={<Clock size={32} />}
           color="yellow"
+          onClick={() => navigate("/goods-shipped?situation=No+Prazo")}
         />
         <KPICard
           title="Taxa de Entrega"

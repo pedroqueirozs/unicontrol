@@ -7,6 +7,7 @@ export const KPICard = ({
   changeType,
   icon,
   color = "blue",
+  onClick,
 }: {
   title: string;
   value: string;
@@ -14,6 +15,7 @@ export const KPICard = ({
   changeType: "increase" | "decrease" | "neutral";
   icon: React.ReactNode;
   color?: string;
+  onClick?: () => void;
 }) => {
   const colorClasses = {
     blue: { card: "bg-blue-50 border-blue-200", icon: "text-blue-500" },
@@ -39,7 +41,10 @@ export const KPICard = ({
       : Clock;
 
   return (
-    <div className={`p-6 rounded-2xl border shadow-sm ${colors.card}`}>
+    <div
+      className={`p-6 rounded-2xl border shadow-sm ${colors.card} ${onClick ? "cursor-pointer hover:brightness-95 transition-[filter]" : ""}`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>

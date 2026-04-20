@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 
@@ -179,6 +180,8 @@ const schema = yup.object({
 export default function GoodsShipped() {
   const { userData } = useAuth();
   const companyId = userData?.companyId ?? "";
+  const [searchParams] = useSearchParams();
+  const initialSituation = searchParams.get("situation") ?? "";
   const [data, setData] = useState<MerchandiseUIData[]>([]);
   const [tableIsLoading, setTableIsLoading] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -539,7 +542,22 @@ export default function GoodsShipped() {
           rows={data}
           localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
           loading={tableIsLoading}
-          initialState={{ pagination: { paginationModel } }}
+          initialState={{
+            pagination: { paginationModel },
+            filter: initialSituation
+              ? {
+                  filterModel: {
+                    items: [
+                      {
+                        field: "situation",
+                        operator: "equals",
+                        value: initialSituation,
+                      },
+                    ],
+                  },
+                }
+              : undefined,
+          }}
           pageSizeOptions={[10, 20, 30]}
           showToolbar
           onRowClick={(params) => setDetailItem(params.row as MerchandiseUIData)}
