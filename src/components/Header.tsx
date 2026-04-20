@@ -49,9 +49,9 @@ export function Header({ title, onMenuClick }: HeaderProps) {
         </h1>
       </div>
       <div className="flex gap-4 justify-center items-center  ">
-        <span>Bem vindo, {auth?.currentUser?.displayName?.split(" ")[0]}</span>
+        <span className="hidden md:inline">Bem vindo, {auth?.currentUser?.displayName?.split(" ")[0]}</span>
 
-        <div className="h-full flex items-center text-center justify-center px-6  ">
+        <div className="flex items-center justify-center">
           <button
             data-cy="user-avatar"
             onClick={() => setOpen((prev) => !prev)}
