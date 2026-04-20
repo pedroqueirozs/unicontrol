@@ -341,7 +341,7 @@ export default function SuppliersPending() {
           Pendências com Fornecedores
         </h1>
         <Button
-          text="Nova pendência +"
+          text="Criar"
           backgroundColor="#34D399"
           onClick={() => setCreateOpen(true)}
         />

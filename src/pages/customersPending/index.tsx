@@ -351,7 +351,7 @@ export default function CustomersPending() {
           Pendências de Clientes
         </h1>
         <Button
-          text="Nova pendência +"
+          text="Criar"
           backgroundColor="#34D399"
           onClick={() => setCreateOpen(true)}
         />
