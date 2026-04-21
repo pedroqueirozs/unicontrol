@@ -18,7 +18,7 @@ export default function MainLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
       <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex flex-col w-full min-h-0">
+      <div className="flex flex-col flex-1 min-w-0 min-h-0">
         <Header title={title} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
         <main className="flex-1 overflow-auto mt-8 mx-4 p-4 border border-input_border rounded-md">
           <Outlet />

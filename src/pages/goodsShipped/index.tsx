@@ -536,7 +536,7 @@ export default function GoodsShipped() {
         </form>
       )}
 
-      <div>
+      <div className="overflow-x-auto">
         <CustomDataGrid
           columns={columns}
           rows={data}

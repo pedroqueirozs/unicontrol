@@ -437,7 +437,7 @@ export default function Addresses() {
           )}
         </form>
       )}
-      <div>
+      <div className="overflow-x-auto">
         <DataGrid
           columns={addressColumns}
           rows={data}
@@ -458,7 +458,7 @@ export default function Addresses() {
           }}
         />
       </div>
-      <div>
+      <div className="overflow-x-auto">
         <h2 className="my-8 text-color_primary_500 font-semibold">
           Endereços selecionados para impressão
         </h2>
