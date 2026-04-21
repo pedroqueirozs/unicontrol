@@ -113,21 +113,22 @@ const SideBar = React.forwardRef<HTMLElement, SideBarProps>(({ isOpen, onClose }
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-40
+          flex flex-col h-screen
           w-72 bg-background_primary_400 rounded-r-2xl text-text_white
           transition-transform duration-300
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0 md:flex-shrink-0
         `}
       >
-        <nav>
-          <div className="h-20 flex w-full justify-center items-center p-4">
-            <img
-              src={logotipoLightSvg}
-              alt="logomarca do software unicontrol"
-              className="h-14 w-auto"
-            />
-          </div>
-          <ul className="text-center flex flex-col gap-2 py-8">
+        <div className="h-20 flex-shrink-0 flex w-full justify-center items-center p-4">
+          <img
+            src={logotipoLightSvg}
+            alt="logomarca do software unicontrol"
+            className="h-14 w-auto"
+          />
+        </div>
+        <nav className="flex-1 overflow-y-auto">
+          <ul className="text-center flex flex-col gap-2 py-4">
             {visibleItems.map((item) => (
               <SidebarItem
                 key={item.to}
