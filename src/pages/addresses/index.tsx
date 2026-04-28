@@ -13,7 +13,8 @@ import { ptBR } from "@mui/x-data-grid/locales";
 
 import { generateDocx, CompanySender } from "@/utils/DocxGenerator";
 
-import { db } from "@/services/firebaseConfig";
+import { db, storage } from "@/services/firebaseConfig";
+import { getBytes, getMetadata, ref as storageRef } from "firebase/storage";
 import {
   addDoc,
   getDoc,
@@ -260,7 +261,25 @@ export default function Addresses() {
       }
 
       const company = companyDoc.data() as CompanySender;
-      await generateDocx(selectedAddresses, company);
+
+      let logoBuffer: ArrayBuffer | null = null;
+      let logoType: "png" | "jpg" = "png";
+      if (company.logoUrl) {
+        try {
+          const logoRef = storageRef(storage, `companies/${companyId}/logo`);
+          const [buffer, metadata] = await Promise.all([
+            getBytes(logoRef),
+            getMetadata(logoRef),
+          ]);
+          logoBuffer = buffer;
+          const ct = metadata.contentType ?? "";
+          if (ct.includes("jpeg") || ct.includes("jpg")) logoType = "jpg";
+        } catch {
+          // logo não encontrada, gera sem ela
+        }
+      }
+
+      await generateDocx(selectedAddresses, company, logoBuffer, logoType);
       notify.success("Endereços gerados com sucesso!");
     } catch (error) {
       notify.error("Erro ao gerar endereços");

@@ -1,6 +1,7 @@
 import { saveAs } from "file-saver";
 import {
   Document,
+  ImageRun,
   Packer,
   Paragraph,
   TextRun,
@@ -10,6 +11,8 @@ import {
   WidthType,
   BorderStyle,
   AlignmentType,
+  VerticalAlign,
+  TableLayoutType,
 } from "docx";
 
 import { SelectedAddress } from "src/pages/addresses";
@@ -23,16 +26,22 @@ export type CompanySender = {
   zip: string;
   phone: string;
   whatsapp: string;
+  logoUrl?: string | null;
 };
 
-export async function generateDocx(addresses: SelectedAddress[], sender: CompanySender) {
+export async function generateDocx(
+  addresses: SelectedAddress[],
+  sender: CompanySender,
+  logoBuffer: ArrayBuffer | null = null,
+  logoType: "png" | "jpg" = "png"
+) {
   const recipientBlock = (addr: SelectedAddress) => [
     new Paragraph({
       children: [
-        new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 28 }),
+        new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 32 }),
         new TextRun({
           text: addr.recipient?.toUpperCase() ?? "",
-          size: 30,
+          size: 34,
           bold: true,
         }),
       ],
@@ -80,26 +89,22 @@ export async function generateDocx(addresses: SelectedAddress[], sender: Company
     }),
   ];
 
-  const senderBlock = () => [
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const noMargin = { top: 0, bottom: 0, left: 0, right: 0 };
+
+  const senderInfoParagraphs = [
     new Paragraph({
       children: [
-        new TextRun({
-          text: sender.name.toUpperCase(),
-          size: 24,
-          bold: true,
-        }),
+        new TextRun({ text: sender.name.toUpperCase(), size: 24, bold: true }),
       ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 40 },
     }),
     new Paragraph({
       children: [
-        new TextRun({
-          text: `${sender.street} - ${sender.district}`,
-          size: 18,
-        }),
+        new TextRun({ text: `${sender.street} - ${sender.district}`, size: 18 }),
       ],
-      alignment: AlignmentType.CENTER,
+      alignment: AlignmentType.LEFT,
     }),
     new Paragraph({
       children: [
@@ -108,7 +113,7 @@ export async function generateDocx(addresses: SelectedAddress[], sender: Company
           size: 18,
         }),
       ],
-      alignment: AlignmentType.CENTER,
+      alignment: AlignmentType.LEFT,
     }),
     new Paragraph({
       children: [
@@ -117,10 +122,70 @@ export async function generateDocx(addresses: SelectedAddress[], sender: Company
           size: 18,
         }),
       ],
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 50 },
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 40 },
     }),
   ];
+
+  const senderBlock = (): (Paragraph | Table)[] => {
+    if (!logoBuffer) return senderInfoParagraphs;
+
+    return [
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        layout: TableLayoutType.FIXED,
+        borders: {
+          top: noBorder,
+          bottom: noBorder,
+          left: noBorder,
+          right: noBorder,
+          insideH: noBorder,
+          insideV: noBorder,
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 20, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: noBorder,
+                  bottom: noBorder,
+                  left: noBorder,
+                  right: noBorder,
+                },
+                margins: noMargin,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: logoBuffer,
+                        transformation: { width: 55, height: 55 },
+                        type: logoType,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 80, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: noBorder,
+                  bottom: noBorder,
+                  left: noBorder,
+                  right: noBorder,
+                },
+                margins: noMargin,
+                verticalAlign: VerticalAlign.CENTER,
+                children: senderInfoParagraphs,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+  };
 
   const labelRows = addresses.flatMap((addr) =>
     Array(addr.amount)

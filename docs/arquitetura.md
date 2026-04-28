@@ -27,9 +27,12 @@ Representa uma empresa cadastrada no sistema.
 | `phone` | string | Telefone fixo |
 | `whatsapp` | string | WhatsApp |
 | `createdAt` | Timestamp | Data de criação |
+| `logoUrl` | string \| null | URL pública da logo no Firebase Storage (opcional) |
 
 > Criado manualmente pelo proprietário do SaaS (Pedro) para cada novo cliente.
 > Os campos de endereço e contato são usados como remetente na geração de etiquetas (.docx).
+> `logoUrl` é gerenciado pelo próprio admin da empresa via módulo de Configurações → aba Empresa.
+> Arquivo armazenado em `companies/{companyId}/logo` no Firebase Storage.
 
 ---
 

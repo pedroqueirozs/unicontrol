@@ -1,26 +1,339 @@
-import { Cog, Wrench } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { Tab, Tabs } from "@mui/material";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { Building2, SlidersHorizontal, BellRing } from "lucide-react";
 
-export default function Settings() {
+import { db, storage } from "@/services/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import { notify } from "@/utils/notify";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type CompanyFormData = {
+  name: string;
+  street: string;
+  district: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  whatsapp: string;
+};
+
+// ── Schema ─────────────────────────────────────────────────────────────────────
+
+const schema = yup.object({
+  name: yup.string().required("*").max(200, "Máximo 200 caracteres"),
+  street: yup.string().required("*").max(200, "Máximo 200 caracteres"),
+  district: yup.string().required("*").max(100, "Máximo 100 caracteres"),
+  city: yup.string().required("*").max(100, "Máximo 100 caracteres"),
+  state: yup.string().required("*").max(2, "Use a sigla (ex: SP)"),
+  zip: yup.string().required("*").max(20, "Máximo 20 caracteres"),
+  phone: yup.string().required("*").max(30, "Máximo 30 caracteres"),
+  whatsapp: yup.string().required("*").max(30, "Máximo 30 caracteres"),
+});
+
+// ── Placeholder de aba futura ──────────────────────────────────────────────────
+
+function ComingSoonTab({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
-    <div className=" flex items-center justify-center p-4 min-h-full">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-gray-200">
-        <div className="relative mb-6">
-          <div className="animate-spin-slow inline-block">
-            <Cog className="w-16 h-16 text-blue-500 mx-auto" />
-          </div>
-          <div className="absolute -top-1 -right-1">
-            <Wrench className="w-6 h-6 text-orange-500 animate-bounce" />
+    <div className="flex items-center justify-center py-16">
+      <div className="text-center max-w-sm">
+        <SlidersHorizontal className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">{title}</h2>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Tab: Empresa ───────────────────────────────────────────────────────────────
+
+function EmpresaTab() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [removingLogo, setRemovingLogo] = useState(false);
+  const [savingData, setSavingData] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CompanyFormData>({ resolver: yupResolver(schema) });
+
+  useEffect(() => {
+    if (!companyId) return;
+    async function load() {
+      const snap = await getDoc(doc(db, "companies", companyId));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      setLogoUrl(data.logoUrl ?? null);
+      reset({
+        name: data.name ?? "",
+        street: data.street ?? "",
+        district: data.district ?? "",
+        city: data.city ?? "",
+        state: data.state ?? "",
+        zip: data.zip ?? "",
+        phone: data.phone ?? "",
+        whatsapp: data.whatsapp ?? "",
+      });
+    }
+    load();
+  }, [companyId]);
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !companyId) return;
+    setUploadingLogo(true);
+    try {
+      const storageRef = ref(storage, `companies/${companyId}/logo`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, "companies", companyId), { logoUrl: url });
+      setLogoUrl(url);
+      notify.success("Logo atualizada com sucesso.");
+    } catch {
+      notify.error("Erro ao fazer upload da logo.");
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleLogoRemove() {
+    if (!companyId || !logoUrl) return;
+    setRemovingLogo(true);
+    try {
+      const storageRef = ref(storage, `companies/${companyId}/logo`);
+      await deleteObject(storageRef);
+      await updateDoc(doc(db, "companies", companyId), { logoUrl: null });
+      setLogoUrl(null);
+      notify.success("Logo removida.");
+    } catch {
+      notify.error("Erro ao remover a logo.");
+    } finally {
+      setRemovingLogo(false);
+    }
+  }
+
+  async function onSubmit(data: CompanyFormData) {
+    setSavingData(true);
+    try {
+      await updateDoc(doc(db, "companies", companyId), data);
+      notify.success("Dados da empresa atualizados.");
+    } catch {
+      notify.error("Erro ao salvar os dados.");
+    } finally {
+      setSavingData(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-8 py-6 max-w-2xl">
+      {/* Seção: Logo */}
+      <section>
+        <h2 className="text-base font-semibold text-gray-700 mb-1">
+          Logo da empresa
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Aparece no documento de endereços gerado. Formatos aceitos: PNG, JPG.
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo da empresa"
+              className="h-16 w-auto object-contain border border-gray-200 rounded-lg p-2 bg-white"
+            />
+          ) : (
+            <div className="h-16 w-32 flex items-center justify-center border border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-400 text-xs">
+              Sem logo
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={handleLogoUpload}
+          />
+          <div className="flex gap-2">
+            <Button
+              text="Alterar logo"
+              isLoading={uploadingLogo}
+              onClick={() => fileInputRef.current?.click()}
+            />
+            {logoUrl && (
+              <Button
+                text="Remover"
+                isLoading={removingLogo}
+                onClick={handleLogoRemove}
+                backgroundColor="transparent"
+                color="#EF4444"
+                borderColor="#EF4444"
+              />
+            )}
           </div>
         </div>
+      </section>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">
-          Módulo em Manutenção
-        </h1>
-
-        <p className="text-gray-600 mb-6 leading-relaxed">
-          Estamos trabalhando para melhorar sua experiência. Este módulo estará
-          disponível em breve.
+      {/* Seção: Dados da empresa */}
+      <section>
+        <h2 className="text-base font-semibold text-gray-700 mb-1">
+          Dados da empresa
+        </h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Usados como remetente no documento de endereços gerado.
         </p>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <Input
+                id="name"
+                labelName="Nome da empresa"
+                labelId="name"
+                {...register("name")}
+                errorMessage={errors.name?.message}
+              />
+            </div>
+            <Input
+              id="street"
+              labelName="Endereço (rua e número)"
+              labelId="street"
+              {...register("street")}
+              errorMessage={errors.street?.message}
+            />
+            <Input
+              id="district"
+              labelName="Bairro"
+              labelId="district"
+              {...register("district")}
+              errorMessage={errors.district?.message}
+            />
+            <Input
+              id="city"
+              labelName="Cidade"
+              labelId="city"
+              {...register("city")}
+              errorMessage={errors.city?.message}
+            />
+            <Input
+              id="state"
+              labelName="Estado (ex: SP)"
+              labelId="state"
+              {...register("state")}
+              errorMessage={errors.state?.message}
+            />
+            <Input
+              id="zip"
+              labelName="CEP"
+              labelId="zip"
+              {...register("zip")}
+              errorMessage={errors.zip?.message}
+            />
+            <Input
+              id="phone"
+              labelName="Telefone"
+              labelId="phone"
+              {...register("phone")}
+              errorMessage={errors.phone?.message}
+            />
+            <Input
+              id="whatsapp"
+              labelName="WhatsApp"
+              labelId="whatsapp"
+              {...register("whatsapp")}
+              errorMessage={errors.whatsapp?.message}
+            />
+          </div>
+          <div className="mt-4 w-44">
+            <Button
+              text="Salvar dados"
+              type="submit"
+              isLoading={savingData}
+            />
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+// ── Página principal ───────────────────────────────────────────────────────────
+
+export default function Settings() {
+  const [tab, setTab] = useState(0);
+
+  return (
+    <div>
+      <h1 className="text-xl font-bold text-color_primary_400 mb-6">
+        Configurações
+      </h1>
+
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{
+          borderBottom: "1px solid #e5e7eb",
+          "& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
+          "& .Mui-selected": { color: "#1A2A38" },
+          "& .MuiTabs-indicator": { backgroundColor: "#1A2A38" },
+        }}
+      >
+        <Tab
+          label="Empresa"
+          icon={<Building2 size={16} />}
+          iconPosition="start"
+        />
+        <Tab
+          label="Operacional"
+          icon={<SlidersHorizontal size={16} />}
+          iconPosition="start"
+        />
+        <Tab
+          label="Notificações"
+          icon={<BellRing size={16} />}
+          iconPosition="start"
+        />
+      </Tabs>
+
+      <div className="mt-6">
+        {tab === 0 && <EmpresaTab />}
+        {tab === 1 && (
+          <ComingSoonTab
+            title="Operacional"
+            description="Configurações de transportadoras, prazos e regras operacionais. Em breve."
+          />
+        )}
+        {tab === 2 && (
+          <ComingSoonTab
+            title="Notificações"
+            description="Alertas automáticos para mercadorias atrasadas e outras notificações. Em breve."
+          />
+        )}
       </div>
     </div>
   );
