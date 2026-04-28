@@ -152,27 +152,30 @@ function EmpresaTab() {
   }
 
   return (
-    <div className="flex flex-col gap-8 py-6 max-w-2xl">
-      {/* Seção: Logo */}
-      <section>
-        <h2 className="text-base font-semibold text-gray-700 mb-1">
+    <div className="flex flex-col gap-6 py-6 max-w-3xl mx-auto">
+      {/* Card: Logo */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">
           Logo da empresa
         </h2>
-        <p className="text-xs text-gray-400 mb-4">
+        <p className="text-xs text-gray-400 mb-5">
           Aparece no documento de endereços gerado. Formatos aceitos: PNG, JPG.
         </p>
-        <div className="flex items-center gap-4 flex-wrap">
+
+        <div className="flex items-center gap-6">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt="Logo da empresa"
-              className="h-16 w-auto object-contain border border-gray-200 rounded-lg p-2 bg-white"
+              className="h-20 w-auto max-w-[160px] object-contain border border-gray-200 rounded-lg p-2 bg-gray-50 flex-shrink-0"
             />
           ) : (
-            <div className="h-16 w-32 flex items-center justify-center border border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-400 text-xs">
+            <div className="h-20 w-36 flex-shrink-0 flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-400 text-xs gap-1">
+              <span className="text-lg">🏢</span>
               Sem logo
             </div>
           )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -180,9 +183,10 @@ function EmpresaTab() {
             className="hidden"
             onChange={handleLogoUpload}
           />
-          <div className="flex gap-2">
+
+          <div className="flex flex-row gap-2 p-2">
             <Button
-              text="Alterar logo"
+              text={logoUrl ? "Alterar" : "Enviar"}
               isLoading={uploadingLogo}
               onClick={() => fileInputRef.current?.click()}
             />
@@ -198,19 +202,20 @@ function EmpresaTab() {
             )}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Seção: Dados da empresa */}
-      <section>
-        <h2 className="text-base font-semibold text-gray-700 mb-1">
+      {/* Card: Dados da empresa */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">
           Dados da empresa
         </h2>
-        <p className="text-xs text-gray-400 mb-4">
+        <p className="text-xs text-gray-400 mb-5">
           Usados como remetente no documento de endereços gerado.
         </p>
+
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-3">
               <Input
                 id="name"
                 labelName="Nome da empresa"
@@ -219,13 +224,17 @@ function EmpresaTab() {
                 errorMessage={errors.name?.message}
               />
             </div>
-            <Input
-              id="street"
-              labelName="Endereço (rua e número)"
-              labelId="street"
-              {...register("street")}
-              errorMessage={errors.street?.message}
-            />
+
+            <div className="md:col-span-3">
+              <Input
+                id="street"
+                labelName="Endereço (rua e número)"
+                labelId="street"
+                {...register("street")}
+                errorMessage={errors.street?.message}
+              />
+            </div>
+
             <Input
               id="district"
               labelName="Bairro"
@@ -242,11 +251,12 @@ function EmpresaTab() {
             />
             <Input
               id="state"
-              labelName="Estado (ex: SP)"
+              labelName="Estado (UF)"
               labelId="state"
               {...register("state")}
               errorMessage={errors.state?.message}
             />
+
             <Input
               id="zip"
               labelName="CEP"
@@ -269,15 +279,18 @@ function EmpresaTab() {
               errorMessage={errors.whatsapp?.message}
             />
           </div>
-          <div className="mt-4 w-44">
-            <Button
-              text="Salvar dados"
-              type="submit"
-              isLoading={savingData}
-            />
+
+          <div className="mt-6 flex justify-end">
+            <div className="w-44">
+              <Button
+                text="Salvar"
+                type="submit"
+                isLoading={savingData}
+              />
+            </div>
           </div>
         </form>
-      </section>
+      </div>
     </div>
   );
 }
@@ -289,10 +302,6 @@ export default function Settings() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-color_primary_400 mb-6">
-        Configurações
-      </h1>
-
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
