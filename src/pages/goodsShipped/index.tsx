@@ -72,13 +72,6 @@ const BRAZILIAN_STATES = [
   { value: "TO", label: "TO - Tocantins" },
 ];
 
-const TRANSPORTERS = [
-  { value: "Braspress", label: "Braspress" },
-  { value: "Correios", label: "Correios" },
-  { value: "Via Ônibus", label: "Via Ônibus" },
-  { value: "Retirada na Empresa", label: "Retirada na Empresa" },
-  { value: "Outro", label: "Outro" },
-];
 
 export type MerchandiseFormData = {
   name: string;
@@ -120,7 +113,7 @@ const defaultFormValues: MerchandiseFormData = {
   document_number: "",
   city: "",
   uf: "SP",
-  transporter: "Braspress",
+  transporter: "",
   shipping_date: "",
   delivery_forecast: "",
   delivery_date: "",
@@ -188,6 +181,7 @@ export default function GoodsShipped() {
   const [visibleForm, setVisibleForm] = useState(false);
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
   const [detailItem, setDetailItem] = useState<MerchandiseUIData | null>(null);
+  const [carriers, setCarriers] = useState<{ value: string; label: string }[]>([]);
   const paginationModel = { page: 0, pageSize: 10 };
 
   const {
@@ -219,6 +213,28 @@ export default function GoodsShipped() {
       setValue("delivery_forecast", "");
     }
   }, [isPickup, setValue]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    async function loadCarriers() {
+      try {
+        const q = query(
+          collection(db, "companies", companyId, "carriers"),
+          orderBy("createdAt", "asc")
+        );
+        const snapshot = await getDocs(q);
+        setCarriers(
+          snapshot.docs.map((d) => {
+            const name = (d.data() as { name: string }).name;
+            return { value: name, label: name };
+          })
+        );
+      } catch {
+        notify.error("Erro ao carregar transportadoras.");
+      }
+    }
+    loadCarriers();
+  }, [companyId]);
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Cliente", width: 150 },
@@ -468,7 +484,11 @@ export default function GoodsShipped() {
               id="carrier"
               labelName="Transportadora"
               labelId="carrier"
-              options={TRANSPORTERS}
+              options={
+                carriers.length > 0
+                  ? [{ value: "", label: "Selecione..." }, ...carriers]
+                  : [{ value: "", label: "Nenhuma transportadora cadastrada" }]
+              }
               {...register("transporter")}
             />
             <Input

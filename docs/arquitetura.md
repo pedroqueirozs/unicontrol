@@ -75,6 +75,7 @@ companies/{companyId}/financial/{docId}
 companies/{companyId}/addresses/{docId}
 companies/{companyId}/customers_pending/{docId}
 companies/{companyId}/suppliers_pending/{docId}
+companies/{companyId}/carriers/{docId}
 ```
 
 ---
@@ -126,6 +127,19 @@ Representa uma pendência com um fornecedor.
 
 > Estrutura idêntica à `customers_pending`, com a diferença de que o campo de referência é `supplierName` (fornecedor) em vez de `clientName` + `city` (cliente).
 > A primeira `update` é criada automaticamente no momento da criação da pendência, a partir do campo "Descrição inicial" do formulário.
+
+---
+
+### `companies/{companyId}/carriers/{docId}`
+Representa uma transportadora cadastrada pela empresa.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `name` | string | Nome da transportadora |
+| `createdAt` | Timestamp | Data de criação do registro |
+
+> Gerenciado pelo admin via Configurações → aba Operacional.
+> Usado como lista de opções nos módulos que envolvem escolha de transportadora.
 
 ---
 

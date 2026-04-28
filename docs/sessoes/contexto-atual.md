@@ -3,8 +3,8 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-04-19
-**Sessão mais recente:** [[2026-04-19]]
+**Última atualização:** 2026-04-28
+**Sessão mais recente:** [[2026-04-28]]
 
 ---
 
@@ -23,25 +23,24 @@
 | Pendências de Clientes | ✅ Pronto | CRUD completo, filtros responsivos |
 | Pendências com Fornecedores | ✅ Pronto | CRUD completo, filtros responsivos |
 | Relatórios | 🔧 Placeholder | Sem definição de quais relatórios serão gerados |
-| Configurações | 🔧 Placeholder | Sem definição de escopo |
+| Configurações | ✅ Pronto | Aba Empresa funcional (logo + dados); Operacional e Notificações são placeholder |
 
 ---
 
-## O que Foi Feito Recentemente (sessão 2026-04-19)
+## O que Foi Feito Recentemente (sessão 2026-04-28)
 
-- Scroll duplo nas tabelas corrigido no `MainLayout`
-- Página 404 criada com rota catch-all
-- `vercel.json` criado para resolver 404 ao recarregar em produção
-- Tabela de Mercadorias: coluna observação removida, modal de detalhe ao clicar na linha
-- App responsivo para mobile: sidebar drawer, hamburguer, formulários adaptativos, filtros com wrap, avatar corrigido
-- Logo ajustada em tamanho e qualidade de renderização SVG
+- Módulo de Configurações implementado: aba Empresa com upload de logo e dados da empresa
+- Logo da empresa embutida no .docx de endereços (logo à esquerda, dados à direita)
+- CORS do Firebase Storage configurado via `gsutil` no Google Cloud Shell
+- Correção de erro de build no Vercel (`insideH`/`insideV` inválidos no docx)
+- Layout da página de Configurações reorganizado em cards com grid de 3 colunas
 
 ---
 
 ## Próximos Passos
 
 - [ ] Definir escopo do módulo Relatórios (quais relatórios, filtros, dados)
-- [ ] Definir escopo do módulo Configurações
+- [x] Definir escopo do módulo Configurações
 - [x] Documentar coleção `suppliers_pending` em `docs/arquitetura.md`
 
 ---

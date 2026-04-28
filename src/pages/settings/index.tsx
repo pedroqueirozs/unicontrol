@@ -3,22 +3,40 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Tab, Tabs } from "@mui/material";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
 import {
   deleteObject,
   getDownloadURL,
   ref,
   uploadBytes,
 } from "firebase/storage";
-import { Building2, SlidersHorizontal, BellRing } from "lucide-react";
+import { Building2, SlidersHorizontal, BellRing, Pencil, Trash2 } from "lucide-react";
 
 import { db, storage } from "@/services/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { useConfirmDialog } from "@/components/ConfimDialog";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import { notify } from "@/utils/notify";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
+
+type Carrier = {
+  id: string;
+  name: string;
+  createdAt: Timestamp;
+};
 
 type CompanyFormData = {
   name: string;
@@ -59,6 +77,199 @@ function ComingSoonTab({
         <SlidersHorizontal className="w-12 h-12 text-gray-300 mx-auto mb-4" />
         <h2 className="text-lg font-semibold text-gray-700 mb-2">{title}</h2>
         <p className="text-sm text-gray-500">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Tab: Operacional ──────────────────────────────────────────────────────────
+
+function OperacionalTab() {
+  const { userData } = useAuth();
+  const companyId = userData?.companyId ?? "";
+  const { confirm, dialog } = useConfirmDialog();
+
+  const [carriers, setCarriers] = useState<Carrier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newName, setNewName] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!companyId) return;
+    loadCarriers();
+  }, [companyId]);
+
+  async function loadCarriers() {
+    setLoading(true);
+    try {
+      const q = query(
+        collection(db, "companies", companyId, "carriers"),
+        orderBy("createdAt", "asc")
+      );
+      const snapshot = await getDocs(q);
+      setCarriers(
+        snapshot.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Carrier, "id">),
+        }))
+      );
+    } catch {
+      notify.error("Erro ao carregar transportadoras.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAdd() {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setAdding(true);
+    try {
+      const createdAt = Timestamp.now();
+      const docRef = await addDoc(
+        collection(db, "companies", companyId, "carriers"),
+        { name: trimmed, createdAt }
+      );
+      setCarriers((prev) => [...prev, { id: docRef.id, name: trimmed, createdAt }]);
+      setNewName("");
+      notify.success("Transportadora adicionada.");
+    } catch {
+      notify.error("Erro ao adicionar transportadora.");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const confirmed = await confirm(
+      "Excluir esta transportadora permanentemente? Esta ação não pode ser desfeita."
+    );
+    if (!confirmed) return;
+    try {
+      await deleteDoc(doc(db, "companies", companyId, "carriers", id));
+      setCarriers((prev) => prev.filter((c) => c.id !== id));
+      notify.success("Transportadora removida.");
+    } catch {
+      notify.error("Erro ao remover transportadora.");
+    }
+  }
+
+  async function handleSaveEdit() {
+    const trimmed = editingName.trim();
+    if (!trimmed || !editingId) return;
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "companies", companyId, "carriers", editingId), {
+        name: trimmed,
+      });
+      setCarriers((prev) =>
+        prev.map((c) => (c.id === editingId ? { ...c, name: trimmed } : c))
+      );
+      setEditingId(null);
+      notify.success("Transportadora atualizada.");
+    } catch {
+      notify.error("Erro ao atualizar transportadora.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6 py-6 max-w-3xl mx-auto">
+      {dialog}
+
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">
+          Transportadoras
+        </h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Lista de transportadoras disponíveis para seleção nos módulos do sistema.
+        </p>
+
+        {loading ? (
+          <p className="text-sm text-gray-400">Carregando...</p>
+        ) : (
+          <div className="flex flex-col gap-2 mb-4">
+            {carriers.length === 0 && (
+              <p className="text-sm text-gray-400 py-2">
+                Nenhuma transportadora cadastrada.
+              </p>
+            )}
+            {carriers.map((carrier) => (
+              <div
+                key={carrier.id}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50"
+              >
+                {editingId === carrier.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveEdit();
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                    />
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={saving}
+                      className="text-xs text-emerald-600 font-medium hover:text-emerald-700 px-2 disabled:opacity-50"
+                    >
+                      {saving ? "..." : "Salvar"}
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-2"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1 text-sm text-gray-700">
+                      {carrier.name}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setEditingId(carrier.id);
+                        setEditingName(carrier.name);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                      title="Renomear"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(carrier.id)}
+                      className="text-red-400 hover:text-red-600 p-1"
+                      title="Remover"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-2 border-t border-gray-100">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Nome da transportadora"
+            className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+          />
+          <Button text="Adicionar" onClick={handleAdd} isLoading={adding} />
+        </div>
       </div>
     </div>
   );
@@ -331,12 +542,7 @@ export default function Settings() {
 
       <div className="mt-6">
         {tab === 0 && <EmpresaTab />}
-        {tab === 1 && (
-          <ComingSoonTab
-            title="Operacional"
-            description="Configurações de transportadoras, prazos e regras operacionais. Em breve."
-          />
-        )}
+        {tab === 1 && <OperacionalTab />}
         {tab === 2 && (
           <ComingSoonTab
             title="Notificações"
