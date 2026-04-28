@@ -139,8 +139,6 @@ export async function generateDocx(
           bottom: noBorder,
           left: noBorder,
           right: noBorder,
-          insideH: noBorder,
-          insideV: noBorder,
         },
         rows: [
           new TableRow({
