@@ -3,7 +3,7 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-04-29
+**Última atualização:** 2026-04-29 (continuação)
 **Sessão mais recente:** [[2026-04-29]]
 
 ---
@@ -20,8 +20,7 @@
 | Autenticação | ✅ Pronto | Login, registro, reset senha |
 | Perfil do Usuário | ✅ Pronto | E-mail com quebra correta no mobile |
 | Gerenciar Usuários | ✅ Pronto | Convite, remoção, alteração de cargo com confirmação |
-| Pendências de Clientes | ✅ Pronto | CRUD completo, filtros responsivos |
-| Pendências com Fornecedores | ✅ Pronto | CRUD completo, filtros responsivos |
+| Pendências (Clientes + Fornecedores) | ✅ Pronto | Página unificada `/pendencias` com tabs, busca do cadastro, data padrão hoje |
 | Cadastros | ✅ Pronto | CRUD de clientes e fornecedores com busca |
 | Relatórios | 🔧 Placeholder | Sem definição de quais relatórios serão gerados |
 | Configurações | ✅ Pronto | Aba Empresa funcional (logo + dados); Operacional e Notificações são placeholder |
@@ -34,17 +33,16 @@
 - **Gestão de Endereços** reescrita: formulário manual removido, agora busca direto nos cadastros de clientes/fornecedores com dropdown de resultados em tempo real
 - **DocxGenerator** atualizado: novo tipo `PrintQueueItem` (campos separados: rua, número, complemento, bairro, cidade, estado, CEP); complemento só aparece no .docx se preenchido; cidade exibe estado junto ("São Paulo - SP")
 - Coleção `addresses` do Firestore depreciada (não recebe novos dados)
-- Sidebar e rotas atualizados com item "Cadastros" (admin only)
+- **Mercadorias Enviadas**: campo de busca de cliente no topo do formulário; auto-preenche nome, cidade e UF; armazena `clientId` e `clientCode` no Firestore
+- **Pendências** unificadas em `/pendencias`: duas rotas separadas viraram uma página com tabs Clientes e Fornecedores; busca do cadastro no modal de criação; data de abertura padrão = hoje; páginas antigas removidas
 - Branch de trabalho: `feat/cadastros`
 
 ---
 
 ## Próximos Passos
 
-- [ ] Integrar cadastro de clientes/fornecedores em **Mercadorias Enviadas** (busca pelo cliente ao criar registro)
-- [ ] Integrar em **Pendências de Clientes** (buscar cliente do cadastro)
-- [ ] Integrar em **Pendências com Fornecedores** (buscar fornecedor do cadastro)
 - [ ] Definir escopo do módulo Relatórios (quais relatórios, filtros, dados)
+- [ ] Fazer merge da branch `feat/cadastros` → `main` quando tudo estiver validado
 
 ---
 

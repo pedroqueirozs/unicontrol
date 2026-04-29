@@ -78,8 +78,7 @@ Detalhes completos dos campos: [[arquitetura]]
 | Autenticação | ✅ Pronto | `/login`, `/register`, `/reset-password` |
 | Perfil do Usuário | ✅ Pronto | `/profile` |
 | Gerenciar Usuários | ✅ Pronto | `/manage-users` |
-| Pendências de Clientes | ✅ Pronto | `/customers-pending` |
-| Pendências com Fornecedores | ✅ Pronto | `/suppliers-pending` |
+| Pendências (Clientes + Fornecedores) | ✅ Pronto | `/pendencias` |
 | Cadastros (Clientes/Fornecedores) | ✅ Pronto | `/cadastros` |
 | Relatórios | 🔧 Placeholder | `/reports` |
 | Configurações | ✅ Pronto | `/settings` |

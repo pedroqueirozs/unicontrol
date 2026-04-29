@@ -95,8 +95,7 @@ O sistema possui 3 roles de usuário:
 | Contas a Pagar | ✅ | ❌ | ❌ |
 | Gestão de Endereços | ✅ | ✅ | ❌ |
 | Documentos Úteis | ✅ | ✅ | ❌ |
-| Pendências de Clientes | ✅ | ❌ | ❌ |
-| Pendências com Fornecedores | ✅ | ❌ | ❌ |
+| Pendências (Clientes + Fornecedores) | ✅ | ❌ | ❌ |
 | Relatórios | ✅ | ❌ | ❌ |
 | Configurações | ✅ | ❌ | ❌ |
 | Gerenciar Usuários | ✅ | ❌ | ❌ |
