@@ -14,8 +14,7 @@ import UsefulDocuments from "@/pages/usefulDocuments";
 import Financial from "@/pages/financial";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
-import CustomersPending from "@/pages/customersPending";
-import SuppliersPending from "@/pages/suppliersPending";
+import Pendencias from "@/pages/pendencias";
 import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
 import { ResetPassword } from "@/pages/ResetPassword";
@@ -113,20 +112,11 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "customers-pending",
-            handle: { title: "Pendências/ Trocas de clientes" },
+            path: "pendencias",
+            handle: { title: "Pendências" },
             element: (
               <RoleRoute allowedRoles={["admin"]}>
-                <CustomersPending />
-              </RoleRoute>
-            ),
-          },
-          {
-            path: "suppliers-pending",
-            handle: { title: "Pendências com Fornecedores" },
-            element: (
-              <RoleRoute allowedRoles={["admin"]}>
-                <SuppliersPending />
+                <Pendencias />
               </RoleRoute>
             ),
           },

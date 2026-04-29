@@ -5,8 +5,7 @@ import {
   DollarSign,
   AlignJustify,
   Settings,
-  Users,
-  ShieldAlert,
+  ClipboardList,
   MapPin,
   UserCog,
   BookUser,
@@ -63,15 +62,9 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "expedicao"],
   },
   {
-    label: "Pendências/Clientes",
-    icon: <Users size={24} />,
-    to: "/customers-pending",
-    roles: ["admin"],
-  },
-  {
-    label: "Pendências/Fornecedores",
-    icon: <ShieldAlert size={24} />,
-    to: "/suppliers-pending",
+    label: "Pendências",
+    icon: <ClipboardList size={24} />,
+    to: "/pendencias",
     roles: ["admin"],
   },
   {
