@@ -15,7 +15,7 @@ import {
   TableLayoutType,
 } from "docx";
 
-import { SelectedAddress } from "src/pages/addresses";
+// ── Tipos exportados ──────────────────────────────────────────────────────────
 
 export type CompanySender = {
   name: string;
@@ -29,65 +29,97 @@ export type CompanySender = {
   logoUrl?: string | null;
 };
 
+export type PrintQueueItem = {
+  id: string;
+  sourceType: "client" | "supplier";
+  name: string;
+  code: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  amount: number;
+};
+
+// ── Geração do documento ──────────────────────────────────────────────────────
+
 export async function generateDocx(
-  addresses: SelectedAddress[],
+  addresses: PrintQueueItem[],
   sender: CompanySender,
   logoBuffer: ArrayBuffer | null = null,
   logoType: "png" | "jpg" = "png"
 ) {
-  const recipientBlock = (addr: SelectedAddress) => [
-    new Paragraph({
-      children: [
-        new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 32 }),
-        new TextRun({
-          text: addr.recipient?.toUpperCase() ?? "",
-          size: 34,
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 100 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Endereço: ", bold: true, size: 22 }),
-        new TextRun({ text: addr.street ?? "", size: 22 }),
-        new TextRun({
-          text: addr.complement ? ` - ${addr.complement}` : "",
-          size: 22,
-        }),
-      ],
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 50 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Bairro: ", bold: true, size: 22 }),
-        new TextRun({ text: addr.district ?? "", size: 22 }),
-      ],
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 50 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "CEP: ", bold: true, size: 22 }),
-        new TextRun({ text: addr.zip ?? "", size: 22 }),
-      ],
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 50 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Cidade: ", bold: true, size: 22 }),
-        new TextRun({
-          text: `${addr.city ?? ""} `,
-          size: 22,
-        }),
-      ],
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 50 },
-    }),
-  ];
+  const recipientBlock = (addr: PrintQueueItem): Paragraph[] => {
+    const paragraphs: Paragraph[] = [
+      new Paragraph({
+        children: [
+          new TextRun({ text: "DESTINATÁRIO: ", bold: true, size: 32 }),
+          new TextRun({ text: addr.name.toUpperCase(), size: 34, bold: true }),
+        ],
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 100 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Endereço: ", bold: true, size: 22 }),
+          new TextRun({
+            text: addr.number ? `${addr.street}, ${addr.number}` : addr.street,
+            size: 22,
+          }),
+        ],
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 50 },
+      }),
+    ];
+
+    if (addr.complement) {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Complemento: ", bold: true, size: 22 }),
+            new TextRun({ text: addr.complement, size: 22 }),
+          ],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 50 },
+        })
+      );
+    }
+
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Bairro: ", bold: true, size: 22 }),
+          new TextRun({ text: addr.neighborhood, size: 22 }),
+        ],
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 50 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: "CEP: ", bold: true, size: 22 }),
+          new TextRun({ text: addr.zipCode, size: 22 }),
+        ],
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 50 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Cidade: ", bold: true, size: 22 }),
+          new TextRun({
+            text: addr.state ? `${addr.city} - ${addr.state}` : addr.city,
+            size: 22,
+          }),
+        ],
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 50 },
+      })
+    );
+
+    return paragraphs;
+  };
 
   const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
   const noMargin = { top: 0, bottom: 0, left: 0, right: 0 };
@@ -208,28 +240,11 @@ export async function generateDocx(
                   }),
                   ...senderBlock(),
                 ],
-
                 borders: {
-                  top: {
-                    style: BorderStyle.SINGLE,
-                    size: 6,
-                    color: "000000",
-                  },
-                  bottom: {
-                    style: BorderStyle.SINGLE,
-                    size: 6,
-                    color: "000000",
-                  },
-                  left: {
-                    style: BorderStyle.SINGLE,
-                    size: 6,
-                    color: "000000",
-                  },
-                  right: {
-                    style: BorderStyle.SINGLE,
-                    size: 6,
-                    color: "000000",
-                  },
+                  top: { style: BorderStyle.SINGLE, size: 6, color: "000000" },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: "000000" },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: "000000" },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: "000000" },
                 },
                 margins: { top: 200, bottom: 200, left: 200, right: 200 },
               }),
