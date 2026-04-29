@@ -20,6 +20,7 @@ import Address from "@/pages/addresses";
 import MyProfile from "@/pages/myProfile";
 import { ResetPassword } from "@/pages/ResetPassword";
 import ManageUsers from "@/pages/manageUsers";
+import Cadastros from "@/pages/cadastros";
 import NotFound from "@/pages/notFound";
 
 const router = createBrowserRouter([
@@ -135,6 +136,15 @@ const router = createBrowserRouter([
             element: (
               <RoleRoute allowedRoles={["admin"]}>
                 <ManageUsers />
+              </RoleRoute>
+            ),
+          },
+          {
+            path: "cadastros",
+            handle: { title: "Cadastros" },
+            element: (
+              <RoleRoute allowedRoles={["admin"]}>
+                <Cadastros />
               </RoleRoute>
             ),
           },

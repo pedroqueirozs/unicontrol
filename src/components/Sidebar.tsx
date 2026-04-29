@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   MapPin,
   UserCog,
+  BookUser,
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "@/components/SidebarItem";
@@ -71,6 +72,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Pendências/Fornecedores",
     icon: <ShieldAlert size={24} />,
     to: "/suppliers-pending",
+    roles: ["admin"],
+  },
+  {
+    label: "Cadastros",
+    icon: <BookUser size={24} />,
+    to: "/cadastros",
     roles: ["admin"],
   },
   {
