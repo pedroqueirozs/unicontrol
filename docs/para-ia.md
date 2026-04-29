@@ -43,8 +43,14 @@ invites/{token}                      → convites gerados pelo admin
 companies/{companyId}                → dados da empresa (nome, endereço, contato)
 companies/{companyId}/goods_shipped  → mercadorias enviadas
 companies/{companyId}/financial      → contas a pagar (NFs + boletos)
-companies/{companyId}/addresses      → endereços cadastrados
+companies/{companyId}/clients        → cadastro de clientes (fonte central de dados)
+companies/{companyId}/suppliers      → cadastro de fornecedores (fonte central de dados)
+companies/{companyId}/customers_pending → pendências com clientes
+companies/{companyId}/suppliers_pending → pendências com fornecedores
+companies/{companyId}/carriers       → transportadoras disponíveis
 ```
+
+> A coleção `addresses` foi depreciada. Endereços agora são gerados a partir de `clients` e `suppliers`.
 
 Detalhes completos dos campos: [[arquitetura]]
 
@@ -71,11 +77,12 @@ Detalhes completos dos campos: [[arquitetura]]
 | Documentos Úteis | ✅ Pronto | `/useful-documents` |
 | Autenticação | ✅ Pronto | `/login`, `/register`, `/reset-password` |
 | Perfil do Usuário | ✅ Pronto | `/profile` |
-| Gerenciar Usuários | 🔧 Em andamento | `/manage-users` |
-| Pendências de Clientes | 🔧 Incompleto | `/customers-pending` |
-| Pendências com Fornecedores | 🔧 Não iniciado | `/suppliers-pending` |
+| Gerenciar Usuários | ✅ Pronto | `/manage-users` |
+| Pendências de Clientes | ✅ Pronto | `/customers-pending` |
+| Pendências com Fornecedores | ✅ Pronto | `/suppliers-pending` |
+| Cadastros (Clientes/Fornecedores) | ✅ Pronto | `/cadastros` |
 | Relatórios | 🔧 Placeholder | `/reports` |
-| Configurações | 🔧 Placeholder | `/settings` |
+| Configurações | ✅ Pronto | `/settings` |
 
 ---
 

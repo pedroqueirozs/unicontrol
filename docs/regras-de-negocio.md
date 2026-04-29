@@ -100,6 +100,7 @@ O sistema possui 3 roles de usuário:
 | Relatórios | ✅ | ❌ | ❌ |
 | Configurações | ✅ | ❌ | ❌ |
 | Gerenciar Usuários | ✅ | ❌ | ❌ |
+| Cadastros (Clientes/Fornecedores) | ✅ | ❌ | ❌ |
 
 - O role `admin` é definido pelo proprietário do SaaS diretamente no Firestore
 - O `admin` é responsável por convidar novos membros via link com token
@@ -112,7 +113,7 @@ O sistema possui 3 roles de usuário:
 
 | # | Problema | Setor | Prioridade |
 |---|---|---|---|
-| P-01 | Endereços digitados manualmente no Word | Administrativo | Alta |
+| P-01 | ~~Endereços digitados manualmente no Word~~ → **Resolvido:** endereços gerados via cadastro de clientes/fornecedores | Administrativo | ~~Alta~~ |
 | P-02 | Sem controle de estoque | Expedição | Alta |
 | P-03 | Produtos cadastrados por quem não deveria | Vendas | Média |
 | P-04 | Cobrança de duplicatas manual via relatório do banco | Administrativo | Média |

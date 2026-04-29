@@ -72,11 +72,15 @@ Exemplos:
 ```
 companies/{companyId}/goods_shipped/{docId}
 companies/{companyId}/financial/{docId}
-companies/{companyId}/addresses/{docId}
+companies/{companyId}/addresses/{docId}       ← depreciada (ver nota abaixo)
 companies/{companyId}/customers_pending/{docId}
 companies/{companyId}/suppliers_pending/{docId}
 companies/{companyId}/carriers/{docId}
+companies/{companyId}/clients/{docId}
+companies/{companyId}/suppliers/{docId}
 ```
+
+> **Nota:** A coleção `addresses` foi depreciada. O módulo de Gestão de Endereços passou a usar as coleções `clients` e `suppliers` como fonte de dados. Nenhum novo documento é gravado em `addresses`.
 
 ---
 
@@ -140,6 +144,39 @@ Representa uma transportadora cadastrada pela empresa.
 
 > Gerenciado pelo admin via Configurações → aba Operacional.
 > Usado como lista de opções nos módulos que envolvem escolha de transportadora.
+
+---
+
+### `companies/{companyId}/clients/{docId}`
+Representa um cliente cadastrado no sistema. Fonte de dados central para os módulos de Endereços, Mercadorias e Pendências de Clientes.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `code` | string | Código do cliente (mesmo código usado no sistema de vendas) |
+| `name` | string | Nome / Razão Social |
+| `cnpj` | string | CNPJ ou CPF (opcional) |
+| `street` | string | Logradouro |
+| `number` | string | Número |
+| `complement` | string | Complemento (opcional) |
+| `neighborhood` | string | Bairro |
+| `city` | string | Cidade |
+| `state` | string | Estado (sigla, ex: SP) |
+| `zipCode` | string | CEP (opcional) |
+| `phone` | string | Telefone (opcional) |
+| `email` | string | E-mail (opcional) |
+| `createdAt` | Timestamp | Data de criação do registro |
+
+> Gerenciado pelo admin via módulo Cadastros → aba Clientes.
+> O código do cliente é o mesmo utilizado no sistema externo dos vendedores, permitindo cruzamento de informações.
+
+---
+
+### `companies/{companyId}/suppliers/{docId}`
+Representa um fornecedor cadastrado no sistema. Fonte de dados central para os módulos de Endereços e Pendências com Fornecedores.
+
+Campos idênticos à coleção `clients`.
+
+> Gerenciado pelo admin via módulo Cadastros → aba Fornecedores.
 
 ---
 
