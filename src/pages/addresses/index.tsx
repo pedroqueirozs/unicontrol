@@ -261,6 +261,16 @@ export default function Addresses() {
       valueGetter: (_value, row) =>
         row.state ? `${row.city} - ${row.state}` : row.city,
     },
+    {
+      field: "complement",
+      headerName: "Complemento",
+      width: 140,
+      renderCell: (params) => (
+        <span className={params.value ? "text-gray-800" : "text-gray-300"}>
+          {params.value || "—"}
+        </span>
+      ),
+    },
     { field: "zipCode", headerName: "CEP", width: 100 },
     {
       field: "amount",
