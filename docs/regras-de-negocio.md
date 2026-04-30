@@ -95,16 +95,31 @@ O sistema possui 3 roles de usuário:
 | Contas a Pagar | ✅ | ❌ | ❌ |
 | Gestão de Endereços | ✅ | ✅ | ❌ |
 | Documentos Úteis | ✅ | ✅ | ❌ |
-| Pendências de Clientes | ✅ | ❌ | ❌ |
-| Pendências com Fornecedores | ✅ | ❌ | ❌ |
+| Pendências (Clientes + Fornecedores) | ✅ | ❌ | ❌ |
 | Relatórios | ✅ | ❌ | ❌ |
 | Configurações | ✅ | ❌ | ❌ |
 | Gerenciar Usuários | ✅ | ❌ | ❌ |
+| Cadastros (Clientes/Fornecedores) | ✅ | ❌ | ❌ |
 
 - O role `admin` é definido pelo proprietário do SaaS diretamente no Firestore
 - O `admin` é responsável por convidar novos membros via link com token
 - O `admin` pode promover ou rebaixar qualquer usuário da empresa
 - O role `vendas` não possui módulos ativos no momento — serão implementados futuramente
+
+## RN-19 — Vínculo Obrigatório com Cliente em Mercadorias Enviadas
+
+- Todo registro de mercadoria enviada **deve estar vinculado a um cliente do cadastro**
+- Não é possível salvar um envio sem selecionar um cliente previamente cadastrado
+- Nome, cidade e UF são preenchidos automaticamente a partir do cadastro e não podem ser editados manualmente
+- O cliente pode ser trocado durante a edição (para correção de erros)
+- `clientId` e `clientCode` são sempre gravados no Firestore junto ao registro
+
+## RN-20 — Cadastro de Clientes e Fornecedores
+
+- O código do cliente/fornecedor é gerado automaticamente no momento do cadastro (`C-001`, `C-002`... para clientes; `F-001`, `F-002`... para fornecedores)
+- O CNPJ/CPF é **obrigatório** no cadastro e recebe máscara automática conforme o número de dígitos
+- Um mesmo CNPJ pode ter múltiplos cadastros (para clientes com endereços de entrega diferentes)
+- A busca nos módulos é feita por nome ou CNPJ/CPF — não mais pelo código
 
 ---
 
@@ -112,7 +127,7 @@ O sistema possui 3 roles de usuário:
 
 | # | Problema | Setor | Prioridade |
 |---|---|---|---|
-| P-01 | Endereços digitados manualmente no Word | Administrativo | Alta |
+| P-01 | ~~Endereços digitados manualmente no Word~~ → **Resolvido:** endereços gerados via cadastro de clientes/fornecedores | Administrativo | ~~Alta~~ |
 | P-02 | Sem controle de estoque | Expedição | Alta |
 | P-03 | Produtos cadastrados por quem não deveria | Vendas | Média |
 | P-04 | Cobrança de duplicatas manual via relatório do banco | Administrativo | Média |

@@ -107,7 +107,7 @@ function calculateGeneralStats(
     if (doc.delivery_date) {
       totalDelivered++;
     } else {
-      if (doc.delivery_forecast.toDate() < currentDate) {
+      if (doc.delivery_forecast.toDate() < dayjs(currentDate).startOf("day").toDate()) {
         totalOverdue++;
       } else {
         totalInTransit++;

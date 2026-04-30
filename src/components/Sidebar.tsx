@@ -5,10 +5,10 @@ import {
   DollarSign,
   AlignJustify,
   Settings,
-  Users,
-  ShieldAlert,
+  ClipboardList,
   MapPin,
   UserCog,
+  BookUser,
 } from "lucide-react";
 import React from "react";
 import { SidebarItem } from "@/components/SidebarItem";
@@ -62,15 +62,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "expedicao"],
   },
   {
-    label: "Pendências/Clientes",
-    icon: <Users size={24} />,
-    to: "/customers-pending",
+    label: "Pendências",
+    icon: <ClipboardList size={24} />,
+    to: "/pendencias",
     roles: ["admin"],
   },
   {
-    label: "Pendências/Fornecedores",
-    icon: <ShieldAlert size={24} />,
-    to: "/suppliers-pending",
+    label: "Cadastros",
+    icon: <BookUser size={24} />,
+    to: "/cadastros",
     roles: ["admin"],
   },
   {
