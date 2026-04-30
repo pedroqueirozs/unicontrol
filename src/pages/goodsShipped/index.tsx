@@ -320,6 +320,9 @@ export default function GoodsShipped() {
 
   function handleClearClient() {
     setSelectedClient(null);
+    setValue("name", "");
+    setValue("city", "");
+    setValue("uf", "");
   }
 
   // ── Tabela ──────────────────────────────────────────────────────────────────
@@ -464,6 +467,10 @@ export default function GoodsShipped() {
   }, [companyId]);
 
   async function onSubmit(formData: MerchandiseFormData) {
+    if (!selectedClient) {
+      notify.error("Selecione um cliente do cadastro antes de salvar.");
+      return;
+    }
     const shippingDate = dayjs(formData.shipping_date).startOf("day").toDate();
     const deliveryForecast = isPickup
       ? shippingDate
@@ -474,13 +481,14 @@ export default function GoodsShipped() {
 
     const payload: Omit<MerchandiseFirestoreData, "created_at"> = {
       ...formData,
+      name: selectedClient.name,
+      city: selectedClient.city,
+      uf: selectedClient.state,
       shipping_date: Timestamp.fromDate(shippingDate),
       delivery_forecast: Timestamp.fromDate(deliveryForecast),
       delivery_date: deliveryDate ? Timestamp.fromDate(deliveryDate) : null,
-      ...(selectedClient && {
-        clientId: selectedClient.id,
-        clientCode: selectedClient.code,
-      }),
+      clientId: selectedClient.id,
+      clientCode: selectedClient.code,
     };
 
     try {
@@ -542,8 +550,7 @@ export default function GoodsShipped() {
           {/* ── Busca de cliente ─────────────────────────────────────────── */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              Buscar cliente no cadastro{" "}
-              <span className="text-xs font-normal text-gray-400">(opcional)</span>
+              Selecione o cliente do cadastro
             </p>
 
             {selectedClient ? (
@@ -581,7 +588,7 @@ export default function GoodsShipped() {
                       setShowClientResults(true);
                     }}
                     onFocus={() => setShowClientResults(true)}
-                    placeholder="Nome ou código do cliente..."
+                    placeholder="Buscar por nome ou CNPJ/CPF..."
                     className="flex-1 py-2 text-sm bg-transparent outline-none"
                   />
                   {clientSearch && (
@@ -640,6 +647,7 @@ export default function GoodsShipped() {
               labelName="Nome do Cliente"
               labelId="name"
               {...register("name")}
+              disabled
               errorMessage={errors.name?.message}
             />
             <Input
@@ -655,6 +663,7 @@ export default function GoodsShipped() {
               labelName="Cidade"
               labelId="city"
               {...register("city")}
+              disabled
               errorMessage={errors.city?.message}
             />
             <InputSelect
@@ -663,6 +672,7 @@ export default function GoodsShipped() {
               labelId="uf"
               options={BRAZILIAN_STATES}
               {...register("uf")}
+              disabled
             />
             <InputSelect
               id="carrier"
