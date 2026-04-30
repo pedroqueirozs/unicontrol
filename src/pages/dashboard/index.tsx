@@ -1,8 +1,7 @@
 import {
   Folder,
   TriangleAlert,
-  ShieldAlert,
-  Users,
+  ClipboardList,
   PiggyBank,
   ChartLine,
   Package,
@@ -186,14 +185,9 @@ export default function Dashboard() {
       {/* Outras Funcionalidades */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <InfoCard
-          icon={<ShieldAlert />}
-          title="Pendências com fornecedores"
-          to="/suppliers-pending"
-        />
-        <InfoCard
-          icon={<Users />}
-          title="Trocas/ Avarias de clientes"
-          to="/customers-pending"
+          icon={<ClipboardList />}
+          title="Pendências"
+          to="/pendencias"
         />
         <InfoCard icon={<PiggyBank />} title="Contas a pagar" to="/financial" />
         <InfoCard icon={<ChartLine />} title="Controle de Fretes" comingSoon />
