@@ -54,6 +54,11 @@ type Contact = {
 
 // ── Máscara CNPJ / CPF ────────────────────────────────────────────────────────
 
+function formatZipCode(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  return digits.replace(/(\d{5})(\d{1,3})$/, "$1-$2");
+}
+
 function formatCnpjCpf(value: string): string {
   const digits = value.replace(/\D/g, "");
   if (digits.length <= 11) {
@@ -457,6 +462,9 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
                   labelName="CEP"
                   labelId="zipCode"
                   {...register("zipCode")}
+                  onChange={(e) =>
+                    setValue("zipCode", formatZipCode(e.target.value))
+                  }
                   errorMessage={errors.zipCode?.message}
                 />
                 <Input
