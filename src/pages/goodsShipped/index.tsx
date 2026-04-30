@@ -38,7 +38,7 @@ import {
 
 import { notify } from "@/utils/notify";
 import { ptBR } from "@mui/x-data-grid/locales";
-import { Flag, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, Copy, Flag, Pencil, Search, Trash2, X } from "lucide-react";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -106,6 +106,7 @@ export type MerchandiseFirestoreData = Omit<
   clientId?: string;
   clientCode?: string;
   flagged?: boolean;
+  trackingCodes?: string[];
 };
 
 export type MerchandiseUIData = Omit<
@@ -201,6 +202,18 @@ export default function GoodsShipped() {
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
   const [detailItem, setDetailItem] = useState<MerchandiseUIData | null>(null);
   const [carriers, setCarriers] = useState<{ value: string; label: string }[]>([]);
+
+  // ── Estado de rastreio ──────────────────────────────────────────────────────
+  const [trackingCodes, setTrackingCodes] = useState<string[]>([]);
+  const [trackingInput, setTrackingInput] = useState("");
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  function handleCopyCode(code: string) {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    });
+  }
 
   // ── Estado da busca de clientes ─────────────────────────────────────────────
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -404,6 +417,9 @@ export default function GoodsShipped() {
     setClientSearch("");
     setVisibleForm(true);
 
+    setTrackingCodes(item.trackingCodes ?? []);
+    setTrackingInput("");
+
     const found = clients.find((c) => c.id === item.clientId);
     if (found) {
       setSelectedClient(found);
@@ -434,6 +450,18 @@ export default function GoodsShipped() {
       delivery_date: parseDateForInput(item.delivery_date),
       notes: item.notes ?? "",
     });
+  }
+
+  function handleAddTracking() {
+    const code = trackingInput.trim().toUpperCase();
+    if (!code || trackingCodes.includes(code)) return;
+    setTrackingCodes((prev) => [...prev, code]);
+    setTrackingInput("");
+  }
+
+  async function handleRemoveTracking(code: string) {
+    const confirmed = await confirm(`Remover o código de rastreio "${code}"?`);
+    if (confirmed) setTrackingCodes((prev) => prev.filter((c) => c !== code));
   }
 
   async function handleToggleFlag(item: MerchandiseUIData) {
@@ -522,6 +550,11 @@ export default function GoodsShipped() {
       ? dayjs(formData.delivery_date).startOf("day").toDate()
       : null;
 
+    const pendingCode = trackingInput.trim().toUpperCase();
+    const finalTrackingCodes = pendingCode && !trackingCodes.includes(pendingCode)
+      ? [...trackingCodes, pendingCode]
+      : trackingCodes;
+
     const payload: Omit<MerchandiseFirestoreData, "created_at"> = {
       ...formData,
       name: selectedClient.name,
@@ -532,6 +565,7 @@ export default function GoodsShipped() {
       delivery_date: deliveryDate ? Timestamp.fromDate(deliveryDate) : null,
       clientId: selectedClient.id,
       clientCode: selectedClient.code,
+      trackingCodes: finalTrackingCodes,
     };
 
     try {
@@ -555,6 +589,8 @@ export default function GoodsShipped() {
       setEditItem(null);
       setSelectedClient(null);
       setClientSearch("");
+      setTrackingCodes([]);
+      setTrackingInput("");
       reset(defaultFormValues);
       setVisibleForm(false);
       await getAllDocuments();
@@ -767,6 +803,55 @@ export default function GoodsShipped() {
             />
           </div>
 
+          {/* ── Códigos de rastreio ──────────────────────────────────────── */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">
+              Códigos de rastreio{" "}
+              <span className="text-xs font-normal text-gray-400">(opcional)</span>
+            </p>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={trackingInput}
+                onChange={(e) => setTrackingInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTracking();
+                  }
+                }}
+                placeholder="Ex: AA123456789BR"
+                className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 font-mono focus:outline-none focus:ring-1 focus:ring-color_info"
+              />
+              <button
+                type="button"
+                onClick={handleAddTracking}
+                className="px-4 py-2 text-sm bg-color_info text-white rounded-md hover:opacity-90 flex-shrink-0"
+              >
+                Adicionar
+              </button>
+            </div>
+            {trackingCodes.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {trackingCodes.map((code) => (
+                  <span
+                    key={code}
+                    className="flex items-center gap-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-mono px-3 py-1 rounded-full"
+                  >
+                    {code}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTracking(code)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <X size={13} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="w-52 flex gap-4">
             <Button text={editItem ? "Atualizar" : "Salvar"} type="submit" />
             <Button
@@ -774,6 +859,8 @@ export default function GoodsShipped() {
                 reset(defaultFormValues);
                 setSelectedClient(null);
                 setClientSearch("");
+                setTrackingCodes([]);
+                setTrackingInput("");
               }}
               backgroundColor="#F5F7FA"
               color="#555555"
@@ -788,6 +875,8 @@ export default function GoodsShipped() {
                 setEditItem(null);
                 setSelectedClient(null);
                 setClientSearch("");
+                setTrackingCodes([]);
+                setTrackingInput("");
                 setVisibleForm(false);
                 reset(defaultFormValues);
               }}
@@ -868,6 +957,33 @@ export default function GoodsShipped() {
             </DialogTitle>
 
             <DialogContent dividers>
+              {detailItem.trackingCodes && detailItem.trackingCodes.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    Códigos de Rastreio
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {detailItem.trackingCodes.map((code) => (
+                      <span
+                        key={code}
+                        className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 text-gray-700 text-sm font-mono px-3 py-1 rounded-full"
+                      >
+                        {code}
+                        <button
+                          onClick={() => handleCopyCode(code)}
+                          title="Copiar código"
+                          className="text-gray-400 hover:text-color_info transition-colors"
+                        >
+                          {copiedCode === code
+                            ? <Check size={13} className="text-green-500" />
+                            : <Copy size={13} />
+                          }
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
                 Observação
               </p>
