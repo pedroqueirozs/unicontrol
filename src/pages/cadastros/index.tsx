@@ -52,11 +52,29 @@ type Contact = {
   createdAt: Timestamp;
 };
 
+// ── Máscara CNPJ / CPF ────────────────────────────────────────────────────────
+
+function formatCnpjCpf(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length <= 11) {
+    return digits
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  }
+  return digits
+    .slice(0, 14)
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+}
+
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const schema = yup.object({
   name: yup.string().required("*").max(200, "Máximo 200 caracteres"),
-  cnpj: yup.string().max(20, "Máximo 20 caracteres").default(""),
+  cnpj: yup.string().required("*").max(20, "Máximo 20 caracteres"),
   street: yup.string().required("*").max(200, "Máximo 200 caracteres"),
   number: yup.string().required("*").max(20, "Máximo 20 caracteres"),
   complement: yup.string().max(100, "Máximo 100 caracteres").default(""),
@@ -98,6 +116,7 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ContactFormData>({ resolver: yupResolver(schema) });
 
@@ -358,6 +377,9 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
                 labelName="CNPJ / CPF"
                 labelId="cnpj"
                 {...register("cnpj")}
+                onChange={(e) =>
+                  setValue("cnpj", formatCnpjCpf(e.target.value))
+                }
                 errorMessage={errors.cnpj?.message}
               />
 
