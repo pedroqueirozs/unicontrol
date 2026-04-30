@@ -77,6 +77,7 @@ const BRAZILIAN_STATES = [
 type ClientRecord = {
   id: string;
   code: string;
+  cnpj: string;
   name: string;
   city: string;
   state: string;
@@ -267,8 +268,8 @@ export default function GoodsShipped() {
 
         setClients(
           clientsSnap.docs.map((d) => {
-            const raw = d.data() as { code: string; name: string; city: string; state: string };
-            return { id: d.id, code: raw.code, name: raw.name, city: raw.city, state: raw.state };
+            const raw = d.data() as { code: string; cnpj: string; name: string; city: string; state: string };
+            return { id: d.id, code: raw.code, cnpj: raw.cnpj ?? "", name: raw.name, city: raw.city, state: raw.state };
           })
         );
       } catch {
@@ -303,7 +304,7 @@ export default function GoodsShipped() {
           .filter(
             (c) =>
               c.name.toLowerCase().includes(trimmed) ||
-              c.code.toLowerCase().includes(trimmed)
+              (c.cnpj ?? "").toLowerCase().includes(trimmed)
           )
           .slice(0, 8)
       : [];
@@ -551,9 +552,11 @@ export default function GoodsShipped() {
                   <span className="text-sm font-semibold text-blue-800">
                     {selectedClient.name}
                   </span>
-                  <span className="text-xs text-blue-500">
-                    #{selectedClient.code}
-                  </span>
+                  {selectedClient.cnpj && (
+                    <span className="text-xs text-blue-500">
+                      {selectedClient.cnpj}
+                    </span>
+                  )}
                   <span className="text-xs text-blue-400">
                     {selectedClient.city} / {selectedClient.state}
                   </span>
@@ -604,9 +607,11 @@ export default function GoodsShipped() {
                           <span className="text-sm font-medium text-gray-800">
                             {client.name}
                           </span>
-                          <span className="text-xs text-gray-400 ml-2">
-                            #{client.code}
-                          </span>
+                          {client.cnpj && (
+                            <span className="text-xs text-gray-400 ml-2">
+                              {client.cnpj}
+                            </span>
+                          )}
                           <p className="text-xs text-gray-400 mt-0.5">
                             {client.city} / {client.state}
                           </p>

@@ -23,6 +23,7 @@ import { notify } from "@/utils/notify";
 type ContactRecord = {
   id: string;
   code: string;
+  cnpj: string;
   name: string;
   street: string;
   number: string;
@@ -120,7 +121,7 @@ export default function Addresses() {
           .filter(
             (c) =>
               c.name.toLowerCase().includes(trimmed) ||
-              c.code.toLowerCase().includes(trimmed)
+              (c.cnpj ?? "").toLowerCase().includes(trimmed)
           )
           .slice(0, 8)
       : [];
@@ -376,9 +377,11 @@ export default function Addresses() {
                     <span className="text-sm font-medium text-gray-800">
                       {contact.name}
                     </span>
-                    <span className="text-xs text-gray-400 ml-2">
-                      #{contact.code}
-                    </span>
+                    {contact.cnpj && (
+                      <span className="text-xs text-gray-400 ml-2">
+                        {contact.cnpj}
+                      </span>
+                    )}
                     <p className="text-xs text-gray-400 mt-0.5">
                       {contact.city}
                       {contact.state ? ` - ${contact.state}` : ""}

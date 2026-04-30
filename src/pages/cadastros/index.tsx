@@ -55,7 +55,6 @@ type Contact = {
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const schema = yup.object({
-  code: yup.string().required("*").max(50, "Máximo 50 caracteres"),
   name: yup.string().required("*").max(200, "Máximo 200 caracteres"),
   cnpj: yup.string().max(20, "Máximo 20 caracteres").default(""),
   street: yup.string().required("*").max(200, "Máximo 200 caracteres"),
@@ -130,12 +129,23 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
     loadData();
   }, [companyId, collectionName]);
 
+  // ── Geração de código automático ───────────────────────────────────────────
+
+  function generateNextCode(): string {
+    let max = 0;
+    data.forEach((c) => {
+      const num = parseInt(c.code.replace(/\D/g, ""), 10);
+      if (!isNaN(num) && num > max) max = num;
+    });
+    const prefix = collectionName === "clients" ? "C" : "F";
+    return `${prefix}-${String(max + 1).padStart(3, "0")}`;
+  }
+
   // ── Handlers de modal ───────────────────────────────────────────────────────
 
   function openCreate() {
     setEditingContact(null);
     reset({
-      code: "",
       name: "",
       cnpj: "",
       street: "",
@@ -154,7 +164,6 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
   function openEdit(contact: Contact) {
     setEditingContact(contact);
     reset({
-      code: contact.code,
       name: contact.name,
       cnpj: contact.cnpj ?? "",
       street: contact.street,
@@ -188,12 +197,13 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
         notify.success(`${singularLabel} atualizado com sucesso.`);
       } else {
         const now = Timestamp.now();
+        const code = generateNextCode();
         const docRef = await addDoc(
           collection(db, "companies", companyId, collectionName),
-          { ...formData, createdAt: now }
+          { ...formData, code, createdAt: now }
         );
         setData((prev) =>
-          [...prev, { id: docRef.id, ...formData, createdAt: now }].sort(
+          [...prev, { id: docRef.id, ...formData, code, createdAt: now }].sort(
             (a, b) => a.name.localeCompare(b.name)
           )
         );
@@ -227,7 +237,7 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
     ? data.filter(
         (c) =>
           c.name.toLowerCase().includes(search.toLowerCase()) ||
-          c.code.toLowerCase().includes(search.toLowerCase())
+          (c.cnpj ?? "").toLowerCase().includes(search.toLowerCase())
       )
     : data;
 
@@ -287,7 +297,7 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nome ou código..."
+          placeholder="Buscar por nome ou CNPJ..."
           className="flex-1 max-w-sm text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
         />
         <div className="w-48">
@@ -334,23 +344,22 @@ function ContactsTab({ collectionName, singularLabel }: ContactsTabProps) {
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
             <div className="flex flex-col gap-4 pt-1">
-              {/* Código + CNPJ */}
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  id="code"
-                  labelName="Código"
-                  labelId="code"
-                  {...register("code")}
-                  errorMessage={errors.code?.message}
-                />
-                <Input
-                  id="cnpj"
-                  labelName="CNPJ / CPF"
-                  labelId="cnpj"
-                  {...register("cnpj")}
-                  errorMessage={errors.cnpj?.message}
-                />
-              </div>
+              {/* Código (read-only no edit) + CNPJ */}
+              {editingContact && (
+                <p className="text-xs text-gray-400">
+                  Código:{" "}
+                  <span className="font-mono font-semibold text-gray-600">
+                    {editingContact.code}
+                  </span>
+                </p>
+              )}
+              <Input
+                id="cnpj"
+                labelName="CNPJ / CPF"
+                labelId="cnpj"
+                {...register("cnpj")}
+                errorMessage={errors.cnpj?.message}
+              />
 
               {/* Nome */}
               <Input

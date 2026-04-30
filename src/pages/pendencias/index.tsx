@@ -74,6 +74,7 @@ type PendingUI = {
 type ContactRecord = {
   id: string;
   code: string;
+  cnpj: string;
   name: string;
   city: string;
   state: string;
@@ -216,8 +217,8 @@ function PendingTab({
       const snapshot = await getDocs(q);
       setContacts(
         snapshot.docs.map((d) => {
-          const raw = d.data() as { code: string; name: string; city: string; state: string };
-          return { id: d.id, ...raw };
+          const raw = d.data() as { code: string; cnpj: string; name: string; city: string; state: string };
+          return { id: d.id, code: raw.code, cnpj: raw.cnpj ?? "", name: raw.name, city: raw.city, state: raw.state };
         })
       );
     } catch {
@@ -246,7 +247,7 @@ function PendingTab({
           .filter(
             (c) =>
               c.name.toLowerCase().includes(trimmed) ||
-              c.code.toLowerCase().includes(trimmed)
+              (c.cnpj ?? "").toLowerCase().includes(trimmed)
           )
           .slice(0, 8)
       : [];
@@ -559,9 +560,11 @@ function PendingTab({
                               <span className="text-sm font-medium text-gray-800">
                                 {contact.name}
                               </span>
-                              <span className="text-xs text-gray-400 ml-2">
-                                #{contact.code}
-                              </span>
+                              {contact.cnpj && (
+                                <span className="text-xs text-gray-400 ml-2">
+                                  {contact.cnpj}
+                                </span>
+                              )}
                               <p className="text-xs text-gray-400 mt-0.5">
                                 {contact.city}{contact.state ? ` - ${contact.state}` : ""}
                               </p>
