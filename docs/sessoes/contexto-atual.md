@@ -3,8 +3,8 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-04-29 (continuação)
-**Sessão mais recente:** [[2026-04-29]]
+**Última atualização:** 2026-04-30
+**Sessão mais recente:** [[2026-04-30]]
 
 ---
 
@@ -12,30 +12,28 @@
 
 | Módulo | Estado | Observação |
 |---|---|---|
-| Dashboard | ✅ Pronto | KPIs + gráficos funcionando |
-| Gestão de Mercadorias | ✅ Pronto | Observação exibida em modal ao clicar na linha |
+| Dashboard | ✅ Pronto | KPIs + gráficos; atalhos corrigidos; cálculo de atraso usa início do dia |
+| Gestão de Mercadorias | ✅ Pronto | Cliente obrigatório; flag de atenção; códigos de rastreio com cópia |
 | Contas a Pagar | ✅ Pronto | NFs + boletos, validações RN-16 |
-| Gestão de Endereços | ✅ Pronto | Busca em clientes/fornecedores, fila de impressão, gera .docx |
+| Gestão de Endereços | ✅ Pronto | Busca por nome ou CNPJ/CPF; fila de impressão; gera .docx |
 | Documentos Úteis | ✅ Pronto | Upload/download Firebase Storage |
 | Autenticação | ✅ Pronto | Login, registro, reset senha |
 | Perfil do Usuário | ✅ Pronto | E-mail com quebra correta no mobile |
 | Gerenciar Usuários | ✅ Pronto | Convite, remoção, alteração de cargo com confirmação |
-| Pendências (Clientes + Fornecedores) | ✅ Pronto | Página unificada `/pendencias` com tabs, busca do cadastro, data padrão hoje |
-| Cadastros | ✅ Pronto | CRUD de clientes e fornecedores com busca |
+| Pendências (Clientes + Fornecedores) | ✅ Pronto | Página unificada `/pendencias`; campos `clientId`/`supplierId` corretos |
+| Cadastros | ✅ Pronto | Código auto-gerado; CNPJ/CPF obrigatório com máscara; CEP com máscara |
 | Relatórios | 🔧 Placeholder | Sem definição de quais relatórios serão gerados |
 | Configurações | ✅ Pronto | Aba Empresa funcional (logo + dados); Operacional e Notificações são placeholder |
 
 ---
 
-## O que Foi Feito Recentemente (sessão 2026-04-29)
+## O que Foi Feito Recentemente (sessão 2026-04-30)
 
-- Novo módulo **Cadastros** criado (`/cadastros`): CRUD de Clientes e Fornecedores com tabs, busca por nome/código, modal de criar/editar, confirmação de exclusão
-- **Gestão de Endereços** reescrita: formulário manual removido, agora busca direto nos cadastros de clientes/fornecedores com dropdown de resultados em tempo real
-- **DocxGenerator** atualizado: novo tipo `PrintQueueItem` (campos separados: rua, número, complemento, bairro, cidade, estado, CEP); complemento só aparece no .docx se preenchido; cidade exibe estado junto ("São Paulo - SP")
-- Coleção `addresses` do Firestore depreciada (não recebe novos dados)
-- **Mercadorias Enviadas**: campo de busca de cliente no topo do formulário; auto-preenche nome, cidade e UF; armazena `clientId` e `clientCode` no Firestore
-- **Pendências** unificadas em `/pendencias`: duas rotas separadas viraram uma página com tabs Clientes e Fornecedores; busca do cadastro no modal de criação; data de abertura padrão = hoje; páginas antigas removidas
-- Branch de trabalho: `feat/cadastros`
+- **Dashboard**: atalhos corrigidos (dois links de pendências → um `/pendencias`); cálculo de atraso corrigido para usar início do dia (não hora atual)
+- **Cadastros**: código do cliente/fornecedor agora é auto-gerado (`C-001`/`F-001`); CNPJ/CPF obrigatório com máscara automática; CEP com máscara; busca por nome ou CNPJ
+- **Busca nos módulos** (Endereços, Mercadorias, Pendências): filtro e dropdown trocados de código para CNPJ/CPF
+- **Mercadorias Enviadas**: seleção de cliente obrigatória (RN-19); nome/cidade/UF desabilitados (vêm do cadastro); flag de atenção por linha; códigos de rastreio (múltiplos, array); copiar código no modal de detalhe; fix de restaurar cliente ao abrir edição
+- **Pendências**: campos renomeados de `contactId`/`contactCode` para `clientId`/`clientCode` (customers) e `supplierId`/`supplierCode` (suppliers)
 
 ---
 

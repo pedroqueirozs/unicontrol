@@ -84,18 +84,46 @@ companies/{companyId}/suppliers/{docId}
 
 ---
 
+### `companies/{companyId}/goods_shipped/{docId}`
+Representa uma mercadoria enviada.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `name` | string | Nome do cliente (preenchido automaticamente do cadastro) |
+| `document_number` | string | Nota fiscal ou documento de referência |
+| `city` | string | Cidade (preenchida automaticamente do cadastro) |
+| `uf` | string | Estado (preenchido automaticamente do cadastro) |
+| `transporter` | string | Nome da transportadora |
+| `shipping_date` | Timestamp | Data de envio |
+| `delivery_forecast` | Timestamp | Previsão de entrega |
+| `delivery_date` | Timestamp \| null | Data real de entrega (null se não entregue) |
+| `notes` | string \| null | Anotações livres |
+| `created_at` | Timestamp | Data de criação do registro |
+| `clientId` | string | ID do documento na coleção `clients` — **obrigatório** |
+| `clientCode` | string | Código do cliente (ex: `C-001`) — **obrigatório** |
+| `flagged` | boolean | Sinaliza o registro para atenção (opcional) |
+| `trackingCodes` | string[] | Códigos de rastreio dos Correios (opcional, múltiplos) |
+
+> Todo envio deve ser vinculado a um cliente do cadastro (RN-19).
+> `situation` (Entregue / No Prazo / Atrasada) é calculada no cliente, não armazenada.
+> `flagged` é ativado/desativado diretamente na tabela sem abrir formulário.
+
+---
+
 ### `companies/{companyId}/customers_pending/{docId}`
 Representa uma pendência com um cliente.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| `clientName` | string | Nome do cliente |
+| `name` | string | Nome do cliente |
 | `city` | string | Cidade |
 | `document` | string | NF ou outro documento de referência |
 | `openedAt` | Timestamp | Data de abertura da pendência |
 | `status` | string | `aberta`, `em_andamento` ou `resolvida` |
 | `createdAt` | Timestamp | Data de criação do registro |
 | `updates` | array | Lista de atualizações (ver abaixo) |
+| `clientId` | string | ID do cliente no cadastro (opcional, quando selecionado) |
+| `clientCode` | string | Código do cliente (opcional) |
 
 **Estrutura de cada item em `updates`:**
 
@@ -104,8 +132,6 @@ Representa uma pendência com um cliente.
 | `id` | string | UUID gerado no cliente (evita duplicatas no arrayUnion) |
 | `text` | string | Texto da atualização |
 | `createdAt` | Timestamp | Data e hora da atualização |
-
-> **Status:** migração concluída. Todos os módulos já utilizam esta estrutura.
 
 ---
 
@@ -114,12 +140,15 @@ Representa uma pendência com um fornecedor.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| `supplierName` | string | Nome do fornecedor |
+| `name` | string | Nome do fornecedor |
+| `city` | string | Cidade |
 | `document` | string | NF ou outro documento de referência |
 | `openedAt` | Timestamp | Data de abertura da pendência |
 | `status` | string | `aberta`, `em_andamento` ou `resolvida` |
 | `createdAt` | Timestamp | Data de criação do registro |
 | `updates` | array | Lista de atualizações (ver abaixo) |
+| `supplierId` | string | ID do fornecedor no cadastro (opcional, quando selecionado) |
+| `supplierCode` | string | Código do fornecedor (opcional) |
 
 **Estrutura de cada item em `updates`:**
 
@@ -129,8 +158,8 @@ Representa uma pendência com um fornecedor.
 | `text` | string | Texto da atualização |
 | `createdAt` | Timestamp | Data e hora da atualização |
 
-> Estrutura idêntica à `customers_pending`, com a diferença de que o campo de referência é `supplierName` (fornecedor) em vez de `clientName` + `city` (cliente).
 > A primeira `update` é criada automaticamente no momento da criação da pendência, a partir do campo "Descrição inicial" do formulário.
+> Data de abertura padrão = hoje (dayjs).
 
 ---
 
@@ -152,29 +181,31 @@ Representa um cliente cadastrado no sistema. Fonte de dados central para os mód
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| `code` | string | Código do cliente (mesmo código usado no sistema de vendas) |
+| `code` | string | Código gerado automaticamente no cadastro (ex: `C-001`, `C-002`) |
 | `name` | string | Nome / Razão Social |
-| `cnpj` | string | CNPJ ou CPF (opcional) |
+| `cnpj` | string | CNPJ ou CPF — **obrigatório**, com máscara automática |
 | `street` | string | Logradouro |
 | `number` | string | Número |
 | `complement` | string | Complemento (opcional) |
 | `neighborhood` | string | Bairro |
 | `city` | string | Cidade |
 | `state` | string | Estado (sigla, ex: SP) |
-| `zipCode` | string | CEP (opcional) |
+| `zipCode` | string | CEP com máscara automática (opcional) |
 | `phone` | string | Telefone (opcional) |
 | `email` | string | E-mail (opcional) |
 | `createdAt` | Timestamp | Data de criação do registro |
 
 > Gerenciado pelo admin via módulo Cadastros → aba Clientes.
-> O código do cliente é o mesmo utilizado no sistema externo dos vendedores, permitindo cruzamento de informações.
+> O código é gerado automaticamente em sequência — não é mais inserido manualmente.
+> Um mesmo CNPJ pode ter múltiplos cadastros (endereços diferentes para o mesmo cliente).
+> Busca nos módulos é feita por nome ou CNPJ/CPF.
 
 ---
 
 ### `companies/{companyId}/suppliers/{docId}`
 Representa um fornecedor cadastrado no sistema. Fonte de dados central para os módulos de Endereços e Pendências com Fornecedores.
 
-Campos idênticos à coleção `clients`.
+Campos idênticos à coleção `clients`. Código gerado automaticamente no formato `F-001`, `F-002`...
 
 > Gerenciado pelo admin via módulo Cadastros → aba Fornecedores.
 
