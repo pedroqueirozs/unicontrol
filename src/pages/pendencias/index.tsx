@@ -55,8 +55,10 @@ type PendingFirestore = {
   status: PendingStatus;
   createdAt: Timestamp;
   updates: PendingUpdate[];
-  contactId?: string;
-  contactCode?: string;
+  clientId?: string;
+  clientCode?: string;
+  supplierId?: string;
+  supplierCode?: string;
 };
 
 type PendingUI = {
@@ -121,6 +123,8 @@ function getDefaultValues(): CreateFormData {
 interface PendingTabProps {
   collectionName: "customers_pending" | "suppliers_pending";
   contactCollection: "clients" | "suppliers";
+  idField: "clientId" | "supplierId";
+  codeField: "clientCode" | "supplierCode";
   nameLabel: string;
   columnLabel: string;
 }
@@ -128,6 +132,8 @@ interface PendingTabProps {
 function PendingTab({
   collectionName,
   contactCollection,
+  idField,
+  codeField,
   nameLabel,
   columnLabel,
 }: PendingTabProps) {
@@ -293,8 +299,8 @@ function PendingTab({
         createdAt: now,
         updates: [firstUpdate],
         ...(selectedContact && {
-          contactId: selectedContact.id,
-          contactCode: selectedContact.code,
+          [idField]: selectedContact.id,
+          [codeField]: selectedContact.code,
         }),
       });
       notify.success("Pendência criada com sucesso.");
@@ -784,6 +790,8 @@ export default function Pendencias() {
           <PendingTab
             collectionName="customers_pending"
             contactCollection="clients"
+            idField="clientId"
+            codeField="clientCode"
             nameLabel="Nome do Cliente"
             columnLabel="Cliente"
           />
@@ -792,6 +800,8 @@ export default function Pendencias() {
           <PendingTab
             collectionName="suppliers_pending"
             contactCollection="suppliers"
+            idField="supplierId"
+            codeField="supplierCode"
             nameLabel="Nome do Fornecedor"
             columnLabel="Fornecedor"
           />
