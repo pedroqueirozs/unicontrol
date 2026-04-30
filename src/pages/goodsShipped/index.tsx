@@ -26,6 +26,7 @@ import { db } from "@/services/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
 import {
   addDoc,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -74,6 +75,12 @@ const BRAZILIAN_STATES = [
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
+type NoteEntry = {
+  id: string;
+  text: string;
+  createdAt: Timestamp;
+};
+
 type ClientRecord = {
   id: string;
   code: string;
@@ -107,6 +114,7 @@ export type MerchandiseFirestoreData = Omit<
   clientCode?: string;
   flagged?: boolean;
   trackingCodes?: string[];
+  notesHistory?: NoteEntry[];
 };
 
 export type MerchandiseUIData = Omit<
@@ -121,6 +129,7 @@ export type MerchandiseUIData = Omit<
   notes: string;
   situation: string;
   flagged?: boolean;
+  notesHistory: NoteEntry[];
 };
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -213,6 +222,38 @@ export default function GoodsShipped() {
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
     });
+  }
+
+  // ── Estado do histórico de observações ──────────────────────────────────────
+  const [newNoteText, setNewNoteText] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
+
+  async function handleAddNote() {
+    if (!detailItem || !newNoteText.trim()) return;
+    setAddingNote(true);
+    try {
+      const newEntry: NoteEntry = {
+        id: crypto.randomUUID(),
+        text: newNoteText.trim(),
+        createdAt: Timestamp.now(),
+      };
+      await updateDoc(
+        doc(db, "companies", companyId, "goods_shipped", detailItem.id),
+        { notesHistory: arrayUnion(newEntry) }
+      );
+      const updatedItem: MerchandiseUIData = {
+        ...detailItem,
+        notesHistory: [...detailItem.notesHistory, newEntry],
+      };
+      setDetailItem(updatedItem);
+      setData((prev) => prev.map((d) => d.id === detailItem.id ? updatedItem : d));
+      setNewNoteText("");
+      notify.success("Observação adicionada.");
+    } catch {
+      notify.error("Erro ao adicionar observação.");
+    } finally {
+      setAddingNote(false);
+    }
   }
 
   // ── Estado da busca de clientes ─────────────────────────────────────────────
@@ -515,6 +556,7 @@ export default function GoodsShipped() {
             : "",
           created_at: dayjs(data.created_at.toDate()).format("DD/MM/YYYY"),
           notes: data.notes ?? "",
+          notesHistory: data.notesHistory ?? [],
           situation: calculateSituation(deliveryDate, deliveryForecast),
         };
       });
@@ -555,8 +597,10 @@ export default function GoodsShipped() {
       ? [...trackingCodes, pendingCode]
       : trackingCodes;
 
-    const payload: Omit<MerchandiseFirestoreData, "created_at"> = {
-      ...formData,
+    const { notes, ...restFormData } = formData;
+
+    const basePayload = {
+      ...restFormData,
       name: selectedClient.name,
       city: selectedClient.city,
       uf: selectedClient.state,
@@ -576,12 +620,18 @@ export default function GoodsShipped() {
 
       if (editItem) {
         const ref = doc(db, "companies", companyId, "goods_shipped", editItem.id);
-        await updateDoc(ref, payload);
+        await updateDoc(ref, basePayload);
         notify.success("Registro atualizado com sucesso!");
       } else {
+        const initialNote = notes?.trim();
+        const now = Timestamp.now();
+        const notesHistory: NoteEntry[] = initialNote
+          ? [{ id: crypto.randomUUID(), text: initialNote, createdAt: now }]
+          : [];
         await addDoc(collection(db, "companies", companyId, "goods_shipped"), {
-          ...payload,
-          created_at: Timestamp.now(),
+          ...basePayload,
+          notesHistory,
+          created_at: now,
         });
         notify.success("Cadastrado com sucesso!");
       }
@@ -793,14 +843,16 @@ export default function GoodsShipped() {
               errorMessage={errors.delivery_date?.message}
             />
 
-            <Input
-              id="notes"
-              type="text"
-              labelName="Anotações"
-              labelId="notes"
-              {...register("notes")}
-              errorMessage={errors.notes?.message}
-            />
+            {!editItem && (
+              <Input
+                id="notes"
+                type="text"
+                labelName="Observação inicial (opcional)"
+                labelId="notes"
+                {...register("notes")}
+                errorMessage={errors.notes?.message}
+              />
+            )}
           </div>
 
           {/* ── Códigos de rastreio ──────────────────────────────────────── */}
@@ -938,10 +990,10 @@ export default function GoodsShipped() {
         />
       </div>
 
-      {/* ── Modal de observação ─────────────────────────────────────────────── */}
+      {/* ── Modal de detalhe ───────────────────────────────────────────────── */}
       <Dialog
         open={!!detailItem}
-        onClose={() => setDetailItem(null)}
+        onClose={() => { setDetailItem(null); setNewNoteText(""); }}
         maxWidth="sm"
         fullWidth
       >
@@ -957,6 +1009,7 @@ export default function GoodsShipped() {
             </DialogTitle>
 
             <DialogContent dividers>
+              {/* Códigos de rastreio */}
               {detailItem.trackingCodes && detailItem.trackingCodes.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
@@ -984,23 +1037,64 @@ export default function GoodsShipped() {
                   </div>
                 </div>
               )}
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                Observação
+
+              {/* Histórico de observações */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                Histórico de Observações
               </p>
-              {detailItem.notes ? (
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {detailItem.notes}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-400 italic">
+
+              {detailItem.notesHistory.length === 0 && !detailItem.notes ? (
+                <p className="text-sm text-gray-400 italic mb-4">
                   Nenhuma observação registrada.
                 </p>
+              ) : (
+                <div className="flex flex-col gap-2 mb-4">
+                  {[...detailItem.notesHistory].reverse().map((entry) => (
+                    <div key={entry.id} className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                      <p className="text-xs text-gray-400 mb-1">
+                        {dayjs(entry.createdAt.toDate()).format("DD/MM/YYYY [às] HH:mm")}
+                      </p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.text}</p>
+                    </div>
+                  ))}
+                  {/* Nota legada (campo notes antigo) */}
+                  {detailItem.notesHistory.length === 0 && detailItem.notes && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{detailItem.notes}</p>
+                    </div>
+                  )}
+                </div>
               )}
+
+              {/* Adicionar nova observação */}
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                  Nova Observação
+                </p>
+                <textarea
+                  className="w-full border border-gray-300 rounded-md p-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+                  rows={3}
+                  placeholder="Descreva o que aconteceu..."
+                  value={newNoteText}
+                  onChange={(e) => setNewNoteText(e.target.value)}
+                />
+              </div>
             </DialogContent>
 
             <DialogActions>
-              <MuiButton onClick={() => setDetailItem(null)} sx={{ color: "#555" }}>
+              <MuiButton
+                onClick={() => { setDetailItem(null); setNewNoteText(""); }}
+                sx={{ color: "#555" }}
+              >
                 Fechar
+              </MuiButton>
+              <MuiButton
+                onClick={handleAddNote}
+                disabled={addingNote || !newNoteText.trim()}
+                variant="contained"
+                sx={{ backgroundColor: "#34D399", "&:hover": { backgroundColor: "#45c596" } }}
+              >
+                {addingNote ? "Salvando..." : "Adicionar"}
               </MuiButton>
             </DialogActions>
           </>
