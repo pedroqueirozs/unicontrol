@@ -386,9 +386,22 @@ export default function GoodsShipped() {
 
   function handleEdit(item: MerchandiseUIData) {
     setEditItem(item);
-    setSelectedClient(null);
     setClientSearch("");
     setVisibleForm(true);
+
+    const found = clients.find((c) => c.id === item.clientId);
+    if (found) {
+      setSelectedClient(found);
+    } else {
+      setSelectedClient({
+        id: item.clientId ?? "",
+        code: item.clientCode ?? "",
+        cnpj: "",
+        name: item.name,
+        city: item.city,
+        state: item.uf,
+      });
+    }
 
     const parseDateForInput = (dateStr?: string) => {
       if (!dateStr) return "";
