@@ -89,4 +89,4 @@ Ao encerrar uma sessão (quando Pedro pedir), criar `docs/sessoes/YYYY-MM-DD.md`
 | Pendências de Clientes | ✅ Pronto | `docs/arquitetura.md` — coleção `customers_pending` |
 | Pendências com Fornecedores | ✅ Pronto | `docs/arquitetura.md` — coleção `suppliers_pending` |
 | Relatórios | 🔧 Placeholder | — |
-| Configurações | 🔧 Placeholder | — |
+| Configurações | ✅ Pronto | Empresa (logo + dados) e Operacional (transportadoras + URL rastreio) funcionais; Notificações é placeholder |

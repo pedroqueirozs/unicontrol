@@ -3,7 +3,7 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-04-30
+**Última atualização:** 2026-04-30 (continuação)
 **Sessão mais recente:** [[2026-04-30]]
 
 ---
@@ -13,7 +13,7 @@
 | Módulo | Estado | Observação |
 |---|---|---|
 | Dashboard | ✅ Pronto | KPIs + gráficos; atalhos corrigidos; cálculo de atraso usa início do dia |
-| Gestão de Mercadorias | ✅ Pronto | Cliente obrigatório; flag de atenção; códigos de rastreio com cópia |
+| Gestão de Mercadorias | ✅ Pronto | Cliente obrigatório; flag de atenção; códigos de rastreio com cópia; histórico de observações; link de rastreio da transportadora |
 | Contas a Pagar | ✅ Pronto | NFs + boletos, validações RN-16 |
 | Gestão de Endereços | ✅ Pronto | Busca por nome ou CNPJ/CPF; fila de impressão; gera .docx |
 | Documentos Úteis | ✅ Pronto | Upload/download Firebase Storage |
@@ -23,7 +23,7 @@
 | Pendências (Clientes + Fornecedores) | ✅ Pronto | Página unificada `/pendencias`; campos `clientId`/`supplierId` corretos |
 | Cadastros | ✅ Pronto | Código auto-gerado; CNPJ/CPF obrigatório com máscara; CEP com máscara |
 | Relatórios | 🔧 Placeholder | Sem definição de quais relatórios serão gerados |
-| Configurações | ✅ Pronto | Aba Empresa funcional (logo + dados); Operacional e Notificações são placeholder |
+| Configurações | ✅ Pronto | Aba Empresa funcional (logo + dados); Operacional funcional (transportadoras + URL de rastreio); Notificações é placeholder |
 
 ---
 
@@ -32,15 +32,17 @@
 - **Dashboard**: atalhos corrigidos (dois links de pendências → um `/pendencias`); cálculo de atraso corrigido para usar início do dia (não hora atual)
 - **Cadastros**: código do cliente/fornecedor agora é auto-gerado (`C-001`/`F-001`); CNPJ/CPF obrigatório com máscara automática; CEP com máscara; busca por nome ou CNPJ
 - **Busca nos módulos** (Endereços, Mercadorias, Pendências): filtro e dropdown trocados de código para CNPJ/CPF
-- **Mercadorias Enviadas**: seleção de cliente obrigatória (RN-19); nome/cidade/UF desabilitados (vêm do cadastro); flag de atenção por linha; códigos de rastreio (múltiplos, array); copiar código no modal de detalhe; fix de restaurar cliente ao abrir edição
+- **Mercadorias Enviadas**: seleção de cliente obrigatória (RN-19); nome/cidade/UF desabilitados (vêm do cadastro); flag de atenção por linha; códigos de rastreio (múltiplos, array); copiar código no modal de detalhe; fix de restaurar cliente ao abrir edição; histórico de observações (array `notesHistory`, adicionado direto no modal de detalhe); botão de link para página de rastreio da transportadora nas ações da tabela
 - **Pendências**: campos renomeados de `contactId`/`contactCode` para `clientId`/`clientCode` (customers) e `supplierId`/`supplierCode` (suppliers)
+- **Configurações → Operacional**: campo `trackingUrl` adicionado ao cadastro de transportadoras
 
 ---
 
 ## Próximos Passos
 
+- [ ] Testar todas as funcionalidades da branch `feat/cadastros` (ver checklist na sessão 2026-04-30)
+- [ ] Fazer merge da branch `feat/cadastros` → `main`
 - [ ] Definir escopo do módulo Relatórios (quais relatórios, filtros, dados)
-- [ ] Fazer merge da branch `feat/cadastros` → `main` quando tudo estiver validado
 
 ---
 

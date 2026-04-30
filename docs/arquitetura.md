@@ -103,10 +103,20 @@ Representa uma mercadoria enviada.
 | `clientCode` | string | Código do cliente (ex: `C-001`) — **obrigatório** |
 | `flagged` | boolean | Sinaliza o registro para atenção (opcional) |
 | `trackingCodes` | string[] | Códigos de rastreio dos Correios (opcional, múltiplos) |
+| `notesHistory` | NoteEntry[] | Histórico de observações (opcional, ver estrutura abaixo) |
+
+**Estrutura de cada item em `notesHistory`:**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string | UUID gerado no cliente |
+| `text` | string | Texto da observação |
+| `createdAt` | Timestamp | Data e hora da observação |
 
 > Todo envio deve ser vinculado a um cliente do cadastro (RN-19).
 > `situation` (Entregue / No Prazo / Atrasada) é calculada no cliente, não armazenada.
 > `flagged` é ativado/desativado diretamente na tabela sem abrir formulário.
+> Observações antigas salvas no campo `notes` (string) continuam visíveis no modal como entrada legada.
 
 ---
 
@@ -169,10 +179,12 @@ Representa uma transportadora cadastrada pela empresa.
 | Campo | Tipo | Descrição |
 |---|---|---|
 | `name` | string | Nome da transportadora |
+| `trackingUrl` | string \| null | URL da página de rastreio da transportadora (opcional) |
 | `createdAt` | Timestamp | Data de criação do registro |
 
 > Gerenciado pelo admin via Configurações → aba Operacional.
 > Usado como lista de opções nos módulos que envolvem escolha de transportadora.
+> `trackingUrl` é exibida como botão de atalho nas ações da tabela de Mercadorias Enviadas.
 
 ---
 
