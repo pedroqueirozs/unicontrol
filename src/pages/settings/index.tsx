@@ -21,7 +21,7 @@ import {
   ref,
   uploadBytes,
 } from "firebase/storage";
-import { Building2, SlidersHorizontal, BellRing, Pencil, Trash2 } from "lucide-react";
+import { Building2, SlidersHorizontal, BellRing, ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 import { db, storage } from "@/services/firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +35,7 @@ import { notify } from "@/utils/notify";
 type Carrier = {
   id: string;
   name: string;
+  trackingUrl?: string;
   createdAt: Timestamp;
 };
 
@@ -92,9 +93,11 @@ function OperacionalTab() {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
+  const [newTrackingUrl, setNewTrackingUrl] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [editingTrackingUrl, setEditingTrackingUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -129,12 +132,14 @@ function OperacionalTab() {
     setAdding(true);
     try {
       const createdAt = Timestamp.now();
+      const trackingUrl = newTrackingUrl.trim() || undefined;
       const docRef = await addDoc(
         collection(db, "companies", companyId, "carriers"),
-        { name: trimmed, createdAt }
+        { name: trimmed, trackingUrl: trackingUrl ?? null, createdAt }
       );
-      setCarriers((prev) => [...prev, { id: docRef.id, name: trimmed, createdAt }]);
+      setCarriers((prev) => [...prev, { id: docRef.id, name: trimmed, trackingUrl, createdAt }]);
       setNewName("");
+      setNewTrackingUrl("");
       notify.success("Transportadora adicionada.");
     } catch {
       notify.error("Erro ao adicionar transportadora.");
@@ -162,11 +167,13 @@ function OperacionalTab() {
     if (!trimmed || !editingId) return;
     setSaving(true);
     try {
+      const trackingUrl = editingTrackingUrl.trim() || undefined;
       await updateDoc(doc(db, "companies", companyId, "carriers", editingId), {
         name: trimmed,
+        trackingUrl: trackingUrl ?? null,
       });
       setCarriers((prev) =>
-        prev.map((c) => (c.id === editingId ? { ...c, name: trimmed } : c))
+        prev.map((c) => (c.id === editingId ? { ...c, name: trimmed, trackingUrl } : c))
       );
       setEditingId(null);
       notify.success("Transportadora atualizada.");
@@ -209,23 +216,31 @@ function OperacionalTab() {
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+                      placeholder="Nome"
+                      className="w-36 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleSaveEdit();
                         if (e.key === "Escape") setEditingId(null);
                       }}
                     />
+                    <input
+                      type="url"
+                      value={editingTrackingUrl}
+                      onChange={(e) => setEditingTrackingUrl(e.target.value)}
+                      placeholder="URL de rastreio (opcional)"
+                      className="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+                    />
                     <button
                       onClick={handleSaveEdit}
                       disabled={saving}
-                      className="text-xs text-emerald-600 font-medium hover:text-emerald-700 px-2 disabled:opacity-50"
+                      className="text-xs text-emerald-600 font-medium hover:text-emerald-700 px-2 disabled:opacity-50 flex-shrink-0"
                     >
                       {saving ? "..." : "Salvar"}
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="text-xs text-gray-400 hover:text-gray-600 px-2"
+                      className="text-xs text-gray-400 hover:text-gray-600 px-2 flex-shrink-0"
                     >
                       Cancelar
                     </button>
@@ -235,13 +250,25 @@ function OperacionalTab() {
                     <span className="flex-1 text-sm text-gray-700">
                       {carrier.name}
                     </span>
+                    {carrier.trackingUrl && (
+                      <a
+                        href={carrier.trackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={carrier.trackingUrl}
+                        className="text-blue-400 hover:text-blue-600 p-1"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    )}
                     <button
                       onClick={() => {
                         setEditingId(carrier.id);
                         setEditingName(carrier.name);
+                        setEditingTrackingUrl(carrier.trackingUrl ?? "");
                       }}
                       className="text-gray-400 hover:text-gray-600 p-1"
-                      title="Renomear"
+                      title="Editar"
                     >
                       <Pencil size={15} />
                     </button>
@@ -265,8 +292,15 @@ function OperacionalTab() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nome da transportadora"
-            className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
+            className="w-44 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+          />
+          <input
+            type="url"
+            value={newTrackingUrl}
+            onChange={(e) => setNewTrackingUrl(e.target.value)}
+            placeholder="URL de rastreio (opcional)"
+            className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-color_primary_400"
           />
           <Button text="Adicionar" onClick={handleAdd} isLoading={adding} />
         </div>

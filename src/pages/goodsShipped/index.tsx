@@ -39,7 +39,7 @@ import {
 
 import { notify } from "@/utils/notify";
 import { ptBR } from "@mui/x-data-grid/locales";
-import { Check, Copy, Flag, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Flag, Pencil, Search, Trash2, X } from "lucide-react";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -210,7 +210,7 @@ export default function GoodsShipped() {
   const [visibleForm, setVisibleForm] = useState(false);
   const [editItem, setEditItem] = useState<MerchandiseUIData | null>(null);
   const [detailItem, setDetailItem] = useState<MerchandiseUIData | null>(null);
-  const [carriers, setCarriers] = useState<{ value: string; label: string }[]>([]);
+  const [carriers, setCarriers] = useState<{ value: string; label: string; trackingUrl?: string }[]>([]);
 
   // ── Estado de rastreio ──────────────────────────────────────────────────────
   const [trackingCodes, setTrackingCodes] = useState<string[]>([]);
@@ -317,8 +317,8 @@ export default function GoodsShipped() {
 
         setCarriers(
           carriersSnap.docs.map((d) => {
-            const name = (d.data() as { name: string }).name;
-            return { value: name, label: name };
+            const raw = d.data() as { name: string; trackingUrl?: string };
+            return { value: raw.name, label: raw.name, trackingUrl: raw.trackingUrl };
           })
         );
 
@@ -412,11 +412,12 @@ export default function GoodsShipped() {
     {
       field: "actions",
       headerName: "Ações",
-      width: 140,
+      width: 170,
       renderCell: (params) => {
         const row = params.row as MerchandiseUIData;
+        const carrierTrackingUrl = carriers.find((c) => c.value === row.transporter)?.trackingUrl;
         return (
-          <div className="flex h-full gap-4 items-center">
+          <div className="flex h-full gap-3 items-center">
             <button
               title={row.flagged ? "Remover alerta" : "Marcar em atenção"}
               onClick={(e) => {
@@ -427,6 +428,20 @@ export default function GoodsShipped() {
             >
               <Flag size={18} fill={row.flagged ? "#EF4444" : "none"} />
             </button>
+            {carrierTrackingUrl ? (
+              <a
+                href={carrierTrackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir página de rastreio"
+                className="text-blue-400 hover:text-blue-600"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink size={18} />
+              </a>
+            ) : (
+              <span style={{ width: 18 }} />
+            )}
             <button
               className="text-text_description"
               onClick={(e) => {
