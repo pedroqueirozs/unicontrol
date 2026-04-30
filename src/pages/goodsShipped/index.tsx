@@ -38,7 +38,7 @@ import {
 
 import { notify } from "@/utils/notify";
 import { ptBR } from "@mui/x-data-grid/locales";
-import { Pencil, Search, Trash2, X } from "lucide-react";
+import { Flag, Pencil, Search, Trash2, X } from "lucide-react";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -105,6 +105,7 @@ export type MerchandiseFirestoreData = Omit<
   created_at: Timestamp;
   clientId?: string;
   clientCode?: string;
+  flagged?: boolean;
 };
 
 export type MerchandiseUIData = Omit<
@@ -118,6 +119,7 @@ export type MerchandiseUIData = Omit<
   created_at: string;
   notes: string;
   situation: string;
+  flagged?: boolean;
 };
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -356,29 +358,42 @@ export default function GoodsShipped() {
     {
       field: "actions",
       headerName: "Ações",
-      width: 120,
-      renderCell: (params) => (
-        <div className="flex h-full gap-4 items-center">
-          <button
-            className="text-text_description"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(params.id as string);
-            }}
-          >
-            <Trash2 />
-          </button>
-          <button
-            className="text-text_description"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}
-          >
-            <Pencil />
-          </button>
-        </div>
-      ),
+      width: 140,
+      renderCell: (params) => {
+        const row = params.row as MerchandiseUIData;
+        return (
+          <div className="flex h-full gap-4 items-center">
+            <button
+              title={row.flagged ? "Remover alerta" : "Marcar em atenção"}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleFlag(row);
+              }}
+              style={{ color: row.flagged ? "#EF4444" : "#D1D5DB" }}
+            >
+              <Flag size={18} fill={row.flagged ? "#EF4444" : "none"} />
+            </button>
+            <button
+              className="text-text_description"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.id as string);
+              }}
+            >
+              <Trash2 />
+            </button>
+            <button
+              className="text-text_description"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(params.row);
+              }}
+            >
+              <Pencil />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -419,6 +434,21 @@ export default function GoodsShipped() {
       delivery_date: parseDateForInput(item.delivery_date),
       notes: item.notes ?? "",
     });
+  }
+
+  async function handleToggleFlag(item: MerchandiseUIData) {
+    const newValue = !item.flagged;
+    try {
+      await updateDoc(
+        doc(db, "companies", companyId, "goods_shipped", item.id),
+        { flagged: newValue }
+      );
+      setData((prev) =>
+        prev.map((d) => (d.id === item.id ? { ...d, flagged: newValue } : d))
+      );
+    } catch {
+      notify.error("Erro ao atualizar alerta.");
+    }
   }
 
   async function handleDelete(id: string) {
@@ -794,9 +824,19 @@ export default function GoodsShipped() {
           }}
           pageSizeOptions={[10, 20, 30]}
           showToolbar
+          getRowClassName={(params) =>
+            (params.row as MerchandiseUIData).flagged ? "row-flagged" : ""
+          }
           onRowClick={(params) => setDetailItem(params.row as MerchandiseUIData)}
           sx={{
             cursor: "pointer",
+            "& .row-flagged": {
+              backgroundColor: "#FEF2F2",
+              borderLeft: "3px solid #EF4444",
+            },
+            "& .row-flagged:hover": {
+              backgroundColor: "#FEE2E2 !important",
+            },
             "& .MuiDataGrid-columnHeaderTitle": {
               color: "#1A2A38",
               fontWeight: "bold",
