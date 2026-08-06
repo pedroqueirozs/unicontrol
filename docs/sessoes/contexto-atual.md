@@ -3,8 +3,8 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-07-23
-**Sessão mais recente:** correção do ícone ao instalar o UniControl como app no PC/celular — antes não existia Web App Manifest e a logo ficava desproporcional/cortada pela máscara do sistema operacional.
+**Última atualização:** 2026-08-06
+**Sessão mais recente:** melhorias de UX no Estoque pedidas pelo operador, instalação como PWA finalmente funcionando no Android (faltava Service Worker + o proxy bloqueava manifest/sw sem login), ordenação de Mercadorias Enviadas por data de envio, revisão de segurança da sessão de usuário (reduzida de 30 dias pra 1 dia), e renomeação do projeto de "unicontrol-next" para "unicontrol" (repositório GitHub + projeto Vercel). Detalhes completos: `docs/sessoes/2026-08-06.md`. **Próxima sessão: início do módulo Financeiro.**
 
 ---
 
@@ -16,6 +16,13 @@ O projeto anterior (`unicontrol/`) foi desenvolvido com React + Vite + Firebase 
 - Aprendizado de backend (Next.js API Routes + PostgreSQL)
 - Eliminar dependência de cartão de crédito pessoal no Firebase
 - Stack mais moderna e alinhada ao mercado
+
+---
+
+## Nome do Projeto
+
+Renomeado em 2026-08-06: repositório GitHub e projeto Vercel eram "unicontrol-next", agora são **"unicontrol"** (`github.com/pedroqueirozs/unicontrol`). O repositório antigo da v1 (React + Vite + Firebase) foi renomeado antes pra liberar o nome — ver seção "Contexto da Migração" abaixo pra não confundir os dois.
+O domínio de produção na Vercel **continua sendo `unicontrol-next.vercel.app`** — `unicontrol.vercel.app` já pertence a outra conta (namespace `.vercel.app` é global, não exclusivo do Pedro; a v1 teve o mesmo problema, por isso o domínio dela ficou `unicontrol-iota.vercel.app`). Resolver isso exigiria comprar um domínio próprio; ficou como pendência de baixa prioridade.
 
 ---
 
@@ -146,13 +153,28 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 - **Atalho de teclado:** em ambas as abas, pressionar Enter no campo "Motivo" agora pula o foco direto pro campo de busca/bipagem — pensado para o fluxo com bipador de código de barras conectado.
 - Motivação: pedido direto do operador do estoque, que perdia a seleção ao trocar de aba e sentia falta da busca por nome na Saída (só funcionava por código exato antes).
 
+### Instalação como PWA no Android + proxy bloqueando arquivos técnicos (2026-08-06)
+- Sequência de causas, cada uma escondendo a próxima: (1) faltava manifest — resolvido em 2026-07-23 (ver acima); (2) Chrome no Android só oferece "Instalar app" se o site tiver um Service Worker registrado com handler de `fetch` — não tínhamos nenhum, e pior: com manifest mas sem Service Worker, o Chrome nem cai mais no fallback antigo ("Adicionar à tela inicial" genérico), a opção simplesmente some; (3) mesmo depois de adicionar o Service Worker, ainda não funcionava — causa raiz era `src/proxy.ts`: o matcher liberava `.svg`/`.png`/`favicon.ico` da autenticação, mas não `manifest.webmanifest` nem `sw.js`, então usuário não-logado era redirecionado pro `/login` e o Chrome recebia HTML no lugar do manifest/service worker.
+- **Service Worker** (`public/sw.js` + `src/components/service-worker-register.tsx`): handler de `fetch` **vazio** (sem `respondWith()`) — não faz cache de nada, existe só pra passar no critério técnico. Importante manter assim: este app mostra estoque/financeiro, que precisa estar sempre atualizado.
+- **Proxy** (`src/proxy.ts`): matcher agora também exclui `manifest.webmanifest` e `sw.js` da autenticação — são arquivos técnicos sem dado sensível, o navegador precisa poder buscá-los mesmo deslogado.
+- Confirmado funcionando no Android por Pedro após esse ajuste.
+
+### Sessão de usuário — revisão de segurança + duração reduzida (2026-08-06)
+- Revisão completa do NextAuth (`auth.ts`, `auth.config.ts`, fluxo de convite) a pedido do Pedro. Pontos fortes: bcrypt custo 12, cookie httpOnly, `AUTH_SECRET` com entropia adequada, erro de login genérico (sem enumeração de usuário), `companyId` sempre do token assinado no servidor, cadastro fechado por convite (7 dias de validade, uso único).
+- **Gaps registrados, não corrigidos ainda:** sem rate limiting de tentativas de login; senha mínima de só 6 caracteres sem exigência de complexidade (`api/auth/register/route.ts`); token de convite usa `cuid()` em vez de um token aleatório criptográfico dedicado.
+- **Mudança aplicada:** `session.maxAge` em `src/auth.config.ts` reduzido de 30 dias (padrão do NextAuth) pra **1 dia** — sistema é usado diariamente, então relogar uma vez por dia é o equilíbrio que o Pedro quis entre segurança e conveniência. É 24h corridas a partir do login, não "expira à meia-noite".
+
+### Mercadorias Enviadas — ordenação por data de envio (2026-08-06)
+- `GET /api/goods-shipped` ordenava por `createdAt` (ordem de cadastro), mas operadores registram envios fora de ordem (backlog, NF retroativa). Passou a ordenar por `shippingDate desc`, com `createdAt desc` como desempate para envios do mesmo dia.
+
 ---
 
 ## Próximos Passos Sugeridos
 
-1. Implementar módulo **Financeiro** (Contas a Pagar)
+1. **Implementar módulo Financeiro (Contas a Pagar)** — combinado como próxima sessão; ler `docs/regras-de-negocio.md` e `docs/fluxos/administrativo-financeiro.md` antes de começar.
 2. Implementar módulo **Documentos Úteis**
 3. Implementar módulo **Relatórios**
+4. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
 
 ---
 
