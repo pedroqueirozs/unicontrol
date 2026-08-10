@@ -1,0 +1,71 @@
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { auth } from "@/auth"
+import { prisma } from "@/lib/prisma"
+import { isAdminLevel } from "@/lib/roles"
+
+const paymentMethodSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").optional(),
+  isActive: z.boolean().optional(),
+})
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth()
+  if (!session?.user?.companyId) {
+    return new NextResponse("Unauthorized", { status: 401 })
+  }
+  if (!isAdminLevel(session.user.role)) {
+    return new NextResponse("Forbidden", { status: 403 })
+  }
+
+  const { id } = await params
+  const body = await req.json()
+  const parsed = paymentMethodSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
+  }
+
+  const existing = await prisma.paymentMethod.findFirst({
+    where: { id, companyId: session.user.companyId },
+  })
+  if (!existing) return new NextResponse("Not Found", { status: 404 })
+
+  const updated = await prisma.paymentMethod.update({
+    where: { id },
+    data: parsed.data,
+  })
+
+  return NextResponse.json(updated)
+}
+
+// Nunca exclui de verdade — só inativa (isActive: false), pra não quebrar
+// parcelas antigas que já apontam pra essa forma de pagamento (ver schema.prisma).
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth()
+  if (!session?.user?.companyId) {
+    return new NextResponse("Unauthorized", { status: 401 })
+  }
+  if (!isAdminLevel(session.user.role)) {
+    return new NextResponse("Forbidden", { status: 403 })
+  }
+
+  const { id } = await params
+
+  const existing = await prisma.paymentMethod.findFirst({
+    where: { id, companyId: session.user.companyId },
+  })
+  if (!existing) return new NextResponse("Not Found", { status: 404 })
+
+  await prisma.paymentMethod.update({
+    where: { id },
+    data: { isActive: false },
+  })
+
+  return new NextResponse(null, { status: 204 })
+}
