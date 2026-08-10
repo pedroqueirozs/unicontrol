@@ -139,6 +139,8 @@ Boletos/
 
 **Observação:** O pagamento dos boletos é feito pela **proprietária da empresa**, que mantém controle próprio dos comprovantes. O setor administrativo não tem acesso aos comprovantes de pagamento.
 
+> **Atualização (2026-08-10):** O módulo Financeiro do UniControl (`/financial`) já implementa o cadastro e o controle de contas a pagar, substituindo a planilha de controle: lançamento avulso ou parcelado, vinculado a um fornecedor cadastrado ou com nome livre (pra contas sem fornecedor, tipo aluguel/água/luz), separado por grupo (a proprietária tem outras atividades além da São José) e com marcação de quitação quando avisada pela proprietária. O que **ainda não foi trazido pro sistema**: anexo do PDF escaneado do boleto e a estrutura de pastas no Drive — continuam sendo o arquivo de origem dos comprovantes por enquanto. Ver `RN-16` em `docs/regras-de-negocio.md`.
+
 ---
 
 ## Cobrança de Duplicatas Vencidas
