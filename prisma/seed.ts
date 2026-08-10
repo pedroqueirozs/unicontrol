@@ -39,8 +39,27 @@ async function main() {
     },
   })
 
+  // Módulo Financeiro: grupo padrão (a própria empresa) + formas de pagamento comuns.
+  // Ambos são só o ponto de partida — administrativo/admin pode criar mais pela tela
+  // de "Gerenciar grupos" / "Gerenciar formas de pagamento".
+  await prisma.payableGroup.create({
+    data: { name: company.name, companyId: company.id },
+  })
+
+  await prisma.paymentMethod.createMany({
+    data: [
+      { name: "Boleto", companyId: company.id },
+      { name: "PIX", companyId: company.id },
+      { name: "Cheque", companyId: company.id },
+      { name: "Dinheiro", companyId: company.id },
+      { name: "Transferência", companyId: company.id },
+      { name: "Outro", companyId: company.id },
+    ],
+  })
+
   console.log("✅ Empresa criada:", company.name, `(id: ${company.id})`)
   console.log("✅ Admin criado:", admin.email)
+  console.log("✅ Grupo padrão e formas de pagamento do Financeiro criados")
   console.log("")
   console.log("Acesse o sistema com:")
   console.log("  E-mail:  ", admin.email)

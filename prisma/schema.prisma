@@ -58,6 +58,11 @@ model Company {
   pendings       Pending[]
   stockProducts  StockProduct[]
   stockMovements StockMovement[]
+
+  payableGroups       PayableGroup[]
+  paymentMethods      PaymentMethod[]
+  payables            Payable[]
+  payableInstallments PayableInstallment[]
 }
 
 // =============================================
@@ -367,4 +372,126 @@ model StockMovement {
   createdAt DateTime @default(now())
 
   @@index([companyId])
+}
+
+// =============================================
+// FINANCEIRO — CONTAS A PAGAR
+// =============================================
+
+enum PayableInstallmentStatus {
+  pendente
+  pago
+}
+
+// Grupo que representa a empresa/centro de custo de cada lançamento (São José,
+// outras empresas da proprietária, contas pessoais, Usinas, etc). O tenant real
+// do sistema (Company) continua sendo só a São José — grupo é uma separação
+// lógica dentro dela, não multi-tenant de verdade. CRUD livre pelo usuário.
+// isActive em vez de exclusão de verdade — não quebra lançamentos antigos que
+// já apontam pra esse grupo.
+model PayableGroup {
+  id       String  @id @default(cuid())
+  name     String
+  isActive Boolean @default(true)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  payables     Payable[]
+  installments PayableInstallment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// Forma de pagamento de uma parcela (Boleto, PIX, Cheque, Dinheiro...).
+// CRUD livre pelo usuário — semeada com as formas mais comuns na primeira migration.
+// isActive pelo mesmo motivo do PayableGroup.
+model PaymentMethod {
+  id       String  @id @default(cuid())
+  name     String
+  isActive Boolean @default(true)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  installments PayableInstallment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// Cabeçalho de um lançamento de conta a pagar — avulso (1 parcela) ou
+// parcelado (N parcelas em PayableInstallment).
+// supplierId é uma referência solta (sem @relation) — mesmo padrão do clientId
+// em GoodsShipped: não bloqueia a exclusão do fornecedor e o lançamento
+// sobrevive caso ele seja removido do cadastro no futuro.
+// payeeName é sempre preenchido: copiado do nome do fornecedor quando
+// supplierId está presente, ou digitado livre quando não há cadastro
+// (aluguel, água, luz, contas pessoais da proprietária).
+model Payable {
+  id          String    @id @default(cuid())
+  payeeName   String
+  description String
+  totalAmount Decimal   @db.Decimal(12, 2)
+  issueDate   DateTime?
+  supplierId  String?
+
+  // Snapshot do nome de quem cadastrou — não é @relation porque a remoção de
+  // usuário (RN-17) é definitiva na tabela User, e o histórico financeiro não
+  // pode sumir/quebrar quando alguém sai da empresa. Mesmo padrão do
+  // operatorName em StockMovement.
+  createdByName String
+
+  groupId String
+  group   PayableGroup @relation(fields: [groupId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  installments PayableInstallment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([groupId])
+  @@index([supplierId])
+}
+
+// Cada parcela/boleto individual de um lançamento — é aqui que mora o status
+// de pagamento e a forma de pagamento, que pode variar parcela a parcela
+// (ex: entrada em PIX + restante parcelado em boleto).
+// companyId/groupId são denormalizados do Payable — o dashboard financeiro
+// (consolidado e por empresa) lê só esta tabela, sem precisar de join.
+model PayableInstallment {
+  id                String                   @id @default(cuid())
+  installmentNumber Int // 1, 2, 3... o total exibido ("N/total") vem do count() das parcelas do mesmo payableId
+  amount            Decimal                  @db.Decimal(12, 2)
+  dueDate           DateTime
+  status            PayableInstallmentStatus @default(pendente)
+  paidAt            DateTime?
+
+  payableId String
+  payable   Payable @relation(fields: [payableId], references: [id], onDelete: Cascade)
+
+  paymentMethodId String
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  groupId String
+  group   PayableGroup @relation(fields: [groupId], references: [id])
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, status, dueDate])
+  @@index([companyId, groupId, status, dueDate])
+  @@index([payableId])
 }
