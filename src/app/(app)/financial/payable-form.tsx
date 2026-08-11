@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useForm, useFieldArray, useWatch } from "react-hook-form"
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
 import { Search, X, Plus, Trash2, Split } from "lucide-react"
 import { FormInput } from "@/components/form-input"
+import { CurrencyInput } from "./currency-input"
 import type { Payable, PayableGroupRef, PaymentMethodRef, SupplierRef } from "./types"
 
 const installmentSchema = z.object({
@@ -444,14 +445,18 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
 
         {mode === "avulso" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormInput
-              label="Valor (R$)"
-              id="p-amount"
-              type="number"
-              step="0.01"
-              min={0}
-              {...register("avulsoAmount", { valueAsNumber: true })}
-              error={errors.avulsoAmount?.message}
+            <Controller
+              control={control}
+              name="avulsoAmount"
+              render={({ field }) => (
+                <CurrencyInput
+                  id="p-amount"
+                  label="Valor (R$)"
+                  value={field.value ?? 0}
+                  onChange={field.onChange}
+                  error={errors.avulsoAmount?.message}
+                />
+              )}
             />
             <FormInput
               label="Vencimento"
@@ -476,14 +481,18 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         ) : (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <FormInput
-                label="Valor total (R$)"
-                id="p-total"
-                type="number"
-                step="0.01"
-                min={0}
-                {...register("totalAmount", { valueAsNumber: true })}
-                error={errors.totalAmount?.message}
+              <Controller
+                control={control}
+                name="totalAmount"
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="p-total"
+                    label="Valor total (R$)"
+                    value={field.value ?? 0}
+                    onChange={field.onChange}
+                    error={errors.totalAmount?.message}
+                  />
+                )}
               />
               <FormInput
                 label="Qtd. de parcelas"
@@ -530,20 +539,19 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   <span className="text-xs text-muted-foreground pb-2.5 w-8">
                     {index + 1}/{fields.length}
                   </span>
-                  <div className="flex flex-col gap-1">
-                    {index === 0 && (
-                      <label htmlFor={`p-inst-amount-${index}`} className="text-sm font-medium text-foreground">Valor (R$)</label>
+                  <Controller
+                    control={control}
+                    name={`installments.${index}.amount`}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        id={`p-inst-amount-${index}`}
+                        label={index === 0 ? "Valor (R$)" : undefined}
+                        ariaLabel={`Valor da parcela ${index + 1}`}
+                        value={field.value ?? 0}
+                        onChange={field.onChange}
+                      />
                     )}
-                    <input
-                      id={`p-inst-amount-${index}`}
-                      aria-label={`Valor da parcela ${index + 1}`}
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      {...register(`installments.${index}.amount`, { valueAsNumber: true })}
-                      className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
-                    />
-                  </div>
+                  />
                   <div className="flex flex-col gap-1">
                     {index === 0 && (
                       <label htmlFor={`p-inst-due-${index}`} className="text-sm font-medium text-foreground">Vencimento</label>
