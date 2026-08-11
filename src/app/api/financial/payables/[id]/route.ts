@@ -92,6 +92,7 @@ export async function PUT(
             amount: inst.amount,
             dueDate: inst.dueDate,
             paymentMethodId: inst.paymentMethodId,
+            documentNumber: inst.documentNumber || null,
             groupId: data.groupId,
           },
         })
@@ -103,6 +104,7 @@ export async function PUT(
             amount: inst.amount,
             dueDate: inst.dueDate,
             paymentMethodId: inst.paymentMethodId,
+            documentNumber: inst.documentNumber || null,
             groupId: data.groupId,
             companyId,
           },

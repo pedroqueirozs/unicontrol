@@ -127,6 +127,7 @@ export function LancamentosTab() {
           amount: i.amount,
           dueDate: i.dueDate,
           paymentMethodId: i.paymentMethodId,
+          documentNumber: i.documentNumber,
         })),
       }
 
@@ -325,7 +326,12 @@ export function LancamentosTab() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(installment.dueDate)}</td>
                     <td className="px-4 py-3 font-medium text-foreground">{currency(installment.amount)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{installment.paymentMethod?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {installment.paymentMethod?.name ?? "—"}
+                      {installment.documentNumber && (
+                        <p className="text-xs text-muted-foreground/70">Doc: {installment.documentNumber}</p>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={installmentStatus(installment)} />
                     </td>
@@ -384,6 +390,7 @@ export function LancamentosTab() {
                   <span>Parcela {installment.installmentNumber}/{payable.installments.length}</span>
                   <span>Vence {formatDate(installment.dueDate)}</span>
                   <span>{installment.paymentMethod?.name ?? "—"}</span>
+                  {installment.documentNumber && <span>Doc: {installment.documentNumber}</span>}
                   <span>Lançado em {formatDateTime(payable.createdAt)}</span>
                 </div>
                 <div className="flex items-center justify-between">

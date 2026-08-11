@@ -475,6 +475,10 @@ model PayableInstallment {
   dueDate           DateTime
   status            PayableInstallmentStatus @default(pendente)
   paidAt            DateTime?
+  // Número do documento/linha digitável do boleto — só faz sentido pra essa
+  // forma de pagamento, mas fica livre pra digitar (útil na hora de conferir
+  // o boleto físico contra o relatório na tela).
+  documentNumber    String?
 
   payableId String
   payable   Payable @relation(fields: [payableId], references: [id], onDelete: Cascade)

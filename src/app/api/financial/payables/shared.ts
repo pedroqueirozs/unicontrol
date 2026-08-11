@@ -8,6 +8,7 @@ const installmentInputSchema = z.object({
   amount: z.number().positive("Valor da parcela deve ser maior que zero"),
   dueDate: z.coerce.date(),
   paymentMethodId: z.string().min(1, "Forma de pagamento é obrigatória"),
+  documentNumber: z.string().optional().nullable(),
 })
 
 export const payableSchema = z

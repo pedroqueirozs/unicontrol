@@ -26,6 +26,7 @@ export type PayableInstallment = {
   paidAt: string | null
   paymentMethodId: string
   paymentMethod?: PaymentMethodRef
+  documentNumber: string | null
 }
 
 export type Payable = {

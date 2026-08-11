@@ -77,6 +77,7 @@ export function PayableDetailModal({ payable, onClose, onEdit, onTogglePaid }: P
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       Vence {formatDate(inst.dueDate)} · {inst.paymentMethod?.name ?? "—"}
+                      {inst.documentNumber && ` · Doc ${inst.documentNumber}`}
                       {inst.paidAt && ` · Pago em ${formatDate(inst.paidAt)}`}
                     </p>
                   </div>

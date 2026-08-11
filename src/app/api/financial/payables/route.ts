@@ -66,6 +66,7 @@ export async function POST(req: Request) {
           amount: inst.amount,
           dueDate: inst.dueDate,
           paymentMethodId: inst.paymentMethodId,
+          documentNumber: inst.documentNumber || null,
           groupId: data.groupId,
           companyId,
         })),

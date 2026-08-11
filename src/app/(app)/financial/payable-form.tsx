@@ -15,6 +15,7 @@ const installmentSchema = z.object({
   amount: z.number().positive("Valor deve ser maior que zero"),
   dueDate: z.string().min(1, "Informe o vencimento"),
   paymentMethodId: z.string().min(1, "Selecione a forma de pagamento"),
+  documentNumber: z.string().optional(),
 })
 
 // avulso* e (totalAmount/installments) nunca se misturam no mesmo campo — cada
@@ -33,6 +34,7 @@ const rawSchema = z
     avulsoAmount: z.number().optional(),
     avulsoDueDate: z.string().optional(),
     avulsoPaymentMethodId: z.string().optional(),
+    avulsoDocumentNumber: z.string().optional(),
     totalAmount: z.number().optional(),
     installments: z.array(installmentSchema).optional(),
   })
@@ -84,6 +86,17 @@ function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+// Boleto e cheque têm número de documento físico que vale a pena registrar
+// pra conferir contra o relatório na tela depois — as outras formas não.
+// Comparação por nome (não por id fixo) porque formas de pagamento são
+// cadastro livre do usuário, não um enum fechado.
+function needsDocumentNumber(paymentMethods: PaymentMethodRef[], paymentMethodId: string | undefined): boolean {
+  const method = paymentMethods.find((m) => m.id === paymentMethodId)
+  if (!method) return false
+  const name = method.name.trim().toLowerCase()
+  return name.includes("boleto") || name.includes("cheque")
+}
+
 export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSave, onCancel, saving }: Props) {
   const [mode, setMode] = useState<"avulso" | "parcelado">("avulso")
 
@@ -117,11 +130,13 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
       avulsoAmount: 0,
       avulsoDueDate: todayStr(),
       avulsoPaymentMethodId: paymentMethods[0]?.id ?? "",
+      avulsoDocumentNumber: "",
       totalAmount: 0,
       installments: [],
     },
   })
 
+  const watchedAvulsoPaymentMethodId = useWatch({ control, name: "avulsoPaymentMethodId" })
   const { fields, replace } = useFieldArray({ control, name: "installments" })
   // installments sempre existe em runtime (defaultValues garante []) — o "| undefined"
   // é só do optional() no schema (necessário pro modo avulso não exigir parcelas).
@@ -158,12 +173,14 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         avulsoAmount: !isParcelado && first ? Number(first.amount) : 0,
         avulsoDueDate: !isParcelado && first ? first.dueDate.slice(0, 10) : todayStr(),
         avulsoPaymentMethodId: !isParcelado && first ? first.paymentMethodId : paymentMethods[0]?.id ?? "",
+        avulsoDocumentNumber: !isParcelado && first ? first.documentNumber ?? "" : "",
         totalAmount: Number(editItem.totalAmount),
         installments: editItem.installments.map((inst) => ({
           id: inst.id,
           amount: Number(inst.amount),
           dueDate: inst.dueDate.slice(0, 10),
           paymentMethodId: inst.paymentMethodId,
+          documentNumber: inst.documentNumber ?? "",
         })),
       })
     } else {
@@ -179,6 +196,7 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         avulsoAmount: 0,
         avulsoDueDate: todayStr(),
         avulsoPaymentMethodId: paymentMethods.find((m) => m.isActive)?.id ?? "",
+        avulsoDocumentNumber: "",
         totalAmount: 0,
         installments: [],
       })
@@ -258,7 +276,12 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         issueDate: data.issueDate,
         totalAmount: data.avulsoAmount,
         installments: [
-          { amount: data.avulsoAmount, dueDate: data.avulsoDueDate, paymentMethodId: data.avulsoPaymentMethodId },
+          {
+            amount: data.avulsoAmount,
+            dueDate: data.avulsoDueDate,
+            paymentMethodId: data.avulsoPaymentMethodId,
+            documentNumber: data.avulsoDocumentNumber,
+          },
         ],
       })
     }
@@ -477,6 +500,14 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                 ))}
               </select>
             </div>
+            {needsDocumentNumber(paymentMethods, watchedAvulsoPaymentMethodId) && (
+              <FormInput
+                label="Número do documento"
+                id="p-avulso-doc"
+                placeholder="Nº do boleto/cheque"
+                {...register("avulsoDocumentNumber")}
+              />
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -540,7 +571,8 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
             {/* Parcelas editáveis */}
             <div className="flex flex-col gap-2">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-end">
+                <div key={field.id} className="flex flex-col gap-2 pb-2 border-b border-border last:border-0">
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-end">
                   <span className="text-xs text-muted-foreground pb-2.5 w-8">
                     {index + 1}/{fields.length}
                   </span>
@@ -593,6 +625,15 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   >
                     <Trash2 size={15} />
                   </button>
+                </div>
+                  {needsDocumentNumber(paymentMethods, watchedInstallments[index]?.paymentMethodId) && (
+                    <input
+                      aria-label={`Número do documento da parcela ${index + 1}`}
+                      placeholder={`Nº do documento da parcela ${index + 1}`}
+                      {...register(`installments.${index}.documentNumber`)}
+                      className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors placeholder:text-muted-foreground"
+                    />
+                  )}
                 </div>
               ))}
               <button
