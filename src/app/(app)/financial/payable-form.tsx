@@ -370,13 +370,23 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   ))}
                 </ul>
               )}
+
+              {showSupplierDrop && supplierResults.length === 0 && (
+                <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg px-4 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    {suppliers.length === 0
+                      ? "Nenhum fornecedor cadastrado ainda. Cadastre em Cadastros → Fornecedores."
+                      : "Nenhum fornecedor encontrado."}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {!selectedSupplier && (
             <div className="mt-3">
               <FormInput
-                label="Nome (sem fornecedor cadastrado — ex: Aluguel, CEMIG, Água)"
+                label="Nome (sem fornecedor cadastrado)"
                 id="p-payeeName"
                 {...register("payeeName")}
                 error={errors.payeeName?.message}
