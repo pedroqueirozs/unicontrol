@@ -1,5 +1,15 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
+import { paymentMethodRequiresDocumentNumber } from "@/lib/financial"
+
+// issueDate é opcional e chega como "" quando o campo é deixado vazio no
+// formulário. Sem esse preprocess, z.coerce.date() tenta `new Date("")`
+// (Invalid Date) e o Zod rejeita com uma mensagem confusa ("expected date,
+// received Date") em vez de simplesmente tratar como "sem data".
+const optionalDate = z.preprocess(
+  (val) => (val === "" || val === undefined ? null : val),
+  z.coerce.date().nullable()
+)
 
 // Cada item é uma parcela/boleto. "id" ausente = parcela nova; usado só no PUT
 // de edição para diferenciar "atualizar parcela existente" de "criar nova".
@@ -8,7 +18,7 @@ const installmentInputSchema = z.object({
   amount: z.number().positive("Valor da parcela deve ser maior que zero"),
   dueDate: z.coerce.date(),
   paymentMethodId: z.string().min(1, "Forma de pagamento é obrigatória"),
-  documentNumber: z.string().optional().nullable(),
+  documentNumber: z.string().trim().max(100, "Número do documento muito longo").optional().nullable(),
 })
 
 export const payableSchema = z
@@ -18,7 +28,7 @@ export const payableSchema = z
     payeeName: z.string().optional(),
     description: z.string().min(1, "Descrição é obrigatória"),
     totalAmount: z.number().positive("Valor total deve ser maior que zero"),
-    issueDate: z.coerce.date().optional().nullable(),
+    issueDate: optionalDate.optional(),
     installments: z.array(installmentInputSchema).min(1, "Informe ao menos uma parcela"),
   })
   .refine((data) => data.supplierId || (data.payeeName && data.payeeName.trim().length > 0), {
@@ -59,6 +69,19 @@ export async function resolveAndValidate(data: PayableInput, companyId: string) 
   })
   if (paymentMethods.length !== paymentMethodIds.length) {
     return { error: "Forma de pagamento inválida." } as const
+  }
+
+  // Boleto/cheque exigem número de documento — checado aqui (não só no
+  // formulário) porque o front-end não é a única forma de chamar essa API.
+  const methodNameById = new Map(paymentMethods.map((m) => [m.id, m.name]))
+  const missingDocIndex = data.installments.findIndex((inst) => {
+    const methodName = methodNameById.get(inst.paymentMethodId) ?? ""
+    return paymentMethodRequiresDocumentNumber(methodName) && !inst.documentNumber?.trim()
+  })
+  if (missingDocIndex !== -1) {
+    return {
+      error: `Informe o número do documento da parcela ${missingDocIndex + 1} (obrigatório para boleto/cheque).`,
+    } as const
   }
 
   return { payeeName } as const

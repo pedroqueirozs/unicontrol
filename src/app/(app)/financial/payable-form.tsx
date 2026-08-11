@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Search, X, Plus, Trash2, Split } from "lucide-react"
 import { FormInput } from "@/components/form-input"
 import { CurrencyInput } from "./currency-input"
+import { paymentMethodRequiresDocumentNumber } from "@/lib/financial"
 import type { Payable, PayableGroupRef, PaymentMethodRef, SupplierRef } from "./types"
 
 const installmentSchema = z.object({
@@ -15,7 +16,7 @@ const installmentSchema = z.object({
   amount: z.number().positive("Valor deve ser maior que zero"),
   dueDate: z.string().min(1, "Informe o vencimento"),
   paymentMethodId: z.string().min(1, "Selecione a forma de pagamento"),
-  documentNumber: z.string().optional(),
+  documentNumber: z.string().max(100, "Número do documento muito longo").optional(),
 })
 
 // avulso* e (totalAmount/installments) nunca se misturam no mesmo campo — cada
@@ -34,7 +35,7 @@ const rawSchema = z
     avulsoAmount: z.number().optional(),
     avulsoDueDate: z.string().optional(),
     avulsoPaymentMethodId: z.string().optional(),
-    avulsoDocumentNumber: z.string().optional(),
+    avulsoDocumentNumber: z.string().max(100, "Número do documento muito longo").optional(),
     totalAmount: z.number().optional(),
     installments: z.array(installmentSchema).optional(),
   })
@@ -86,15 +87,11 @@ function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-// Boleto e cheque têm número de documento físico que vale a pena registrar
-// pra conferir contra o relatório na tela depois — as outras formas não.
-// Comparação por nome (não por id fixo) porque formas de pagamento são
-// cadastro livre do usuário, não um enum fechado.
+// Mesma regra usada pela API (src/lib/financial.ts) — front e back nunca
+// divergem sobre quando o documento é exigido.
 function needsDocumentNumber(paymentMethods: PaymentMethodRef[], paymentMethodId: string | undefined): boolean {
   const method = paymentMethods.find((m) => m.id === paymentMethodId)
-  if (!method) return false
-  const name = method.name.trim().toLowerCase()
-  return name.includes("boleto") || name.includes("cheque")
+  return !!method && paymentMethodRequiresDocumentNumber(method.name)
 }
 
 export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSave, onCancel, saving }: Props) {
@@ -268,6 +265,10 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         toast.error("Selecione a forma de pagamento.")
         return
       }
+      if (needsDocumentNumber(paymentMethods, data.avulsoPaymentMethodId) && !data.avulsoDocumentNumber?.trim()) {
+        toast.error("Informe o número do documento.")
+        return
+      }
       return onSave({
         groupId: data.groupId,
         supplierId: data.supplierId,
@@ -292,6 +293,13 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
     }
     if (!data.installments || data.installments.length === 0) {
       toast.error("Adicione ao menos uma parcela.")
+      return
+    }
+    const missingDocIndex = data.installments.findIndex(
+      (inst) => needsDocumentNumber(paymentMethods, inst.paymentMethodId) && !inst.documentNumber?.trim()
+    )
+    if (missingDocIndex !== -1) {
+      toast.error(`Informe o número do documento da parcela ${missingDocIndex + 1}.`)
       return
     }
     return onSave({
