@@ -3,6 +3,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { isAdminLevel } from "@/lib/roles"
+import { Prisma } from "@/generated/prisma/client"
 
 const groupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").optional(),
@@ -33,12 +34,19 @@ export async function PUT(
   })
   if (!existing) return new NextResponse("Not Found", { status: 404 })
 
-  const updated = await prisma.payableGroup.update({
-    where: { id },
-    data: parsed.data,
-  })
+  try {
+    const updated = await prisma.payableGroup.update({
+      where: { id },
+      data: parsed.data,
+    })
 
-  return NextResponse.json(updated)
+    return NextResponse.json(updated)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ error: "Já existe um grupo com esse nome." }, { status: 409 })
+    }
+    throw err
+  }
 }
 
 // Nunca exclui de verdade — só inativa (isActive: false), pra não quebrar

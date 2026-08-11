@@ -3,6 +3,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { isAdminLevel } from "@/lib/roles"
+import { Prisma } from "@/generated/prisma/client"
 
 const groupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -40,12 +41,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
 
-  const group = await prisma.payableGroup.create({
-    data: {
-      name: parsed.data.name,
-      companyId: session.user.companyId,
-    },
-  })
+  try {
+    const group = await prisma.payableGroup.create({
+      data: {
+        name: parsed.data.name,
+        companyId: session.user.companyId,
+      },
+    })
 
-  return NextResponse.json(group, { status: 201 })
+    return NextResponse.json(group, { status: 201 })
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ error: "Já existe um grupo com esse nome." }, { status: 409 })
+    }
+    throw err
+  }
 }
