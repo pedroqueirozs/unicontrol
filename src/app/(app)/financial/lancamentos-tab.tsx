@@ -181,14 +181,17 @@ export function LancamentosTab() {
       const updated: PayableInstallment = await res.json()
       // Merge só de status/paidAt — a resposta do PATCH não inclui a relação
       // paymentMethod, então substituir o objeto inteiro apagaria esse dado da tela.
-      setPayables((prev) =>
-        prev.map((p) => ({
-          ...p,
-          installments: p.installments.map((i) =>
-            i.id === updated.id ? { ...i, status: updated.status, paidAt: updated.paidAt } : i
-          ),
-        }))
-      )
+      const mergeUpdated = (p: Payable) => ({
+        ...p,
+        installments: p.installments.map((i) =>
+          i.id === updated.id ? { ...i, status: updated.status, paidAt: updated.paidAt } : i
+        ),
+      })
+      setPayables((prev) => prev.map(mergeUpdated))
+      // O modal de detalhe guarda sua própria cópia do lançamento (aberta ao
+      // clicar na linha) — sem isso, marcar como pago ali só refletia depois
+      // de fechar e reabrir o modal.
+      setDetailPayable((prev) => (prev ? mergeUpdated(prev) : prev))
       toast.success(next === "pago" ? "Parcela marcada como paga." : "Parcela voltou a pendente.")
     } catch {
       toast.error("Erro ao atualizar parcela.")
