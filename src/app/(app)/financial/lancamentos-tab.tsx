@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle } from "lucide-react"
+import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle, Search, X } from "lucide-react"
 import { PayableForm, type PayableFormData } from "./payable-form"
 import { PayableDetailModal } from "./payable-detail-modal"
 import { currency, formatDate, formatDateTime, installmentStatus, StatusBadge } from "./format"
@@ -28,6 +28,7 @@ export function LancamentosTab() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas")
   const [groupFilter, setGroupFilter] = useState<string>("todos")
+  const [search, setSearch] = useState("")
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -61,11 +62,18 @@ export function LancamentosTab() {
         all.push({ payable, installment })
       }
     }
+    const searchTrimmed = search.trim().toLowerCase()
     return all
       .filter((r) => groupFilter === "todos" || r.payable.groupId === groupFilter)
       .filter((r) => statusFilter === "todas" || installmentStatus(r.installment) === statusFilter)
+      .filter(
+        (r) =>
+          !searchTrimmed ||
+          r.payable.payeeName.toLowerCase().includes(searchTrimmed) ||
+          r.payable.description.toLowerCase().includes(searchTrimmed)
+      )
       .sort((a, b) => new Date(a.installment.dueDate).getTime() - new Date(b.installment.dueDate).getTime())
-  }, [payables, groupFilter, statusFilter])
+  }, [payables, groupFilter, statusFilter, search])
 
   function openCreate() {
     setEditItem(null)
@@ -203,16 +211,37 @@ export function LancamentosTab() {
           </button>
         </div>
 
-        <select
-          value={groupFilter}
-          onChange={(e) => setGroupFilter(e.target.value)}
-          className="h-11 w-full sm:w-64 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
-        >
-          <option value="todos">Todos os grupos</option>
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>{g.name}</option>
-          ))}
-        </select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <select
+            value={groupFilter}
+            onChange={(e) => setGroupFilter(e.target.value)}
+            className="h-11 w-full sm:w-64 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
+          >
+            <option value="todos">Todos os grupos</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por descrição ou fornecedor/nome..."
+              className="w-full h-11 pl-10 pr-10 rounded-lg border border-border bg-background text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition-colors"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Form inline */}
@@ -232,7 +261,11 @@ export function LancamentosTab() {
       {rows.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <Receipt size={40} className="mx-auto mb-2 opacity-30" />
-          <p>Nenhum lançamento encontrado.</p>
+          {search ? (
+            <p>Nenhum lançamento encontrado para <strong className="text-foreground">&ldquo;{search}&rdquo;</strong>.</p>
+          ) : (
+            <p>Nenhum lançamento encontrado.</p>
+          )}
         </div>
       ) : (
         <>
