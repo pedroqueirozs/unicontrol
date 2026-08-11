@@ -494,14 +494,19 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   />
                 )}
               />
-              <FormInput
-                label="Qtd. de parcelas"
-                id="p-count"
-                type="number"
-                min={2}
-                value={installmentCount}
-                onChange={(e) => setInstallmentCount(Math.max(2, Number(e.target.value) || 2))}
-              />
+              <div className="flex flex-col gap-1">
+                <label htmlFor="p-count" className="text-sm font-medium text-foreground">Qtd. de parcelas</label>
+                <select
+                  id="p-count"
+                  value={installmentCount}
+                  onChange={(e) => setInstallmentCount(Number(e.target.value))}
+                  className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
+                >
+                  {Array.from({ length: 18 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n}x</option>
+                  ))}
+                </select>
+              </div>
               <FormInput
                 label="1º vencimento"
                 id="p-firstDue"
