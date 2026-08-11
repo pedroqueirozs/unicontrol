@@ -426,7 +426,7 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
               }`}
             >
-              Avulso
+              Único
             </button>
             <button
               type="button"
