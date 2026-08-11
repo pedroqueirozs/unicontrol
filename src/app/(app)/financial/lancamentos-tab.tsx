@@ -4,36 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle } from "lucide-react"
 import { PayableForm, type PayableFormData } from "./payable-form"
+import { PayableDetailModal } from "./payable-detail-modal"
+import { currency, formatDate, formatDateTime, installmentStatus, StatusBadge } from "./format"
 import type { Payable, PayableInstallment, PayableGroupRef, PaymentMethodRef, SupplierRef } from "./types"
 
 type StatusFilter = "todas" | "pendente" | "vencida" | "pago"
-
-function currency(value: string | number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value))
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(iso))
-}
-
-function installmentStatus(inst: PayableInstallment): "pendente" | "vencida" | "pago" {
-  if (inst.status === "pago") return "pago"
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return new Date(inst.dueDate) < today ? "vencida" : "pendente"
-}
-
-function StatusBadge({ status }: { status: "pendente" | "vencida" | "pago" }) {
-  const styles = {
-    pendente: "bg-primary/10 text-primary",
-    vencida: "bg-destructive/10 text-destructive",
-    pago: "bg-details-green/15 text-details-green",
-  }
-  const labels = { pendente: "Pendente", vencida: "Vencida", pago: "Pago" }
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status]}`}>{labels[status]}</span>
-  )
-}
 
 type Row = { payable: Payable; installment: PayableInstallment }
 
@@ -49,6 +24,7 @@ export function LancamentosTab() {
   const [saving, setSaving] = useState(false)
 
   const [confirmDelete, setConfirmDelete] = useState<Payable | null>(null)
+  const [detailPayable, setDetailPayable] = useState<Payable | null>(null)
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas")
   const [groupFilter, setGroupFilter] = useState<string>("todos")
@@ -267,6 +243,7 @@ export function LancamentosTab() {
                 <tr className="border-b border-border bg-muted/50">
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Descrição</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Grupo</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Lançado em</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Parcela</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Vencimento</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70 text-xs uppercase tracking-wide">Valor</th>
@@ -277,12 +254,17 @@ export function LancamentosTab() {
               </thead>
               <tbody>
                 {rows.map(({ payable, installment }) => (
-                  <tr key={installment.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={installment.id}
+                    onClick={() => setDetailPayable(payable)}
+                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                  >
                     <td className="px-4 py-3">
                       <p className="font-medium text-foreground">{payable.payeeName}</p>
                       <p className="text-xs text-muted-foreground">{payable.description}</p>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{payable.group?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDateTime(payable.createdAt)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {installment.installmentNumber}/{payable.installments.length}
                     </td>
@@ -295,7 +277,7 @@ export function LancamentosTab() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => handleTogglePaid(installment)}
+                          onClick={(e) => { e.stopPropagation(); handleTogglePaid(installment) }}
                           className={`p-2 rounded-lg transition-colors ${
                             installment.status === "pago"
                               ? "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
@@ -306,14 +288,14 @@ export function LancamentosTab() {
                           {installment.status === "pago" ? <Undo2 size={15} /> : <CheckCircle2 size={15} />}
                         </button>
                         <button
-                          onClick={() => openEdit(payable)}
+                          onClick={(e) => { e.stopPropagation(); openEdit(payable) }}
                           className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                           title="Editar lançamento"
                         >
                           <Pencil size={15} />
                         </button>
                         <button
-                          onClick={() => setConfirmDelete(payable)}
+                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(payable) }}
                           className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           title="Excluir lançamento"
                         >
@@ -330,7 +312,11 @@ export function LancamentosTab() {
           {/* Mobile */}
           <div className="md:hidden flex flex-col gap-3">
             {rows.map(({ payable, installment }) => (
-              <div key={installment.id} className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3">
+              <div
+                key={installment.id}
+                onClick={() => setDetailPayable(payable)}
+                className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3 cursor-pointer"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium text-foreground text-sm">{payable.payeeName}</p>
@@ -343,12 +329,13 @@ export function LancamentosTab() {
                   <span>Parcela {installment.installmentNumber}/{payable.installments.length}</span>
                   <span>Vence {formatDate(installment.dueDate)}</span>
                   <span>{installment.paymentMethod?.name ?? "—"}</span>
+                  <span>Lançado em {formatDateTime(payable.createdAt)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-foreground">{currency(installment.amount)}</span>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => handleTogglePaid(installment)}
+                      onClick={(e) => { e.stopPropagation(); handleTogglePaid(installment) }}
                       className={`p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${
                         installment.status === "pago"
                           ? "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
@@ -358,13 +345,13 @@ export function LancamentosTab() {
                       {installment.status === "pago" ? <Undo2 size={16} /> : <CheckCircle2 size={16} />}
                     </button>
                     <button
-                      onClick={() => openEdit(payable)}
+                      onClick={(e) => { e.stopPropagation(); openEdit(payable) }}
                       className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
-                      onClick={() => setConfirmDelete(payable)}
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(payable) }}
                       className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 size={16} />
@@ -416,6 +403,14 @@ export function LancamentosTab() {
           </div>
         </div>
       )}
+
+      {/* Detalhe do lançamento — todas as parcelas, não só a clicada */}
+      <PayableDetailModal
+        payable={detailPayable}
+        onClose={() => setDetailPayable(null)}
+        onEdit={(payable) => { setDetailPayable(null); openEdit(payable) }}
+        onTogglePaid={handleTogglePaid}
+      />
     </div>
   )
 }
