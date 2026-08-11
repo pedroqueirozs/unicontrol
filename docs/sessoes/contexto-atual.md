@@ -3,8 +3,10 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-08-06
-**Sessão mais recente:** melhorias de UX no Estoque pedidas pelo operador, instalação como PWA finalmente funcionando no Android (faltava Service Worker + o proxy bloqueava manifest/sw sem login), ordenação de Mercadorias Enviadas por data de envio, revisão de segurança da sessão de usuário (reduzida de 30 dias pra 1 dia), e renomeação do projeto de "unicontrol-next" para "unicontrol" (repositório GitHub + projeto Vercel). Detalhes completos: `docs/sessoes/2026-08-06.md`. **Próxima sessão: início do módulo Financeiro.**
+**Última atualização:** 2026-08-10
+**Sessão mais recente:** módulo Financeiro (Contas a Pagar) construído do zero — schema, APIs e telas de Dashboard, Lançamentos, Grupos e Formas de Pagamento, tudo testado ponta a ponta. Também foi criado o primeiro banco de desenvolvimento do projeto (Docker), separado da produção. Detalhes completos: `docs/sessoes/2026-08-10.md`.
+
+> **⚠️ Estado do Git:** todo o trabalho desta sessão está na branch `feat/financeiro-contas-a-pagar`, **nada foi commitado ainda** (aguardando Pedro pedir). Antes de continuar o módulo numa sessão nova, confirme se essa branch já foi commitada/mergeada ou se ainda está pendente.
 
 ---
 
@@ -35,6 +37,21 @@ O sistema está **em produção** desde julho de 2026:
 
 ---
 
+## Ambiente de Desenvolvimento (2026-08-10)
+
+Até 2026-08-10 só existia o banco de produção (VPS). Agora há um banco de dev local, isolado:
+
+- **`docker-compose.yml`** (raiz do projeto) sobe um Postgres 16 local em `localhost:5432`, dados persistidos num volume Docker nomeado
+- **`.env`** local aponta pro banco de dev; a `DATABASE_URL` de produção ficou comentada logo acima, só de referência — o `.env` **nunca** vai pra Vercel (está no `.gitignore`, produção usa variáveis configuradas direto no painel da Vercel), então alternar o valor local é sempre seguro
+- Comandos do dia a dia:
+  - `docker compose up -d` / `docker compose stop` — ligar/desligar sem perder dados
+  - `docker compose down -v` — apaga tudo e recomeça do zero (útil pra testar migration limpa)
+  - Depois de `down -v`: `npx prisma migrate deploy && npx prisma generate && npm run seed`
+- `npm run seed` agora também cria o grupo padrão do Financeiro (nome da empresa) e as formas de pagamento comuns (Boleto, PIX, Cheque, Dinheiro, Transferência, Outro)
+- Se o Docker não tiver instalado: `sudo apt install -y docker.io docker-compose-v2 && sudo systemctl enable --now docker && sudo usermod -aG docker $USER` (precisa logout/login ou `newgrp docker` depois)
+
+---
+
 ## Estado dos Módulos
 
 | Módulo | Estado |
@@ -51,7 +68,7 @@ O sistema está **em produção** desde julho de 2026:
 | Cadastros (Clientes + Fornecedores) | ✅ Concluído |
 | Estoque | ✅ Concluído |
 | Configurações (dados da empresa + logo) | ✅ Concluído |
-| Financeiro | 🚧 Placeholder "em construção" |
+| Financeiro (Contas a Pagar) | ✅ Concluído (branch não commitada — ver aviso no topo) |
 | Documentos Úteis | 🚧 Placeholder "em construção" |
 | Relatórios | 🚧 Placeholder "em construção" |
 
@@ -167,14 +184,23 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 ### Mercadorias Enviadas — ordenação por data de envio (2026-08-06)
 - `GET /api/goods-shipped` ordenava por `createdAt` (ordem de cadastro), mas operadores registram envios fora de ordem (backlog, NF retroativa). Passou a ordenar por `shippingDate desc`, com `createdAt desc` como desempate para envios do mesmo dia.
 
+### Módulo Financeiro — Contas a Pagar (2026-08-10)
+- **Schema:** `PayableGroup`, `PaymentMethod`, `Payable` (cabeçalho) e `PayableInstallment` (parcelas) — decisões completas em `docs/arquitetura.md`. Migration `20260806044145_add_financial_payables_module`.
+- **APIs:** `/api/financial/groups`, `/api/financial/payment-methods` (CRUD simples, `isActive` em vez de exclusão), `/api/financial/payables` + `/api/financial/payables/[id]` (cabeçalho + parcelas, edição reconcilia por diff pra não perder parcela já paga), `/api/financial/installments/[id]` (PATCH pra marcar pago/pendente), `/api/financial/dashboard?days=N` (agregados).
+- **Telas** em `src/app/(app)/financial/`: `page.tsx` (abas), `dashboard-tab.tsx`, `lancamentos-tab.tsx` + `payable-form.tsx` (o formulário de lançamento, avulso ou parcelado), `simple-lookup-manager.tsx` (reutilizado pelas telas de Grupos e Formas de Pagamento).
+- **Bug de React Hook Form encontrado e corrigido:** o campo "Valor" do modo Avulso e o da 1ª parcela do modo Parcelado compartilhavam o mesmo caminho de formulário (`installments.0.amount`) — o RHF manteve o `onChange` do Avulso "grudado" ao trocar de modo, corrompendo o total ao editar a parcela. Corrigido dando ao Avulso campos totalmente independentes (`avulsoAmount`/`avulsoDueDate`/`avulsoPaymentMethodId`), unidos ao restante só no submit. Também trocado `watch()` por `useWatch()` (o linter já alertava que `watch()` não é seguro com o React Compiler deste projeto). Detalhes da investigação: `docs/sessoes/2026-08-10.md`.
+- **Regras completas:** `RN-16` em `docs/regras-de-negocio.md`.
+- **Pendente:** proteção de rota já herda do bloqueio geral do `/financial` em `src/proxy.ts` (RN-18) — não foi criada nenhuma regra nova. Anexo de PDF do boleto ficou de fora por decisão do Pedro (ver RN-16).
+
 ---
 
 ## Próximos Passos Sugeridos
 
-1. **Implementar módulo Financeiro (Contas a Pagar)** — combinado como próxima sessão; ler `docs/regras-de-negocio.md` e `docs/fluxos/administrativo-financeiro.md` antes de começar.
+1. **Commitar e mergear a branch `feat/financeiro-contas-a-pagar`** — só quando Pedro pedir explicitamente (regra do `CLAUDE.md`).
 2. Implementar módulo **Documentos Úteis**
 3. Implementar módulo **Relatórios**
 4. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
+5. (Baixa prioridade, ideia registrada) Anexo de PDF do boleto no lançamento do Financeiro — descartado por ora, ver RN-16.
 
 ---
 

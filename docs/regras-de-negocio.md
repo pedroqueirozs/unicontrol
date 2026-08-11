@@ -70,15 +70,37 @@ Documento consolidado com as regras identificadas a partir do fluxo da empresa.
 - A data de entrega deve ser **igual ou posterior à data de envio**
 - Válido tanto para entregas via transportadora quanto para retiradas na empresa
 
-## RN-16 — Regras do Módulo Financeiro
+## RN-16 — Módulo Financeiro (Contas a Pagar)
 
-- Uma nota fiscal **deve ter ao menos um boleto** para ser salva
-- O **total dos boletos deve ser igual ao valor da nota fiscal** (tolerância de R$ 0,01)
-- A **data de emissão** da nota não pode ser futura — deve ser igual ou anterior à data atual
-- O **vencimento do boleto** não pode ser anterior à data atual
-- Durante a edição, boletos removidos só são excluídos do banco ao confirmar a atualização
-- Cancelar a edição restaura o estado original sem alterar nenhum dado
-- **Status (2026-07-16):** módulo ainda não implementado nesta versão (placeholder "em construção" em `/financial`) — regras acima valem como especificação para quando for construído
+**Status (2026-08-10): implementado.** Abas Dashboard, Lançamentos, Grupos e Formas de Pagamento em `/financial`. A especificação original deste RN (nota fiscal + boletos vinculados) foi revisada durante a implementação — o modelo final é mais simples e cobre casos que a v1 não previa (contas sem fornecedor cadastrado, centralização de outras empresas da proprietária). Detalhes técnicos completos: [[arquitetura]] e `docs/sessoes/2026-08-10.md`.
+
+### Centralização multi-empresa (Grupos)
+- A proprietária tem outras atividades além da São José (ex: Usinas, contas pessoais) que precisam de contas a pagar controladas no mesmo sistema — sem que isso vire multi-tenant de verdade
+- `PayableGroup` é essa separação lógica dentro do tenant único (São José): CRUD livre em "Financeiro → Grupos"
+- Grupo nunca é excluído de verdade, só inativado (`isActive: false`) — preserva o histórico de lançamentos antigos que já apontam pra ele
+
+### Estrutura do lançamento — avulso ou parcelado
+- Cada lançamento (`Payable`) tem um cabeçalho — grupo, fornecedor cadastrado (opcional) ou nome livre, descrição, data de emissão opcional — e uma ou mais parcelas (`PayableInstallment`)
+- **Avulso:** uma única parcela (valor, vencimento e forma de pagamento próprios)
+- **Parcelado:** o usuário informa o valor total e a quantidade de parcelas; o sistema divide automaticamente (o resto do arredondamento vai pra última parcela) e permite ajustar cada parcela antes de salvar, pra bater com valores reais de boletos que não dividem exato
+- A soma das parcelas deve bater com o valor total informado, com tolerância de R$ 0,01 — mesma regra da especificação original, agora aplicada ao total do lançamento em vez de ao valor de uma nota fiscal
+- Cada parcela tem sua própria forma de pagamento — pode variar dentro do mesmo lançamento (ex: entrada em PIX + resto parcelado em boleto)
+- **Vencimento no passado é permitido** — diferente da especificação original (que bloqueava); útil pra registrar contas já atrasadas ou lançar histórico
+
+### Formas de pagamento
+- `PaymentMethod` também é CRUD livre ("Financeiro → Formas de Pagamento"), mesmo padrão do `PayableGroup` (nunca excluído de verdade, só inativado)
+- Seed inicial: Boleto, PIX, Cheque, Dinheiro, Transferência, Outro
+
+### Quitação
+- Quem paga os boletos é a proprietária, fora do sistema; o administrativo só registra que foi avisado — marca a parcela como paga, com a data de quitação
+- Ação reversível ("desfazer pagamento") caso marcada por engano
+
+### Edição e exclusão
+- Lançamento — mesmo com parcelas já pagas — pode ser editado ou excluído livremente: é controle interno, não um livro fiscal auditado
+- Ao editar, as parcelas são reconciliadas por diff (atualiza as que continuam, cria as novas, remove as que saíram) em vez de recriadas do zero — assim uma parcela já paga **não perde esse status** só por o lançamento ter sido editado
+
+### Permissões
+- Mesma regra da RN-18: só `admin`/`administrativo` acessam o módulo (dashboard, lançamentos, grupos, formas de pagamento)
 
 ## RN-17 — Remoção de Membros
 

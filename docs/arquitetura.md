@@ -30,6 +30,10 @@ Um usuário (`User`) pertence a uma única empresa (`Company`) e possui um `role
 | `Pending` | Pendências | Um único model pra cliente e fornecedor, diferenciado pelo campo `type: "client" \| "supplier"`. `updates` é `Json`, histórico imutável |
 | `StockProduct` | Estoque → produtos | `code` é sequencial por empresa (`max(code) + 1`); `sku` é o código do sistema antigo, mantido só pra busca de transição |
 | `StockMovement` | Estoque → entrada/saída/estorno/ajuste | Registro imutável — nunca é editado ou apagado, mesmo para corrigir erro (ver RN-21); campos do produto são denormalizados (`productName`, `productCode`, `productSku`) pra preservar histórico mesmo se o produto for editado ou excluído depois. `type`: `"entrada" \| "saida" \| "estorno" \| "ajuste"`; `direction`: `1` = soma ao estoque, `-1` = subtrai. `reversalOfId`/`reversedAt` vinculam um estorno ao lançamento original. `previousStock`/`newStock` guardam o saldo do produto imediatamente antes/depois **de qualquer movimentação** (não só ajuste) — é o que torna o histórico auditável sem precisar reconstruir a soma manualmente. `GET /api/stock/movements` pagina por `page`/`pageSize`/`type` (sem limite fixo) |
+| `PayableGroup` | Financeiro → Grupos | Separação lógica de "empresa/centro de custo" dentro do tenant único (RN-16). CRUD livre; `isActive: false` em vez de exclusão real |
+| `PaymentMethod` | Financeiro → Formas de Pagamento | Mesmo padrão de `PayableGroup` — CRUD livre, `isActive` em vez de exclusão. Seed inicial: Boleto, PIX, Cheque, Dinheiro, Transferência, Outro |
+| `Payable` | Financeiro → Lançamentos (cabeçalho) | `totalAmount` é `Decimal`, não `Float` (ver decisão abaixo). `supplierId` é referência solta — sem `@relation`, mesmo padrão de `GoodsShipped.clientId`. `payeeName` é sempre preenchido (copiado do fornecedor ou digitado livre). `createdByName` é um snapshot de nome, não relação com `User` |
+| `PayableInstallment` | Financeiro → Lançamentos (parcelas) | Cada parcela de um `Payable` — status (`pendente`/`pago`), `paidAt`, forma de pagamento própria. `companyId`/`groupId` são denormalizados do `Payable` pra o dashboard financeiro agregar sem join (`GET /api/financial/dashboard`) |
 
 ---
 
@@ -97,3 +101,15 @@ Para o volume de clientes esperado, o custo de rodar `npm run seed` manualmente 
 
 ### Por que o token do convite é `cuid()` e não `crypto.randomUUID()`?
 O projeto anterior gerava o token no cliente (browser). Aqui o convite é criado inteiramente no servidor (`POST /api/invites`), então usar o gerador padrão do Prisma (`cuid()`) é mais simples e já garante unicidade — não há motivo pra usar uma função diferente só pra gerar o token.
+
+### Por que valores monetários do Financeiro são `Decimal` e não `Float` (como `StockProduct.price`)?
+`Decimal` (mapeado pro `numeric` do Postgres) tem precisão exata; `Float` é ponto flutuante binário e acumula erro de arredondamento (`0.1 + 0.2 !== 0.3`). Como a RN-16 exige que a soma das parcelas bata com o total com tolerância de só R$ 0,01, esse erro poderia gerar falso-negativo na validação. `StockProduct.price` continua `Float` — não foi migrado retroativamente, fora do escopo da mudança.
+
+### Por que `Payable.supplierId` não é uma relação forte (`@relation`)?
+Mesmo padrão do `GoodsShipped.clientId` (RN-19): referência solta, sem FK no banco. Se um fornecedor for excluído do cadastro no futuro, os lançamentos antigos que apontam pra ele continuam existindo — `payeeName` já guarda o nome no momento do cadastro (copiado do fornecedor ou digitado livre), então a tela nunca depende do fornecedor ainda existir.
+
+### Por que `Payable.createdByName` é um nome congelado e não uma relação com `User`?
+Mesmo padrão do `StockMovement.operatorName`. A RN-17 exclui usuário removido **de verdade** da tabela `User` (sem soft-delete) — uma relação forte quebraria o histórico financeiro quando alguém saísse da empresa.
+
+### Por que `companyId`/`groupId` são denormalizados em `PayableInstallment`?
+O dashboard financeiro (consolidado e por empresa) agrega (`SUM`/`groupBy`) por esses dois campos o tempo todo. Denormalizá-los na própria parcela evita join com `Payable` em toda query de relatório — mesma lógica de performance por trás do `name`/`city`/`uf` em `GoodsShipped`.

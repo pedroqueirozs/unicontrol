@@ -47,7 +47,7 @@ A empresa usa o sistema para:
 
 Cada empresa (`Company`) tem dados isolados — toda tabela de negócio tem `companyId`, e toda query **deve** filtrar por ele.
 
-Tabelas principais: `Company`, `User`, `Invite`, `Client`, `Supplier`, `Carrier`, `GoodsShipped`, `Pending`, `StockProduct`, `StockMovement` (+ `Account`/`Session`/`VerificationToken`, exigidas pelo adapter do NextAuth).
+Tabelas principais: `Company`, `User`, `Invite`, `Client`, `Supplier`, `Carrier`, `GoodsShipped`, `Pending`, `StockProduct`, `StockMovement`, `PayableGroup`, `PaymentMethod`, `Payable`, `PayableInstallment` (+ `Account`/`Session`/`VerificationToken`, exigidas pelo adapter do NextAuth).
 
 Schema completo e comentado: `prisma/schema.prisma`.
 Descrição de cada tabela, decisões e fluxos técnicos: [[arquitetura]]
@@ -84,7 +84,7 @@ Aplicado em duas camadas: `src/components/sidebar.tsx` (esconde item de menu) + 
 | Configurações (dados da empresa + logo) | ✅ Pronto | `/settings` |
 | Autenticação | ✅ Pronto | `/login`, `/register` |
 | Perfil do Usuário | ✅ Pronto | `/profile` |
-| Financeiro (Contas a Pagar) | 🚧 Placeholder "em construção" | `/financial` |
+| Financeiro (Contas a Pagar) | ✅ Pronto | `/financial` |
 | Documentos Úteis | 🚧 Placeholder "em construção" | `/useful-documents` |
 | Relatórios | 🚧 Placeholder "em construção" | `/reports` |
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus, Pencil, Trash2, Search, Phone, Mail, MapPin, ExternalLink, Building2, Truck } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Phone, Mail, MapPin, ExternalLink, Building2, Truck, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { ContactModal, type ContactFormData, type ContactRecord } from "@/components/contact-modal"
 import { CarrierModal, type CarrierFormData, type CarrierRecord } from "@/components/carrier-modal"
@@ -22,6 +22,8 @@ const API_URL: Record<Tab, string> = {
   carriers: "/api/carriers",
 }
 
+const PAGE_SIZE = 50
+
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function CadastrosPage() {
@@ -29,6 +31,7 @@ export default function CadastrosPage() {
   const [records, setRecords] = useState<(ContactRecord | CarrierRecord)[]>([])
   const [filtered, setFiltered] = useState<(ContactRecord | CarrierRecord)[]>([])
   const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -118,6 +121,10 @@ export default function CadastrosPage() {
 
   const newLabel = isCarriers ? "Nova Transportadora" : `Novo ${TAB_LABELS[tab].slice(0, -1)}`
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   return (
     <div className="flex flex-col gap-5">
       {/* Abas */}
@@ -125,7 +132,7 @@ export default function CadastrosPage() {
         {(["clients", "suppliers", "carriers"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setSearch("") }}
+            onClick={() => { setTab(t); setSearch(""); setPage(1) }}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               tab === t
                 ? "border-sidebar-accent text-foreground"
@@ -145,7 +152,7 @@ export default function CadastrosPage() {
             type="text"
             placeholder={isCarriers ? "Buscar por nome..." : "Buscar por nome ou CNPJ/CPF..."}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full h-10 pl-9 pr-4 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
@@ -165,18 +172,49 @@ export default function CadastrosPage() {
         <div className="text-sm text-muted-foreground py-8 text-center">
           {search ? "Nenhum resultado para a busca." : `Nenhum registro cadastrado ainda.`}
         </div>
-      ) : isCarriers ? (
-        <CarriersView
-          records={filtered as CarrierRecord[]}
-          onEdit={openEdit}
-          onDelete={(r) => setDeleteTarget({ id: r.id, name: r.name })}
-        />
       ) : (
-        <ContactsView
-          records={filtered as ContactRecord[]}
-          onEdit={openEdit}
-          onDelete={(r) => setDeleteTarget({ id: r.id, name: r.name })}
-        />
+        <>
+          {isCarriers ? (
+            <CarriersView
+              records={paginated as CarrierRecord[]}
+              onEdit={openEdit}
+              onDelete={(r) => setDeleteTarget({ id: r.id, name: r.name })}
+            />
+          ) : (
+            <ContactsView
+              records={paginated as ContactRecord[]}
+              onEdit={openEdit}
+              onDelete={(r) => setDeleteTarget({ id: r.id, name: r.name })}
+            />
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-muted-foreground">
+                {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length} registros
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 text-sm font-medium text-foreground">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modais */}
