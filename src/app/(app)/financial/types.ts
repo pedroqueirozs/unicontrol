@@ -42,3 +42,27 @@ export type Payable = {
   createdAt: string
   installments: PayableInstallment[]
 }
+
+// Uma linha da listagem de Lançamentos (paginada no servidor, por parcela) —
+// traz só o resumo do lançamento dono da parcela, não todas as parcelas dele.
+// Pra editar ou ver o detalhe completo, busca o Payable inteiro por id.
+export type PayableInstallmentRow = {
+  id: string
+  installmentNumber: number
+  amount: string
+  dueDate: string
+  status: "pendente" | "pago"
+  paidAt: string | null
+  documentNumber: string | null
+  paymentMethodId: string
+  paymentMethod?: PaymentMethodRef
+  payable: {
+    id: string
+    payeeName: string
+    description: string
+    createdAt: string
+    groupId: string
+    group: { id: string; name: string } | null
+    installmentsCount: number
+  }
+}

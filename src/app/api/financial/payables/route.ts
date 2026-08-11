@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma"
 import { isAdminLevel } from "@/lib/roles"
 import { payableSchema, resolveAndValidate } from "./shared"
 
-export async function GET() {
+// A listagem de Lançamentos é por parcela (uma linha por parcela, não por
+// lançamento), então a paginação/filtro aqui é feita direto na tabela
+// PayableInstallment — ela já tem companyId/groupId/status/dueDate
+// denormalizados (com índice) exatamente pra isso, sem precisar trazer todos
+// os Payable com todas as parcelas pra filtrar em memória.
+export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user?.companyId) {
     return new NextResponse("Unauthorized", { status: 401 })
@@ -13,19 +18,83 @@ export async function GET() {
     return new NextResponse("Forbidden", { status: 403 })
   }
 
-  const payables = await prisma.payable.findMany({
-    where: { companyId: session.user.companyId },
-    include: {
-      group: { select: { id: true, name: true } },
-      installments: {
-        orderBy: { installmentNumber: "asc" },
-        include: { paymentMethod: { select: { id: true, name: true } } },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  })
+  const companyId = session.user.companyId
+  const { searchParams } = new URL(req.url)
 
-  return NextResponse.json(payables)
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
+  const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") ?? "50", 10) || 50))
+  const groupId = searchParams.get("groupId")
+  const status = searchParams.get("status")
+  const search = searchParams.get("search")?.trim()
+
+  const where = {
+    companyId,
+    ...(groupId && groupId !== "todos" ? { groupId } : {}),
+    ...(search
+      ? {
+          payable: {
+            OR: [
+              { payeeName: { contains: search, mode: "insensitive" as const } },
+              { description: { contains: search, mode: "insensitive" as const } },
+            ],
+          },
+        }
+      : {}),
+    ...(status === "pago" ? { status: "pago" as const } : {}),
+    // "Vencida" não é um status próprio no banco — é "pendente" com dueDate no
+    // passado. O corte usa meia-noite UTC porque dueDate é salvo como data pura
+    // (meia-noite UTC vinda do <input type="date">); assim o filtro não muda
+    // conforme o fuso horário de quem está acessando.
+    ...(status === "pendente" || status === "vencida"
+      ? {
+          status: "pendente" as const,
+          dueDate: (() => {
+            const startOfToday = new Date()
+            startOfToday.setUTCHours(0, 0, 0, 0)
+            return status === "vencida" ? { lt: startOfToday } : { gte: startOfToday }
+          })(),
+        }
+      : {}),
+  }
+
+  const [installments, total] = await Promise.all([
+    prisma.payableInstallment.findMany({
+      where,
+      orderBy: { dueDate: "asc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        paymentMethod: { select: { id: true, name: true } },
+        payable: {
+          select: {
+            id: true,
+            payeeName: true,
+            description: true,
+            createdAt: true,
+            groupId: true,
+            group: { select: { id: true, name: true } },
+            _count: { select: { installments: true } },
+          },
+        },
+      },
+    }),
+    prisma.payableInstallment.count({ where }),
+  ])
+
+  const rows = installments.map(({ payable, ...inst }) => ({
+    ...inst,
+    payable: {
+      id: payable.id,
+      payeeName: payable.payeeName,
+      description: payable.description,
+      createdAt: payable.createdAt,
+      groupId: payable.groupId,
+      group: payable.group,
+      installmentsCount: payable._count.installments,
+    },
+  }))
+
+  return NextResponse.json({ rows, total, page, pageSize })
 }
 
 export async function POST(req: Request) {

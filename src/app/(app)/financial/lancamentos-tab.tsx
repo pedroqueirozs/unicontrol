@@ -1,86 +1,104 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { PayableForm, type PayableFormData } from "./payable-form"
 import { PayableDetailModal } from "./payable-detail-modal"
 import { currency, formatDate, formatDateTime, installmentStatus, StatusBadge } from "./format"
-import type { Payable, PayableInstallment, PayableGroupRef, PaymentMethodRef, SupplierRef } from "./types"
+import type { Payable, PayableGroupRef, PaymentMethodRef, SupplierRef, PayableInstallmentRow } from "./types"
 
 type StatusFilter = "todas" | "pendente" | "vencida" | "pago"
+type ConfirmDeleteTarget = { id: string; payeeName: string; description: string; installmentsCount: number }
 
 const PAGE_SIZE = 50
 
-type Row = { payable: Payable; installment: PayableInstallment }
-
 export function LancamentosTab() {
-  const [payables, setPayables] = useState<Payable[]>([])
+  // Dados de referência (grupos, formas de pagamento, fornecedores) — usados
+  // pelo formulário e pelo filtro de grupo, carregados uma vez só.
   const [groups, setGroups] = useState<PayableGroupRef[]>([])
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodRef[]>([])
   const [suppliers, setSuppliers] = useState<SupplierRef[]>([])
-  const [loading, setLoading] = useState(true)
+  const [staticLoading, setStaticLoading] = useState(true)
+
+  // Lista de lançamentos (uma linha por parcela) — paginada e filtrada no
+  // servidor, já que a tabela de parcelas tem companyId/grupo/status/vencimento
+  // denormalizados com índice pra isso.
+  const [rows, setRows] = useState<PayableInstallmentRow[]>([])
+  const [total, setTotal] = useState(0)
+  const [rowsLoading, setRowsLoading] = useState(true)
 
   const [showForm, setShowForm] = useState(false)
   const [editItem, setEditItem] = useState<Payable | null>(null)
   const [saving, setSaving] = useState(false)
+  const [openingId, setOpeningId] = useState<string | null>(null)
 
-  const [confirmDelete, setConfirmDelete] = useState<Payable | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteTarget | null>(null)
   const [detailPayable, setDetailPayable] = useState<Payable | null>(null)
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas")
   const [groupFilter, setGroupFilter] = useState<string>("todos")
-  const [search, setSearch] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [page, setPage] = useState(1)
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
+  const loadStatic = useCallback(async () => {
     try {
-      const [payablesRes, groupsRes, methodsRes, suppliersRes] = await Promise.all([
-        fetch("/api/financial/payables"),
+      const [groupsRes, methodsRes, suppliersRes] = await Promise.all([
         fetch("/api/financial/groups"),
         fetch("/api/financial/payment-methods"),
         fetch("/api/suppliers"),
       ])
-      if (!payablesRes.ok || !groupsRes.ok || !methodsRes.ok || !suppliersRes.ok) throw new Error()
-      setPayables(await payablesRes.json())
+      if (!groupsRes.ok || !methodsRes.ok || !suppliersRes.ok) throw new Error()
       setGroups(await groupsRes.json())
       setPaymentMethods(await methodsRes.json())
       setSuppliers(await suppliersRes.json())
     } catch {
-      toast.error("Erro ao carregar os dados.")
+      toast.error("Erro ao carregar dados auxiliares.")
     } finally {
-      setLoading(false)
+      setStaticLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadStatic()
+  }, [loadStatic])
 
-  const rows: Row[] = useMemo(() => {
-    const all: Row[] = []
-    for (const payable of payables) {
-      for (const installment of payable.installments) {
-        all.push({ payable, installment })
-      }
+  const load = useCallback(async () => {
+    setRowsLoading(true)
+    try {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) })
+      if (statusFilter !== "todas") params.set("status", statusFilter)
+      if (groupFilter !== "todos") params.set("groupId", groupFilter)
+      if (debouncedSearch) params.set("search", debouncedSearch)
+      const res = await fetch(`/api/financial/payables?${params}`)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setRows(data.rows)
+      setTotal(data.total)
+    } catch {
+      toast.error("Erro ao carregar lançamentos.")
+    } finally {
+      setRowsLoading(false)
     }
-    const searchTrimmed = search.trim().toLowerCase()
-    return all
-      .filter((r) => groupFilter === "todos" || r.payable.groupId === groupFilter)
-      .filter((r) => statusFilter === "todas" || installmentStatus(r.installment) === statusFilter)
-      .filter(
-        (r) =>
-          !searchTrimmed ||
-          r.payable.payeeName.toLowerCase().includes(searchTrimmed) ||
-          r.payable.description.toLowerCase().includes(searchTrimmed)
-      )
-      .sort((a, b) => new Date(a.installment.dueDate).getTime() - new Date(b.installment.dueDate).getTime())
-  }, [payables, groupFilter, statusFilter, search])
+  }, [page, statusFilter, groupFilter, debouncedSearch])
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const paginated = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  useEffect(() => {
+    load()
+  }, [load])
+
+  // Busca por texto dispara uma requisição nova — espera o usuário parar de
+  // digitar por 300ms antes de refazer a chamada, pra não bater na API a
+  // cada tecla.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim())
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   function handleStatusFilterChange(next: StatusFilter) {
     setStatusFilter(next)
@@ -92,24 +110,53 @@ export function LancamentosTab() {
     setPage(1)
   }
 
-  function handleSearchChange(next: string) {
-    setSearch(next)
-    setPage(1)
-  }
-
   function openCreate() {
     setEditItem(null)
-    setShowForm(true)
-  }
-
-  function openEdit(payable: Payable) {
-    setEditItem(payable)
     setShowForm(true)
   }
 
   function closeForm() {
     setShowForm(false)
     setEditItem(null)
+  }
+
+  async function fetchFullPayable(id: string): Promise<Payable | null> {
+    try {
+      const res = await fetch(`/api/financial/payables/${id}`)
+      if (!res.ok) throw new Error()
+      return await res.json()
+    } catch {
+      toast.error("Erro ao carregar o lançamento.")
+      return null
+    }
+  }
+
+  // A listagem só traz o resumo do lançamento de cada parcela (não as outras
+  // parcelas dele) — editar ou ver o detalhe completo busca o registro
+  // inteiro por id. Quando o lançamento já está carregado por inteiro (vindo
+  // do próprio modal de detalhe), não precisa buscar de novo.
+  async function openEditById(payableId: string) {
+    if (openingId) return
+    setOpeningId(payableId)
+    const full = await fetchFullPayable(payableId)
+    setOpeningId(null)
+    if (full) {
+      setEditItem(full)
+      setShowForm(true)
+    }
+  }
+
+  function openEditFull(payable: Payable) {
+    setEditItem(payable)
+    setShowForm(true)
+  }
+
+  async function openDetail(payableId: string) {
+    if (openingId) return
+    setOpeningId(payableId)
+    const full = await fetchFullPayable(payableId)
+    setOpeningId(null)
+    if (full) setDetailPayable(full)
   }
 
   async function handleSave(data: PayableFormData) {
@@ -149,7 +196,7 @@ export function LancamentosTab() {
         return
       }
 
-      await loadData()
+      await load()
       closeForm()
       toast.success(editItem ? "Lançamento atualizado." : "Lançamento cadastrado.")
     } finally {
@@ -157,19 +204,19 @@ export function LancamentosTab() {
     }
   }
 
-  async function handleDelete(payable: Payable) {
+  async function handleDelete(target: ConfirmDeleteTarget) {
     try {
-      const res = await fetch(`/api/financial/payables/${payable.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/financial/payables/${target.id}`, { method: "DELETE" })
       if (!res.ok) throw new Error()
-      setPayables((prev) => prev.filter((p) => p.id !== payable.id))
       setConfirmDelete(null)
+      await load()
       toast.success("Lançamento removido.")
     } catch {
       toast.error("Erro ao remover lançamento.")
     }
   }
 
-  async function handleTogglePaid(installment: PayableInstallment) {
+  async function handleTogglePaid(installment: { id: string; status: "pendente" | "pago" }) {
     const next = installment.status === "pago" ? "pendente" : "pago"
     try {
       const res = await fetch(`/api/financial/installments/${installment.id}`, {
@@ -178,20 +225,24 @@ export function LancamentosTab() {
         body: JSON.stringify({ status: next, paidAt: next === "pago" ? new Date().toISOString() : undefined }),
       })
       if (!res.ok) throw new Error()
-      const updated: PayableInstallment = await res.json()
-      // Merge só de status/paidAt — a resposta do PATCH não inclui a relação
-      // paymentMethod, então substituir o objeto inteiro apagaria esse dado da tela.
-      const mergeUpdated = (p: Payable) => ({
-        ...p,
-        installments: p.installments.map((i) =>
-          i.id === updated.id ? { ...i, status: updated.status, paidAt: updated.paidAt } : i
-        ),
-      })
-      setPayables((prev) => prev.map(mergeUpdated))
+      const updated: { id: string; status: "pendente" | "pago"; paidAt: string | null } = await res.json()
       // O modal de detalhe guarda sua própria cópia do lançamento (aberta ao
       // clicar na linha) — sem isso, marcar como pago ali só refletia depois
       // de fechar e reabrir o modal.
-      setDetailPayable((prev) => (prev ? mergeUpdated(prev) : prev))
+      setDetailPayable((prev) =>
+        prev
+          ? {
+              ...prev,
+              installments: prev.installments.map((i) =>
+                i.id === updated.id ? { ...i, status: updated.status, paidAt: updated.paidAt } : i
+              ),
+            }
+          : prev
+      )
+      // A lista recarrega da API (em vez de só trocar o status localmente)
+      // porque o filtro por status agora é feito no servidor — se a aba
+      // ativa for "Pendentes", por exemplo, a parcela paga precisa sumir dela.
+      await load()
       toast.success(next === "pago" ? "Parcela marcada como paga." : "Parcela voltou a pendente.")
     } catch {
       toast.error("Erro ao atualizar parcela.")
@@ -205,7 +256,7 @@ export function LancamentosTab() {
     { key: "pago", label: "Pagas" },
   ]
 
-  if (loading) {
+  if (staticLoading) {
     return <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Carregando...</div>
   }
 
@@ -253,14 +304,14 @@ export function LancamentosTab() {
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <input
               type="text"
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Buscar por descrição ou fornecedor/nome..."
               className="w-full h-11 pl-10 pr-10 rounded-lg border border-border bg-background text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition-colors"
             />
-            {search && (
+            {searchInput && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => setSearchInput("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X size={16} />
@@ -284,11 +335,20 @@ export function LancamentosTab() {
       )}
 
       {/* Lista */}
-      {rows.length === 0 ? (
+      {rowsLoading ? (
+        <div className="flex flex-col gap-3 animate-pulse">
+          <div className="rounded-xl border border-border overflow-hidden">
+            <div className="h-12 bg-muted/70 border-b border-border" />
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-14 border-b border-border last:border-0 bg-muted/30" />
+            ))}
+          </div>
+        </div>
+      ) : rows.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <Receipt size={40} className="mx-auto mb-2 opacity-30" />
-          {search ? (
-            <p>Nenhum lançamento encontrado para <strong className="text-foreground">&ldquo;{search}&rdquo;</strong>.</p>
+          {debouncedSearch ? (
+            <p>Nenhum lançamento encontrado para <strong className="text-foreground">&ldquo;{debouncedSearch}&rdquo;</strong>.</p>
           ) : (
             <p>Nenhum lançamento encontrado.</p>
           )}
@@ -312,54 +372,64 @@ export function LancamentosTab() {
                 </tr>
               </thead>
               <tbody>
-                {paginated.map(({ payable, installment }) => (
+                {rows.map((row) => (
                   <tr
-                    key={installment.id}
-                    onClick={() => setDetailPayable(payable)}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                    key={row.id}
+                    onClick={() => openDetail(row.payable.id)}
+                    className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer ${
+                      openingId === row.payable.id ? "opacity-50" : ""
+                    }`}
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">{payable.payeeName}</p>
-                      <p className="text-xs text-muted-foreground">{payable.description}</p>
+                      <p className="font-medium text-foreground">{row.payable.payeeName}</p>
+                      <p className="text-xs text-muted-foreground">{row.payable.description}</p>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{payable.group?.name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDateTime(payable.createdAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.payable.group?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDateTime(row.payable.createdAt)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {installment.installmentNumber}/{payable.installments.length}
+                      {row.installmentNumber}/{row.payable.installmentsCount}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(installment.dueDate)}</td>
-                    <td className="px-4 py-3 font-medium text-foreground">{currency(installment.amount)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDate(row.dueDate)}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">{currency(row.amount)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {installment.paymentMethod?.name ?? "—"}
-                      {installment.documentNumber && (
-                        <p className="text-xs text-muted-foreground/70">Doc: {installment.documentNumber}</p>
+                      {row.paymentMethod?.name ?? "—"}
+                      {row.documentNumber && (
+                        <p className="text-xs text-muted-foreground/70">Doc: {row.documentNumber}</p>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={installmentStatus(installment)} />
+                      <StatusBadge status={installmentStatus(row)} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleTogglePaid(installment) }}
+                          onClick={(e) => { e.stopPropagation(); handleTogglePaid(row) }}
                           className={`p-2 rounded-lg transition-colors ${
-                            installment.status === "pago"
+                            row.status === "pago"
                               ? "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
                               : "text-muted-foreground hover:text-details-green hover:bg-details-green/10"
                           }`}
-                          title={installment.status === "pago" ? "Desfazer pagamento" : "Marcar como pago"}
+                          title={row.status === "pago" ? "Desfazer pagamento" : "Marcar como pago"}
                         >
-                          {installment.status === "pago" ? <Undo2 size={15} /> : <CheckCircle2 size={15} />}
+                          {row.status === "pago" ? <Undo2 size={15} /> : <CheckCircle2 size={15} />}
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); openEdit(payable) }}
+                          onClick={(e) => { e.stopPropagation(); openEditById(row.payable.id) }}
                           className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                           title="Editar lançamento"
                         >
                           <Pencil size={15} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(payable) }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setConfirmDelete({
+                              id: row.payable.id,
+                              payeeName: row.payable.payeeName,
+                              description: row.payable.description,
+                              installmentsCount: row.payable.installmentsCount,
+                            })
+                          }}
                           className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           title="Excluir lançamento"
                         >
@@ -375,48 +445,58 @@ export function LancamentosTab() {
 
           {/* Mobile */}
           <div className="md:hidden flex flex-col gap-3">
-            {paginated.map(({ payable, installment }) => (
+            {rows.map((row) => (
               <div
-                key={installment.id}
-                onClick={() => setDetailPayable(payable)}
-                className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3 cursor-pointer"
+                key={row.id}
+                onClick={() => openDetail(row.payable.id)}
+                className={`rounded-xl border border-border bg-card p-4 flex flex-col gap-3 cursor-pointer ${
+                  openingId === row.payable.id ? "opacity-50" : ""
+                }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-foreground text-sm">{payable.payeeName}</p>
-                    <p className="text-xs text-muted-foreground">{payable.description}</p>
+                    <p className="font-medium text-foreground text-sm">{row.payable.payeeName}</p>
+                    <p className="text-xs text-muted-foreground">{row.payable.description}</p>
                   </div>
-                  <StatusBadge status={installmentStatus(installment)} />
+                  <StatusBadge status={installmentStatus(row)} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <span>{payable.group?.name ?? "—"}</span>
-                  <span>Parcela {installment.installmentNumber}/{payable.installments.length}</span>
-                  <span>Vence {formatDate(installment.dueDate)}</span>
-                  <span>{installment.paymentMethod?.name ?? "—"}</span>
-                  {installment.documentNumber && <span>Doc: {installment.documentNumber}</span>}
-                  <span>Lançado em {formatDateTime(payable.createdAt)}</span>
+                  <span>{row.payable.group?.name ?? "—"}</span>
+                  <span>Parcela {row.installmentNumber}/{row.payable.installmentsCount}</span>
+                  <span>Vence {formatDate(row.dueDate)}</span>
+                  <span>{row.paymentMethod?.name ?? "—"}</span>
+                  {row.documentNumber && <span>Doc: {row.documentNumber}</span>}
+                  <span>Lançado em {formatDateTime(row.payable.createdAt)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-foreground">{currency(installment.amount)}</span>
+                  <span className="text-lg font-bold text-foreground">{currency(row.amount)}</span>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleTogglePaid(installment) }}
+                      onClick={(e) => { e.stopPropagation(); handleTogglePaid(row) }}
                       className={`p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${
-                        installment.status === "pago"
+                        row.status === "pago"
                           ? "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
                           : "text-muted-foreground hover:text-details-green hover:bg-details-green/10"
                       }`}
                     >
-                      {installment.status === "pago" ? <Undo2 size={16} /> : <CheckCircle2 size={16} />}
+                      {row.status === "pago" ? <Undo2 size={16} /> : <CheckCircle2 size={16} />}
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); openEdit(payable) }}
+                      onClick={(e) => { e.stopPropagation(); openEditById(row.payable.id) }}
                       className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(payable) }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setConfirmDelete({
+                          id: row.payable.id,
+                          payeeName: row.payable.payeeName,
+                          description: row.payable.description,
+                          installmentsCount: row.payable.installmentsCount,
+                        })
+                      }}
                       className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 size={16} />
@@ -431,22 +511,22 @@ export function LancamentosTab() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-muted-foreground">
-                {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, rows.length)} de {rows.length} registros
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total} registros
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
+                  disabled={page === 1}
                   className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <span className="px-3 text-sm font-medium text-foreground">
-                  {currentPage} / {totalPages}
+                  {page} / {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
+                  disabled={page === totalPages}
                   className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronRight size={16} />
@@ -475,7 +555,7 @@ export function LancamentosTab() {
                 <h2 className="font-semibold text-foreground">Excluir lançamento?</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   <strong className="text-foreground">{confirmDelete.payeeName}</strong> — {confirmDelete.description} —
-                  todas as {confirmDelete.installments.length} parcela(s) serão removidas, mesmo as já pagas.
+                  todas as {confirmDelete.installmentsCount} parcela(s) serão removidas, mesmo as já pagas.
                 </p>
               </div>
             </div>
@@ -501,7 +581,7 @@ export function LancamentosTab() {
       <PayableDetailModal
         payable={detailPayable}
         onClose={() => setDetailPayable(null)}
-        onEdit={(payable) => { setDetailPayable(null); openEdit(payable) }}
+        onEdit={(payable) => { setDetailPayable(null); openEditFull(payable) }}
         onTogglePaid={handleTogglePaid}
       />
     </div>

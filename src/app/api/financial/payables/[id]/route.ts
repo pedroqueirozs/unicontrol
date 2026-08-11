@@ -19,7 +19,13 @@ export async function GET(
   const { id } = await params
   const payable = await prisma.payable.findFirst({
     where: { id, companyId: session.user.companyId },
-    include: { installments: { orderBy: { installmentNumber: "asc" } } },
+    include: {
+      group: { select: { id: true, name: true } },
+      installments: {
+        orderBy: { installmentNumber: "asc" },
+        include: { paymentMethod: { select: { id: true, name: true } } },
+      },
+    },
   })
   if (!payable) return new NextResponse("Not Found", { status: 404 })
 
