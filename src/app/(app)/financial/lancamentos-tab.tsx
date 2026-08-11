@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle, Search, X } from "lucide-react"
+import { Plus, Pencil, Trash2, CheckCircle2, Undo2, Receipt, AlertCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { PayableForm, type PayableFormData } from "./payable-form"
 import { PayableDetailModal } from "./payable-detail-modal"
 import { currency, formatDate, formatDateTime, installmentStatus, StatusBadge } from "./format"
 import type { Payable, PayableInstallment, PayableGroupRef, PaymentMethodRef, SupplierRef } from "./types"
 
 type StatusFilter = "todas" | "pendente" | "vencida" | "pago"
+
+const PAGE_SIZE = 50
 
 type Row = { payable: Payable; installment: PayableInstallment }
 
@@ -29,6 +31,7 @@ export function LancamentosTab() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas")
   const [groupFilter, setGroupFilter] = useState<string>("todos")
   const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -74,6 +77,25 @@ export function LancamentosTab() {
       )
       .sort((a, b) => new Date(a.installment.dueDate).getTime() - new Date(b.installment.dueDate).getTime())
   }, [payables, groupFilter, statusFilter, search])
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  function handleStatusFilterChange(next: StatusFilter) {
+    setStatusFilter(next)
+    setPage(1)
+  }
+
+  function handleGroupFilterChange(next: string) {
+    setGroupFilter(next)
+    setPage(1)
+  }
+
+  function handleSearchChange(next: string) {
+    setSearch(next)
+    setPage(1)
+  }
 
   function openCreate() {
     setEditItem(null)
@@ -192,7 +214,7 @@ export function LancamentosTab() {
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setStatusFilter(tab.key)}
+                onClick={() => handleStatusFilterChange(tab.key)}
                 className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition min-h-[44px] ${
                   statusFilter === tab.key
                     ? "bg-primary text-primary-foreground"
@@ -214,7 +236,7 @@ export function LancamentosTab() {
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={groupFilter}
-            onChange={(e) => setGroupFilter(e.target.value)}
+            onChange={(e) => handleGroupFilterChange(e.target.value)}
             className="h-11 w-full sm:w-64 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
           >
             <option value="todos">Todos os grupos</option>
@@ -228,7 +250,7 @@ export function LancamentosTab() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Buscar por descrição ou fornecedor/nome..."
               className="w-full h-11 pl-10 pr-10 rounded-lg border border-border bg-background text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition-colors"
             />
@@ -286,7 +308,7 @@ export function LancamentosTab() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ payable, installment }) => (
+                {paginated.map(({ payable, installment }) => (
                   <tr
                     key={installment.id}
                     onClick={() => setDetailPayable(payable)}
@@ -344,7 +366,7 @@ export function LancamentosTab() {
 
           {/* Mobile */}
           <div className="md:hidden flex flex-col gap-3">
-            {rows.map(({ payable, installment }) => (
+            {paginated.map(({ payable, installment }) => (
               <div
                 key={installment.id}
                 onClick={() => setDetailPayable(payable)}
@@ -394,6 +416,34 @@ export function LancamentosTab() {
               </div>
             ))}
           </div>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-muted-foreground">
+                {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, rows.length)} de {rows.length} registros
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 text-sm font-medium text-foreground">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
