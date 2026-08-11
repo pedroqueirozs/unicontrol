@@ -57,7 +57,7 @@ export async function PUT(
   })
   if (!existing) return new NextResponse("Not Found", { status: 404 })
 
-  const resolved = await resolveAndValidate(data, companyId)
+  const resolved = await resolveAndValidate(data, companyId, existing)
   if ("error" in resolved) {
     return NextResponse.json({ error: resolved.error }, { status: 400 })
   }

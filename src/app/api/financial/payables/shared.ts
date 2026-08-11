@@ -42,10 +42,20 @@ export const payableSchema = z
 
 export type PayableInput = z.infer<typeof payableSchema>
 
+// Lançamento (Payable) já existente sendo editado — passado só pelo PUT.
+// Usado pra não travar a edição de um registro antigo que já usa um grupo ou
+// forma de pagamento que foi inativado depois de criado.
+type ExistingPayable = {
+  groupId: string
+  installments: { paymentMethodId: string }[]
+}
+
 // Valida grupo, fornecedor (se houver) e formas de pagamento contra o companyId
 // da sessão — nunca confia em ids vindos do cliente sem checar que pertencem
-// à mesma empresa (regra de ouro do multi-tenant).
-export async function resolveAndValidate(data: PayableInput, companyId: string) {
+// à mesma empresa (regra de ouro do multi-tenant). Também bloqueia usar um
+// grupo/forma de pagamento inativo — exceto se já era esse mesmo valor no
+// registro sendo editado, pra edição de dados antigos não quebrar.
+export async function resolveAndValidate(data: PayableInput, companyId: string, existing?: ExistingPayable | null) {
   const sum = data.installments.reduce((acc, i) => acc + i.amount, 0)
   if (Math.abs(sum - data.totalAmount) > 0.01) {
     return {
@@ -55,6 +65,9 @@ export async function resolveAndValidate(data: PayableInput, companyId: string) 
 
   const group = await prisma.payableGroup.findFirst({ where: { id: data.groupId, companyId } })
   if (!group) return { error: "Grupo inválido." } as const
+  if (!group.isActive && data.groupId !== existing?.groupId) {
+    return { error: "Grupo inativo — selecione outro." } as const
+  }
 
   let payeeName = data.payeeName?.trim() || ""
   if (data.supplierId) {
@@ -69,6 +82,12 @@ export async function resolveAndValidate(data: PayableInput, companyId: string) 
   })
   if (paymentMethods.length !== paymentMethodIds.length) {
     return { error: "Forma de pagamento inválida." } as const
+  }
+
+  const previouslyUsedMethodIds = new Set(existing?.installments.map((i) => i.paymentMethodId) ?? [])
+  const newlyUsedInactiveMethod = paymentMethods.find((m) => !m.isActive && !previouslyUsedMethodIds.has(m.id))
+  if (newlyUsedInactiveMethod) {
+    return { error: `Forma de pagamento "${newlyUsedInactiveMethod.name}" está inativa — selecione outra.` } as const
   }
 
   // Boleto/cheque exigem número de documento — checado aqui (não só no

@@ -94,13 +94,25 @@ function needsDocumentNumber(paymentMethods: PaymentMethodRef[], paymentMethodId
   return !!method && paymentMethodRequiresDocumentNumber(method.name)
 }
 
+// Inativo não aparece pra escolher de novo — mas se o valor atual (edição de
+// um lançamento antigo) já é um grupo/forma inativado, mantém ele na lista
+// pra não sumir o valor selecionado debaixo do usuário.
+function selectableOptions<T extends { id: string; isActive: boolean }>(
+  list: T[],
+  currentId: string | undefined
+): T[] {
+  return list.filter((item) => item.isActive || item.id === currentId)
+}
+
 export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSave, onCancel, saving }: Props) {
   const [mode, setMode] = useState<"avulso" | "parcelado">("avulso")
 
   // Campos auxiliares só para a divisão automática — não vão pro payload.
   const [installmentCount, setInstallmentCount] = useState(2)
   const [firstDueDate, setFirstDueDate] = useState(todayStr())
-  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState(paymentMethods[0]?.id ?? "")
+  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState(
+    paymentMethods.find((m) => m.isActive)?.id ?? paymentMethods[0]?.id ?? ""
+  )
 
   // Busca de fornecedor
   const [supplierSearch, setSupplierSearch] = useState("")
@@ -119,20 +131,21 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
   } = useForm<RawFormData>({
     resolver: zodResolver(rawSchema),
     defaultValues: {
-      groupId: groups[0]?.id ?? "",
+      groupId: groups.find((g) => g.isActive)?.id ?? groups[0]?.id ?? "",
       supplierId: null,
       payeeName: "",
       description: "",
       issueDate: "",
       avulsoAmount: 0,
       avulsoDueDate: todayStr(),
-      avulsoPaymentMethodId: paymentMethods[0]?.id ?? "",
+      avulsoPaymentMethodId: paymentMethods.find((m) => m.isActive)?.id ?? paymentMethods[0]?.id ?? "",
       avulsoDocumentNumber: "",
       totalAmount: 0,
       installments: [],
     },
   })
 
+  const watchedGroupId = useWatch({ control, name: "groupId" })
   const watchedAvulsoPaymentMethodId = useWatch({ control, name: "avulsoPaymentMethodId" })
   const { fields, replace } = useFieldArray({ control, name: "installments" })
   // installments sempre existe em runtime (defaultValues garante []) — o "| undefined"
@@ -341,7 +354,7 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
             {...register("groupId")}
             className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
           >
-            {groups.map((g) => (
+            {selectableOptions(groups, watchedGroupId).map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}{!g.isActive ? " (inativo)" : ""}
               </option>
@@ -513,7 +526,7 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                 {...register("avulsoPaymentMethodId")}
                 className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
               >
-                {paymentMethods.map((m) => (
+                {selectableOptions(paymentMethods, watchedAvulsoPaymentMethodId).map((m) => (
                   <option key={m.id} value={m.id}>{m.name}{!m.isActive ? " (inativo)" : ""}</option>
                 ))}
               </select>
@@ -563,7 +576,7 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                   onChange={(e) => setDefaultPaymentMethodId(e.target.value)}
                   className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
                 >
-                  {paymentMethods.map((m) => (
+                  {paymentMethods.filter((m) => m.isActive).map((m) => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
@@ -641,8 +654,8 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                         {...register(`installments.${index}.paymentMethodId`)}
                         className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
                       >
-                        {paymentMethods.map((m) => (
-                          <option key={m.id} value={m.id}>{m.name}</option>
+                        {selectableOptions(paymentMethods, watchedInstallments[index]?.paymentMethodId).map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}{!m.isActive ? " (inativo)" : ""}</option>
                         ))}
                       </select>
                     </div>
