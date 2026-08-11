@@ -47,7 +47,7 @@ export type PayableInput = z.infer<typeof payableSchema>
 // forma de pagamento que foi inativado depois de criado.
 type ExistingPayable = {
   groupId: string
-  installments: { paymentMethodId: string }[]
+  installments: { id: string; paymentMethodId: string }[]
 }
 
 // Valida grupo, fornecedor (se houver) e formas de pagamento contra o companyId
@@ -101,6 +101,43 @@ export async function resolveAndValidate(data: PayableInput, companyId: string, 
     return {
       error: `Informe o número do documento da parcela ${missingDocIndex + 1} (obrigatório para boleto/cheque).`,
     } as const
+  }
+
+  // Número do documento existe pra conferir a parcela contra o boleto/cheque
+  // físico — repetido vira ambiguidade nessa conferência. Verifica duplicidade
+  // tanto dentro do próprio lote enviado quanto contra o que já existe no
+  // banco pra essa empresa. As parcelas do próprio lançamento sendo editado
+  // ficam de fora da checagem contra o banco (elas serão atualizadas/excluídas
+  // na mesma operação, então não configuram conflito real).
+  const docEntries = data.installments
+    .map((inst, index) => ({ index, documentNumber: inst.documentNumber?.trim() || "" }))
+    .filter((entry) => entry.documentNumber)
+
+  const firstIndexByDoc = new Map<string, number>()
+  for (const entry of docEntries) {
+    const firstIndex = firstIndexByDoc.get(entry.documentNumber)
+    if (firstIndex !== undefined) {
+      return {
+        error: `O número do documento "${entry.documentNumber}" está repetido nas parcelas ${firstIndex + 1} e ${entry.index + 1}.`,
+      } as const
+    }
+    firstIndexByDoc.set(entry.documentNumber, entry.index)
+  }
+
+  if (docEntries.length > 0) {
+    const excludeIds = existing?.installments.map((i) => i.id) ?? []
+    const conflict = await prisma.payableInstallment.findFirst({
+      where: {
+        companyId,
+        documentNumber: { in: docEntries.map((entry) => entry.documentNumber) },
+        ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+      },
+    })
+    if (conflict) {
+      return {
+        error: `O número do documento "${conflict.documentNumber}" já está sendo usado em outro lançamento.`,
+      } as const
+    }
   }
 
   return { payeeName } as const
