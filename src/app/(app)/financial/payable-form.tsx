@@ -305,6 +305,8 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
     })
   }
 
+  const showAvulsoDoc = needsDocumentNumber(paymentMethods, watchedAvulsoPaymentMethodId)
+
   const supplierTrimmed = supplierSearch.trim().toLowerCase()
   const supplierResults =
     supplierTrimmed.length >= 1
@@ -467,7 +469,15 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
         </div>
 
         {mode === "avulso" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${showAvulsoDoc ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+            {showAvulsoDoc && (
+              <FormInput
+                label="Número do documento"
+                id="p-avulso-doc"
+                placeholder="Nº do boleto/cheque"
+                {...register("avulsoDocumentNumber")}
+              />
+            )}
             <Controller
               control={control}
               name="avulsoAmount"
@@ -500,14 +510,6 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
                 ))}
               </select>
             </div>
-            {needsDocumentNumber(paymentMethods, watchedAvulsoPaymentMethodId) && (
-              <FormInput
-                label="Número do documento"
-                id="p-avulso-doc"
-                placeholder="Nº do boleto/cheque"
-                {...register("avulsoDocumentNumber")}
-              />
-            )}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -570,72 +572,84 @@ export function PayableForm({ groups, paymentMethods, suppliers, editItem, onSav
 
             {/* Parcelas editáveis */}
             <div className="flex flex-col gap-2">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex flex-col gap-2 pb-2 border-b border-border last:border-0">
-                <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-2 items-end">
-                  <span className="text-xs text-muted-foreground pb-2.5 w-8">
-                    {index + 1}/{fields.length}
-                  </span>
-                  <Controller
-                    control={control}
-                    name={`installments.${index}.amount`}
-                    render={({ field }) => (
-                      <CurrencyInput
-                        id={`p-inst-amount-${index}`}
-                        label={index === 0 ? "Valor (R$)" : undefined}
-                        ariaLabel={`Valor da parcela ${index + 1}`}
-                        value={field.value ?? 0}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                  <div className="flex flex-col gap-1">
-                    {index === 0 && (
-                      <label htmlFor={`p-inst-due-${index}`} className="text-sm font-medium text-foreground">Vencimento</label>
-                    )}
-                    <input
-                      id={`p-inst-due-${index}`}
-                      aria-label={`Vencimento da parcela ${index + 1}`}
-                      type="date"
-                      {...register(`installments.${index}.dueDate`)}
-                      className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {index === 0 && (
-                      <label htmlFor={`p-inst-method-${index}`} className="text-sm font-medium text-foreground">Forma de pgto.</label>
-                    )}
-                    <select
-                      id={`p-inst-method-${index}`}
-                      aria-label={`Forma de pagamento da parcela ${index + 1}`}
-                      {...register(`installments.${index}.paymentMethodId`)}
-                      className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
-                    >
-                      {paymentMethods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => replace(watchedInstallments.filter((_, i) => i !== index))}
-                    disabled={fields.length <= 1}
-                    className="h-11 w-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
-                    title="Remover parcela"
+              {fields.map((field, index) => {
+                const showRowDoc = needsDocumentNumber(paymentMethods, watchedInstallments[index]?.paymentMethodId)
+                return (
+                  <div
+                    key={field.id}
+                    className={`grid gap-2 items-end ${
+                      showRowDoc ? "grid-cols-[auto_1fr_1fr_1fr_1fr_auto]" : "grid-cols-[auto_1fr_1fr_1fr_auto]"
+                    }`}
                   >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-                  {needsDocumentNumber(paymentMethods, watchedInstallments[index]?.paymentMethodId) && (
-                    <input
-                      aria-label={`Número do documento da parcela ${index + 1}`}
-                      placeholder={`Nº do documento da parcela ${index + 1}`}
-                      {...register(`installments.${index}.documentNumber`)}
-                      className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors placeholder:text-muted-foreground"
+                    <span className="text-xs text-muted-foreground pb-2.5 w-8">
+                      {index + 1}/{fields.length}
+                    </span>
+                    {showRowDoc && (
+                      <div className="flex flex-col gap-1">
+                        {index === 0 && (
+                          <label htmlFor={`p-inst-doc-${index}`} className="text-sm font-medium text-foreground">Nº documento</label>
+                        )}
+                        <input
+                          id={`p-inst-doc-${index}`}
+                          aria-label={`Número do documento da parcela ${index + 1}`}
+                          placeholder="Nº do boleto/cheque"
+                          {...register(`installments.${index}.documentNumber`)}
+                          className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors placeholder:text-muted-foreground"
+                        />
+                      </div>
+                    )}
+                    <Controller
+                      control={control}
+                      name={`installments.${index}.amount`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          id={`p-inst-amount-${index}`}
+                          label={index === 0 ? "Valor (R$)" : undefined}
+                          ariaLabel={`Valor da parcela ${index + 1}`}
+                          value={field.value ?? 0}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                  )}
-                </div>
-              ))}
+                    <div className="flex flex-col gap-1">
+                      {index === 0 && (
+                        <label htmlFor={`p-inst-due-${index}`} className="text-sm font-medium text-foreground">Vencimento</label>
+                      )}
+                      <input
+                        id={`p-inst-due-${index}`}
+                        aria-label={`Vencimento da parcela ${index + 1}`}
+                        type="date"
+                        {...register(`installments.${index}.dueDate`)}
+                        className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {index === 0 && (
+                        <label htmlFor={`p-inst-method-${index}`} className="text-sm font-medium text-foreground">Forma de pgto.</label>
+                      )}
+                      <select
+                        id={`p-inst-method-${index}`}
+                        aria-label={`Forma de pagamento da parcela ${index + 1}`}
+                        {...register(`installments.${index}.paymentMethodId`)}
+                        className="h-11 rounded-md border border-border bg-input-bg px-3 text-base text-foreground outline-none focus:border-ring transition-colors"
+                      >
+                        {paymentMethods.map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => replace(watchedInstallments.filter((_, i) => i !== index))}
+                      disabled={fields.length <= 1}
+                      className="h-11 w-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
+                      title="Remover parcela"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                )
+              })}
               <button
                 type="button"
                 onClick={() =>
