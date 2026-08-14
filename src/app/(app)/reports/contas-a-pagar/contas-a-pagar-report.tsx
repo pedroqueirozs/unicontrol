@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { Search, X, AlertTriangle, Receipt } from "lucide-react"
+import { Search, X, AlertTriangle, Receipt, Printer } from "lucide-react"
 import { currency, formatDate, formatDateTime, installmentStatus, StatusBadge } from "../../financial/format"
 import type { PayableGroupRef, PaymentMethodRef } from "../../financial/types"
 import type {
@@ -92,6 +92,65 @@ function groupRows(rows: PayableReportRow[], groupBy: ReportGroupBy): Bucket[] |
   // ISO, então ordena certo por string); os demais ficam em ordem alfabética.
   list.sort((a, b) => a.key.localeCompare(b.key))
   return list
+}
+
+// Dados vêm do banco (nome de fornecedor, descrição etc.) — nunca confiar
+// neles como HTML puro na hora de montar a janela de impressão.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+const PRINT_STATUS_STYLE: Record<"pendente" | "vencida" | "pago", { label: string; bg: string; fg: string }> = {
+  pendente: { label: "Pendente", bg: "#e0e7ff", fg: "#4338ca" },
+  vencida: { label: "Vencida", bg: "#fee2e2", fg: "#b91c1c" },
+  pago: { label: "Pago", bg: "#dcfce7", fg: "#15803d" },
+}
+
+function printRowHtml(row: PayableReportRow): string {
+  const status = installmentStatus(row)
+  const { label, bg, fg } = PRINT_STATUS_STYLE[status]
+  return `
+    <tr>
+      <td>
+        <div class="primary">${escapeHtml(row.payable.payeeName)}</div>
+        <div class="secondary">${escapeHtml(row.payable.description)}</div>
+      </td>
+      <td>${row.group ? escapeHtml(row.group.name) : "—"}</td>
+      <td>${row.payable.issueDate ? formatDate(row.payable.issueDate) : "—"}</td>
+      <td>${formatDate(row.dueDate)}</td>
+      <td>${row.paidAt ? formatDate(row.paidAt) : "—"}</td>
+      <td class="amount">${currency(row.amount)}</td>
+      <td>
+        ${row.paymentMethod ? escapeHtml(row.paymentMethod.name) : "—"}
+        ${row.documentNumber ? `<div class="secondary">Doc: ${escapeHtml(row.documentNumber)}</div>` : ""}
+      </td>
+      <td><span class="badge" style="background:${bg};color:${fg}">${label}</span></td>
+    </tr>
+  `
+}
+
+function printTableHtml(rows: PayableReportRow[]): string {
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Fornecedor</th>
+          <th>Grupo</th>
+          <th>Emissão</th>
+          <th>Vencimento</th>
+          <th>Pagamento</th>
+          <th class="amount">Valor</th>
+          <th>Forma / Doc.</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows.map(printRowHtml).join("")}</tbody>
+    </table>
+  `
 }
 
 function ReportRowsList({ rows }: { rows: PayableReportRow[] }) {
@@ -264,15 +323,107 @@ export function ContasAPagarReport() {
 
   const buckets = useMemo(() => groupRows(rows, groupBy), [rows, groupBy])
 
+  function handlePrint() {
+    const filterBits = [`${PERIOD_LABELS[periodField]}: ${from ? formatDate(from) : "—"} a ${to ? formatDate(to) : "—"}`]
+    if (statusFilter !== "todas") filterBits.push(`Status: ${STATUS_TABS.find((t) => t.key === statusFilter)?.label}`)
+    if (groupFilter !== "todos") {
+      const g = groups.find((g) => g.id === groupFilter)
+      if (g) filterBits.push(`Grupo: ${g.name}`)
+    }
+    if (paymentMethodFilter !== "todos") {
+      const m = paymentMethods.find((m) => m.id === paymentMethodFilter)
+      if (m) filterBits.push(`Forma: ${m.name}`)
+    }
+    if (debouncedSearch) filterBits.push(`Busca: "${debouncedSearch}"`)
+
+    const bodyHtml = buckets
+      ? buckets
+          .map(
+            (b) => `
+              <h2 class="group-title">
+                ${escapeHtml(b.label)}
+                <span class="group-count">(${b.rows.length})</span>
+                <span class="group-subtotal">${currency(b.subtotal)}</span>
+              </h2>
+              ${printTableHtml(b.rows)}
+            `
+          )
+          .join("")
+      : printTableHtml(rows)
+
+    const win = window.open("", "_blank", "width=1000,height=800")
+    if (!win) {
+      toast.error("O navegador bloqueou a janela de impressão — permita pop-ups pra esse site.")
+      return
+    }
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório de Contas a Pagar</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; color: #111; padding: 12mm; }
+          h1 { font-size: 18pt; margin-bottom: 2mm; }
+          .filters { font-size: 9pt; color: #555; margin-bottom: 6mm; }
+          .summary { display: flex; gap: 6mm; margin-bottom: 8mm; }
+          .summary div { border: 0.3mm solid #ddd; border-radius: 2mm; padding: 3mm 5mm; flex: 1; }
+          .summary span { display: block; font-size: 8pt; color: #666; margin-bottom: 1mm; }
+          .summary strong { font-size: 12pt; }
+          .group-title { font-size: 11pt; margin: 8mm 0 2mm; padding-bottom: 1.5mm; border-bottom: 0.3mm solid #ccc; display: flex; gap: 4mm; align-items: baseline; }
+          .group-count { font-weight: normal; color: #777; font-size: 9pt; }
+          .group-subtotal { margin-left: auto; font-weight: bold; }
+          table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 4mm; }
+          thead { display: table-header-group; }
+          th, td { border-bottom: 0.2mm solid #e5e5e5; padding: 2mm 2mm; text-align: left; vertical-align: top; }
+          th { background: #f5f5f5; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.02em; }
+          tr { break-inside: avoid; }
+          .primary { font-weight: 600; }
+          .secondary { color: #777; font-size: 7.5pt; }
+          .amount { text-align: right; font-weight: 600; white-space: nowrap; }
+          .badge { display: inline-block; padding: 0.8mm 2.5mm; border-radius: 9999px; font-size: 7.5pt; font-weight: 600; }
+          .footer { margin-top: 6mm; font-size: 8pt; color: #999; text-align: right; }
+          @page { size: A4 landscape; margin: 10mm; }
+        </style>
+      </head>
+      <body>
+        <h1>Relatório de Contas a Pagar</h1>
+        <p class="filters">${escapeHtml(filterBits.join(" · "))}</p>
+        <div class="summary">
+          <div><span>Títulos</span><strong>${summary.count}</strong></div>
+          <div><span>Total do período</span><strong>${currency(summary.total)}</strong></div>
+          <div><span>Total pago</span><strong>${currency(summary.totalPago)}</strong></div>
+          <div><span>Total em aberto</span><strong>${currency(summary.totalAberto)}</strong></div>
+        </div>
+        ${bodyHtml}
+        <p class="footer">Gerado em ${formatDateTime(generatedAt ?? new Date().toISOString())}</p>
+        <script>window.onload = function() { window.print(); }<\/script>
+      </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   if (staticLoading) {
     return <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Carregando...</div>
   }
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6">
-      <div className="flex items-center gap-3">
-        <Receipt size={24} className="text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Relatório de Contas a Pagar</h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Receipt size={24} className="text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">Relatório de Contas a Pagar</h1>
+        </div>
+        <button
+          onClick={handlePrint}
+          disabled={rowsLoading || rows.length === 0}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Printer size={16} /> Imprimir
+        </button>
       </div>
 
       {/* Filtros */}
