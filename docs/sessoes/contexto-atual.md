@@ -3,10 +3,13 @@
 > Arquivo atualizado ao final de cada sessão de trabalho.
 > Qualquer IA deve ler este arquivo para saber exatamente onde o projeto está.
 
-**Última atualização:** 2026-08-10
-**Sessão mais recente:** módulo Financeiro (Contas a Pagar) construído do zero — schema, APIs e telas de Dashboard, Lançamentos, Grupos e Formas de Pagamento, tudo testado ponta a ponta. Também foi criado o primeiro banco de desenvolvimento do projeto (Docker), separado da produção. Detalhes completos: `docs/sessoes/2026-08-10.md`.
+**Última atualização:** 2026-08-12
+**Sessão mais recente:** fechamento do módulo Financeiro (documento obrigatório em boleto/cheque, ocultar inativos, paginação real no servidor, documento e nome de grupo únicos) + **primeiro deploy dessa branch em produção** (com troubleshooting de Vercel/build no caminho) + início do módulo Relatórios com o relatório de Contas a Pagar. Detalhes completos: `docs/sessoes/2026-08-12.md`.
 
-> **⚠️ Estado do Git:** todo o trabalho desta sessão está na branch `feat/financeiro-contas-a-pagar`, **nada foi commitado ainda** (aguardando Pedro pedir). Antes de continuar o módulo numa sessão nova, confirme se essa branch já foi commitada/mergeada ou se ainda está pendente.
+> **⚠️ Pendências urgentes pra próxima sessão:**
+> 1. O módulo **Relatórios (Contas a Pagar)** foi implementado e testado, mas **ainda não foi commitado** — Pedro pediu pra parar antes de decidir.
+> 2. `src/proxy.ts` (`ADMIN_ONLY_ROUTES`) **não inclui `/reports/contas-a-pagar`** ainda — a página tem sua própria proteção e foi testada, mas fica inconsistente com o padrão real de proteção de rota do projeto (RN-18). Ver `docs/sessoes/2026-08-12.md` seção 4.
+> 3. Não investigado: por que o merge do PR do Financeiro não disparou o deploy de Produção sozinho na Vercel (contornado manualmente com "Promote to Production" dessa vez).
 
 ---
 
@@ -68,9 +71,9 @@ Até 2026-08-10 só existia o banco de produção (VPS). Agora há um banco de d
 | Cadastros (Clientes + Fornecedores) | ✅ Concluído |
 | Estoque | ✅ Concluído |
 | Configurações (dados da empresa + logo) | ✅ Concluído |
-| Financeiro (Contas a Pagar) | ✅ Concluído (branch não commitada — ver aviso no topo) |
+| Financeiro (Contas a Pagar) | ✅ Concluído, em produção |
 | Documentos Úteis | 🚧 Placeholder "em construção" |
-| Relatórios | 🚧 Placeholder "em construção" |
+| Relatórios | 🚧 Primeiro relatório (Contas a Pagar) pronto e testado, não commitado ainda — ver aviso no topo |
 
 ---
 
@@ -108,7 +111,7 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 - Dados completos ficam em memória (necessário para Saída/Entrada)
 
 ### Build na Vercel
-- `package.json` → `"build": "prisma generate && next build"`
+- `package.json` → `"build": "prisma generate && prisma migrate deploy && next build"` (o `migrate deploy` foi adicionado em 2026-08-12 — antes disso, migrations nunca eram aplicadas em produção automaticamente, só em dev; descoberto quando o módulo Financeiro foi pro ar e as tabelas novas não existiam no banco de produção. Ver `docs/sessoes/2026-08-12.md`.)
 - O diretório `src/generated/prisma` está no `.gitignore` e é gerado no servidor a cada deploy
 
 ### Importação de Produtos
@@ -196,11 +199,13 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 
 ## Próximos Passos Sugeridos
 
-1. **Commitar e mergear a branch `feat/financeiro-contas-a-pagar`** — só quando Pedro pedir explicitamente (regra do `CLAUDE.md`).
-2. Implementar módulo **Documentos Úteis**
-3. Implementar módulo **Relatórios**
-4. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
-5. (Baixa prioridade, ideia registrada) Anexo de PDF do boleto no lançamento do Financeiro — descartado por ora, ver RN-16.
+1. **Commitar o relatório de Contas a Pagar** (`/reports/contas-a-pagar`) — só quando Pedro pedir explicitamente (regra do `CLAUDE.md`). Ver aviso no topo.
+2. **Adicionar `/reports/contas-a-pagar` ao `ADMIN_ONLY_ROUTES` em `src/proxy.ts`** — avisar o Pedro antes, é arquivo de proteção de rotas.
+3. Investigar por que o deploy de Produção não disparou sozinho no merge do PR do Financeiro (ver `docs/sessoes/2026-08-12.md`).
+4. Mais relatórios no módulo Relatórios, ou implementar módulo **Documentos Úteis** — a definir com o Pedro.
+5. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
+6. (Baixa prioridade, ideia registrada) Anexo de PDF do boleto no lançamento do Financeiro — descartado por ora, ver RN-16.
+7. (Ideia registrada, não pedida) Lançar contas fixas recorrentes como um parcelado de 12x — funciona hoje com uma ressalva sobre documento obrigatório em boleto/cheque, ver `docs/sessoes/2026-08-12.md`.
 
 ---
 
