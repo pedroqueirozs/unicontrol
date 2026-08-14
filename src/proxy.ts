@@ -18,7 +18,7 @@ const ALWAYS_PUBLIC_ROUTES = ["/rastreio"]
 // Módulos restritos a admin/administrativo (RN-18). Qualquer outra role
 // tentando acessar digitando a URL diretamente é redirecionada — a proteção
 // não pode depender só de esconder o link na sidebar.
-const ADMIN_ONLY_ROUTES = ["/financial", "/settings", "/manage-users"]
+const ADMIN_ONLY_ROUTES = ["/financial", "/settings", "/manage-users", "/reports/contas-a-pagar"]
 
 export default auth((req) => {
   const { nextUrl, auth: session } = req
