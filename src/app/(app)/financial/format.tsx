@@ -1,5 +1,3 @@
-import type { PayableInstallment } from "./types"
-
 export function currency(value: string | number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value))
 }
@@ -17,7 +15,7 @@ export function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR").format(new Date(iso))
 }
 
-export function installmentStatus(inst: PayableInstallment): "pendente" | "vencida" | "pago" {
+export function installmentStatus(inst: { status: "pendente" | "pago"; dueDate: string }): "pendente" | "vencida" | "pago" {
   if (inst.status === "pago") return "pago"
   const today = new Date()
   today.setHours(0, 0, 0, 0)
