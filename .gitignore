@@ -47,3 +47,4 @@ next-env.d.ts
 
 # arquivos de importação com dados da empresa
 products-import.csv
+scripts/fornecedores-raw.txt
