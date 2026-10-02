@@ -6,10 +6,10 @@
 **Última atualização:** 2026-08-14
 **Sessão mais recente:** commits finais do módulo Relatórios (Contas a Pagar) + fix do `proxy.ts`, importação em massa de ~370 fornecedores a partir de um PDF do sistema antigo (aplicada em dev **e em produção**, com detecção de duplicado por CNPJ), e abertura do PR de `feat/financeiro-contas-a-pagar` pra `main`. Detalhes completos: `docs/sessoes/2026-08-14.md`.
 
-> **⚠️ Pendências pra próxima sessão:**
-> 1. **Confirmar se o PR foi criado/mergeado** — o formulário foi preenchido no fim da sessão, mas não há confirmação de que o Pedro clicou em "Create pull request".
-> 2. Não investigado: por que o merge do PR do Financeiro não disparou o deploy de Produção sozinho na Vercel (contornado manualmente com "Promote to Production" da vez anterior).
-> 3. `scripts/import-suppliers.ts`, `scripts/check-existing-suppliers.ts` e `scripts/fornecedores-raw.txt` existem no filesystem local mas **não estão commitados** (decisão do Pedro — o repo é público e o `.txt` tem CPF/endereço pessoal de algumas pessoas físicas fornecedoras). Não commitar o `.txt` sem confirmar com ele de novo.
+> **⚠️ Pendência em aberto:**
+> - Não investigado: por que o merge do PR do Financeiro não disparou o deploy de Produção sozinho na Vercel (contornado manualmente com "Promote to Production" da vez anterior).
+>
+> **Resolvido em 2026-10-01:** PR #2 (`feat/financeiro-contas-a-pagar` → `main`) confirmado como mergeado; branches locais já mergeadas removidas (a remota `origin/feat/financeiro-contas-a-pagar` foi mantida por enquanto, decisão do Pedro); scripts de importação de fornecedores commitados — só os `.ts`, o `scripts/fornecedores-raw.txt` (CPF/endereço de pessoas físicas, repo público) foi adicionado ao `.gitignore` e fica só local.
 
 ---
 
@@ -203,7 +203,7 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 - **Impressão** (commit `5f0fa91`, 2026-08-14, feito depois do log da sessão): botão "Imprimir" abre uma nova janela com uma versão A4 paisagem do relatório já filtrado (respeita o agrupamento ativo, mostra os filtros aplicados e os totais) e chama `window.print()` automaticamente — mesmo padrão das etiquetas de estoque. Dados do banco passam por `escapeHtml()` antes de entrar no HTML da janela. Se o navegador bloquear o pop-up, aparece um toast pedindo pra liberar. Exportação pra Excel/PDF ficou como próximo passo separado.
 
 ### Importação de fornecedores do sistema antigo (2026-08-14)
-- ~370 fornecedores importados a partir de um PDF exportado do sistema antigo (M3Soft), via script (`scripts/import-suppliers.ts`, não commitado — ver pendência no topo deste arquivo). Aplicado em dev e **em produção** (375 fornecedores no total hoje).
+- ~370 fornecedores importados a partir de um PDF exportado do sistema antigo (M3Soft), via script (`scripts/import-suppliers.ts`, commitado em 2026-10-01; o texto bruto de entrada `scripts/fornecedores-raw.txt` está no `.gitignore` por conter dados pessoais — só existe na máquina do Pedro). Aplicado em dev e **em produção** (375 fornecedores no total hoje).
 - CNPJ/CPF é obrigatório (RN-20) — 6 fornecedores do relatório antigo não tinham documento válido e ficaram de fora. 2 já existiam no banco (mesmo CNPJ, nome diferente) e foram pulados, não duplicados.
 - Detalhes completos: `docs/sessoes/2026-08-14.md`.
 
@@ -211,12 +211,11 @@ Helper centralizado em `src/lib/roles.ts` → `isAdminLevel(role)`.
 
 ## Próximos Passos Sugeridos
 
-1. **Confirmar status do PR** de `feat/financeiro-contas-a-pagar` pra `main` (formulário preenchido no fim da sessão de 2026-08-14, não confirmado se foi criado/mergeado).
-2. Investigar por que o deploy de Produção não disparou sozinho no merge do PR do Financeiro (ver `docs/sessoes/2026-08-12.md`).
-3. Mais relatórios no módulo Relatórios, ou implementar módulo **Documentos Úteis** — a definir com o Pedro.
-4. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
-5. (Baixa prioridade, ideia registrada) Anexo de PDF do boleto no lançamento do Financeiro — descartado por ora, ver RN-16.
-6. (Ideia registrada, não pedida) Lançar contas fixas recorrentes como um parcelado de 12x — funciona hoje com uma ressalva sobre documento obrigatório em boleto/cheque, ver `docs/sessoes/2026-08-12.md`.
+1. Investigar por que o deploy de Produção não disparou sozinho no merge do PR do Financeiro (ver `docs/sessoes/2026-08-12.md`).
+2. Mais relatórios no módulo Relatórios, ou implementar módulo **Documentos Úteis** — a definir com o Pedro.
+3. (Baixa prioridade, registrado mas não pedido ainda) Gaps de segurança da sessão de usuário — ver seção acima.
+4. (Baixa prioridade, ideia registrada) Anexo de PDF do boleto no lançamento do Financeiro — descartado por ora, ver RN-16.
+5. (Ideia registrada, não pedida) Lançar contas fixas recorrentes como um parcelado de 12x — funciona hoje com uma ressalva sobre documento obrigatório em boleto/cheque, ver `docs/sessoes/2026-08-12.md`.
 
 ---
 
