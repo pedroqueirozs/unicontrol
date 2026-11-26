@@ -362,7 +362,7 @@ export function ContasAPagarReport() {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Relatório de Contas a Pagar</title>
+        <title>RELATÓRIO DE CONTAS A PAGAR RAINHA DA PAZ</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; color: #111; padding: 12mm; }

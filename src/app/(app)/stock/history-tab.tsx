@@ -20,6 +20,7 @@ const TYPE_BADGE: Record<StockMovement["type"], { label: string; icon: React.Rea
   ajuste: { label: "Ajuste", icon: <ClipboardCheck size={11} />, className: "bg-amber-500/15 text-amber-600" },
 }
 
+
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso))
 }
