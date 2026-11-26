@@ -389,7 +389,7 @@ export function ContasAPagarReport() {
         </style>
       </head>
       <body>
-        <h1>Relatório de Contas a Pagar</h1>
+        <h1>RELATÓRIO DE CONTAS A PAGAR RAINHA DA PAZ</h1>
         <p class="filters">${escapeHtml(filterBits.join(" · "))}</p>
         <div class="summary">
           <div><span>Títulos</span><strong>${summary.count}</strong></div>
